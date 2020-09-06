@@ -1,0 +1,11 @@
+{% extends 'gestureApp/base.html' %}
+{% block content %}
+  <h1>Enter the experiment code</h1>
+  
+  {% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
+  <form action="{% url 'gestureApp:experiment' %}">
+    {{form.as_p}}
+    <input type="submit" value="Enter">
+  </form>
+  
+{% endblock content %}

@@ -1,0 +1,39 @@
+{% extends 'gestureApp/base.html' %}
+
+{% load static %}
+{% block content %}
+
+<h1>This is experiment {{ experiment.code }}</h1>
+<button id="start-btn">Start</button>
+<button id="send-data-btn" style='display: none;'>Send Data</button>
+
+{% csrf_token %}
+
+<div id='experiment-info' style='display: none;'>
+    <h2>Block number: <span id='block-num'>1</span></h2>
+    <h2>Current Trial: <span id='trial-num'>1</span></h2>
+    <h3>Trials left: <span id='trials-left'>0</span></h3>
+    <h2>Sequence to replicate: <b id="sequence">0</b></h2>
+    <h2>Time left: <b id="time-left">0</b></h2>
+</div>
+<div id='rest-info' style='display: none;'>
+    <h2>Rest</h2>
+    <h2>Time left: <b id="time-left-rest">0</b></h2>
+</div>
+<div id="div-content">
+</div>
+
+{% comment %} {{ experiment.code|json_script:"experiment" }}
+
+<script>
+    hola('{{ experiment.code }}')
+</script> {% endcomment %}
+
+{% endblock %}
+{% block javascript %}
+{{ experiment.code|json_script:"experiment" }}
+{{ blocks|json_script:"blocks" }}
+{{ sequences|json_script:"sequences" }}
+{{ experiment.resting_time|json_script:"rest-time" }}
+<script src="{% static 'gestureApp/js/experiment.js' %}"></script> 
+{% endblock javascript %}
