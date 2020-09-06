@@ -26,7 +26,7 @@ SECRET_KEY = 'y!7l+(vux@ny4ak((kk=a1^a3)f@&*hn6zssc5a2f=ov^&)ra='
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['https://neurroexperiment.herokuapp.com/']
+ALLOWED_HOSTS = ['neurroexperiment.herokuapp.com', '127.0.0.1']
 
 
 # Application definition
@@ -125,13 +125,13 @@ USE_TZ = True
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, "static")
 
-# Extra lookup directories for collectstatic to find static files
-STATICFILES_DIRS = (
-    os.path.join(BASE_DIR, 'static'),
-)
+# # Extra lookup directories for collectstatic to find static files
+# STATICFILES_DIRS = (
+#     os.path.join(BASE_DIR, 'static'),
+# )
 
 #  Add configuration for static files storage using whitenoise
-STATICFILES_STORAGE = 'whitenoise.django.GzipManifestStaticFilesStorage'
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 
 import dj_database_url 
