@@ -1,0 +1,15 @@
+{% extends 'gestureApp/base.html' %}
+{% block content %}
+
+<h1>{{ user.first_name }} {{ user.last_name }}</h1>
+
+<a href="{% url 'gestureApp:create-experiment' %}">Create Experiment</a>
+
+<h3>Experiments:</h3>
+<ul>
+{% for experiment in experiments %}
+    <li>{{ experiment.name }}</li>
+{% endfor %}
+</ul>
+
+{% endblock content %}

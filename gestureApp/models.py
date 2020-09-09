@@ -1,6 +1,13 @@
 from django.db import models, IntegrityError
 import random, string
 from django.utils import timezone
+from django.contrib.auth.models import AbstractUser
+
+class User(AbstractUser):
+    organization = models.CharField(max_length=50)
+
+    def __str__(self):
+        return self.first_name + ' ' + self.last_name
 
 # Create your models here.
 class Sequence(models.Model):
@@ -8,17 +15,7 @@ class Sequence(models.Model):
 
     def __str__(self):
         return self.sequence
-
-class Designer(models.Model):
-    first_name = models.CharField(max_length=30)
-    last_name = models.CharField(max_length=30)
-    organization = models.CharField(max_length=50)
-
-    def __str__(self):
-        return self.first_name + ' ' + self.last_name
     
-
-
 class Subject(models.Model):
     code = models.CharField(max_length=16, blank=True, editable=False, primary_key=True)
     age = models.IntegerField()
@@ -48,10 +45,10 @@ class Experiment(models.Model):
     code = models.CharField(max_length=4, blank=True, editable=False, primary_key=True)
     name = models.CharField(max_length=100)
     created_at = models.DateTimeField(auto_now_add=True)
-    creator = models.ForeignKey(Designer, models.SET_NULL, null=True)
-    resting_time = models.IntegerField(default=10)
+    creator = models.ForeignKey(User, models.SET_NULL, null=True, related_name='experiments')
 
     def save(self, *args, **kwargs):
+        print('Buenaaa')
         if not self.code:
             self.code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=4))
             # using your function as above or anything else
@@ -76,7 +73,8 @@ class Experiment(models.Model):
 class Block(models.Model):
     experiment = models.ForeignKey(Experiment, related_name='blocks', on_delete=models.CASCADE)
     sequence = models.ForeignKey(Sequence, on_delete=models.PROTECT)
-    time_per_trial = models.IntegerField()
+    time_per_trial = models.IntegerField(default=5)
+    resting_time = models.IntegerField(default=10)
     num_trials = models.IntegerField(default=10)
 
 
@@ -84,14 +82,16 @@ class Trial(models.Model):
     block = models.ForeignKey(Block, on_delete=models.CASCADE)
     subject = models.ForeignKey(Subject, on_delete=models.PROTECT)
     started_at = models.DateTimeField()
-    did_timeout = models.BooleanField(default=False)
-    input_sequence = models.CharField(max_length=50)
     time = models.FloatField(null=True)
 
     def __str__(self):
-        return str(timezone.localtime(self.started_at)) + ' | ' + str(self.time) + 's'
+        return str(timezone.localtime(self.started_at))
 
-    def is_correct(self):
-        if self.block.sequence.sequence == self.input_sequence:
-            return True
-        return False
+class Keypress(models.Model):
+    trial = models.ForeignKey(Trial, related_name='keypresses', on_delete=models.CASCADE)
+    value = models.CharField(max_length=1)
+    timestamp = models.DateTimeField()
+
+    def __str__(self):
+        return self.value + ", " + str(self.timestamp)
+    

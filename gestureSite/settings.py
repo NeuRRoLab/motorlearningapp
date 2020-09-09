@@ -104,6 +104,10 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+AUTH_USER_MODEL = 'gestureApp.User'
+LOGIN_REDIRECT_URL = '/'
+LOGIN_URL = '/login'
+
 
 # Internationalization
 # https://docs.djangoproject.com/en/3.1/topics/i18n/
