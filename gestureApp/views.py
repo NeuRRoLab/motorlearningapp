@@ -14,7 +14,7 @@ from django.views.generic.edit import CreateView, FormView
 from django.forms import inlineformset_factory
 
 
-from .forms import ExperimentCode, UserRegisterForm, ExperimentForm, BlockFormSet
+from .forms import ExperimentCode, UserRegisterForm, ExperimentForm
 from .models import Experiment, Subject, Trial, User, Keypress, Block
 
 
