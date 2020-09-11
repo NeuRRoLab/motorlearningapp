@@ -1,8 +1,8 @@
 {% extends 'gestureApp/base.html' %}
 {% block content %}
   {% if request.user.is_authenticated %}
-  
   <a href="{% url 'gestureApp:logout' %}">Logout</a>
+  <a href="{% url 'gestureApp:profile' %}">Profile</a>
   {% else %}
   <a href="{% url 'gestureApp:login' %}">Log In</a>
   <a href="{% url 'gestureApp:register' %}">Register</a>
