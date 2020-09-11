@@ -8,13 +8,6 @@ class User(AbstractUser):
 
     def __str__(self):
         return self.first_name + ' ' + self.last_name
-
-# Create your models here.
-class Sequence(models.Model):
-    sequence = models.CharField(max_length=15)
-
-    def __str__(self):
-        return self.sequence
     
 class Subject(models.Model):
     code = models.CharField(max_length=16, blank=True, editable=False, primary_key=True)
@@ -72,7 +65,7 @@ class Experiment(models.Model):
 
 class Block(models.Model):
     experiment = models.ForeignKey(Experiment, related_name='blocks', on_delete=models.CASCADE)
-    sequence = models.ForeignKey(Sequence, on_delete=models.PROTECT)
+    sequence = models.CharField(max_length=15)
     time_per_trial = models.IntegerField(default=5)
     resting_time = models.IntegerField(default=10)
     num_trials = models.IntegerField(default=10)
