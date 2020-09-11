@@ -1,6 +1,7 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
-from .models import User, Experiment
+from .models import User, Experiment, Block
+from django.forms import formset_factory
 
 class ExperimentCode(forms.Form):
     code = forms.CharField(label='Code',required=True,max_length=4,min_length=4,strip=True)
@@ -16,3 +17,8 @@ class ExperimentForm(forms.ModelForm):
     class Meta:
         model = Experiment
         fields = ['name']
+
+class BlockForm(forms.ModelForm):
+    class Meta:
+        model = Block
+        fields = ['sequence', 'time_per_trial','resting_time','num_trials']

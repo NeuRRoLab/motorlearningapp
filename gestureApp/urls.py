@@ -13,7 +13,7 @@ urlpatterns = [
     path('logout', logout_then_login , name='logout'),
     path('register', views.SignUpView.as_view(), name='register'),
     path('profile', views.Profile.as_view(), name='profile'),
-    path('profile/create-experiment', views.CreateExperiment.as_view(), name='create-experiment'),
+    path('profile/create-experiment', views.create_experiment, name='create-experiment'),
     path('experiment/', views.experiment, name='experiment'),
     path('ajax/create_trials', views.create_trials, name='create_trials')
 ]

@@ -3,7 +3,7 @@ from datetime import datetime
 from urllib import parse
 
 from django.contrib.auth.decorators import login_required
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse_lazy, reverse
 from django.utils import timezone
@@ -11,10 +11,11 @@ from django.utils.decorators import method_decorator
 from django.utils.timezone import make_aware, now
 from django.views.generic.detail import DetailView
 from django.views.generic.edit import CreateView, FormView
+from django.forms import inlineformset_factory
 
 
-from .forms import ExperimentCode, UserRegisterForm, ExperimentForm
-from .models import Experiment, Subject, Trial, User, Keypress
+from .forms import ExperimentCode, UserRegisterForm, ExperimentForm, BlockFormSet
+from .models import Experiment, Subject, Trial, User, Keypress, Block
 
 
 @method_decorator([login_required], name='dispatch')
@@ -37,17 +38,6 @@ class SignUpView(CreateView):
   form_class = UserRegisterForm
 
 
-class CreateExperiment(FormView):
-    template_name = 'gestureApp/create_experiment.html'
-    form_class = ExperimentForm
-    success_url = reverse_lazy('gestureApp:profile')
-
-    def form_valid(self, form):
-        print(form.instance)
-        # form.instance.creator = self.request.user
-        return super().form_valid(form)
-
-
 # Create your views here.
 def experiment(request):
     form = ExperimentCode(request.GET)
@@ -57,7 +47,7 @@ def experiment(request):
         return render(request, 'gestureApp/experiment.html', {
             'experiment': experiment,
             'blocks': list(experiment.blocks.all().values()),
-            'sequences': [block.sequence.sequence for block in experiment.blocks.all()]
+            'sequences': [block.sequence for block in experiment.blocks.all()]
             })
     else:
         form = ExperimentCode()
@@ -96,3 +86,24 @@ def create_trials(request):
     # Create response
     data = {}
     return JsonResponse(data)
+
+def create_experiment(request):
+    BlockInlineFormSet = inlineformset_factory(Experiment, Block, fields=('sequence', 'time_per_trial','resting_time','num_trials'))
+    if request.method == "POST":
+        experiment_form = ExperimentForm(request.POST)
+        print('Hola')
+        if experiment_form.is_valid():
+            print('Como')
+            experiment = experiment_form.save(commit=False)
+            experiment.creator = request.user
+            formset = formset = BlockInlineFormSet(request.POST, instance=experiment)
+            if formset.is_valid():
+                print('Estas')
+                experiment.save()
+                formset.save()
+                # Do something. Should generally end with a redirect. For example:
+                return HttpResponseRedirect(reverse('gestureApp:profile'))
+    else:
+        experiment_form = ExperimentForm()
+        formset = BlockInlineFormSet()
+    return render(request, 'gestureApp/create_experiment.html', {'formset': formset, 'form': experiment_form})
