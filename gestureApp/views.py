@@ -46,8 +46,7 @@ def experiment(request):
         experiment = get_object_or_404(Experiment, pk=code)
         return render(request, 'gestureApp/experiment.html', {
             'experiment': experiment,
-            'blocks': list(experiment.blocks.all().values()),
-            'sequences': [block.sequence for block in experiment.blocks.all()]
+            'blocks': list(experiment.blocks.all().values())
             })
     else:
         form = ExperimentCode()
@@ -62,14 +61,16 @@ def home(request):
     return render(request, 'gestureApp/home.html', {'form':form})
 
 def create_trials(request):
-    exp_code = request.POST.get('experiment')
+    data = json.loads(request.body)
+    exp_code = data.get('experiment')
+    print(exp_code)
     experiment = get_object_or_404(Experiment, pk=exp_code)
     
     # Create a new subject
     subject = Subject(age=25)
     subject.save()
     # Save the trials to database.
-    experiment_trials = json.loads(request.POST.get('experiment_trials'))
+    experiment_trials = json.loads(data.get('experiment_trials'))
     for i,block in enumerate(experiment_trials):
         for trial in block:
             t = Trial(

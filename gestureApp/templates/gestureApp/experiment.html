@@ -3,8 +3,7 @@
 {% load static %}
 {% block content %}
 
-<h1>This is experiment {{ experiment.code }}</h1>
-<button id="start-btn">Start</button>
+{% comment %} <button id="start-btn">Start</button>
 <button id="send-data-btn" style='display: none;'>Send Data</button>
 
 {% csrf_token %}
@@ -21,6 +20,10 @@
     <h2>Time left: <b id="time-left-rest">0</b></h2>
 </div>
 <div id="div-content">
+</div> {% endcomment %}
+
+<div id="app">
+    <App/>
 </div>
 
 {% comment %} {{ experiment.code|json_script:"experiment" }}
@@ -30,10 +33,20 @@
 </script> {% endcomment %}
 
 {% endblock %}
+
 {% block javascript %}
+<script src="https://unpkg.com/http-vue-loader"></script>
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<script type="text/javascript">
+    window.vue = window.Vue; // quick fix for vue-notification
+</script>
+<script type="text/javascript" src="https://unpkg.com/vue-notification"></script>
+<script type="text/javascript">
+    window.vueNotification = window["vue-notification"].default;
+    Vue.use(vueNotification);
+</script>
 {{ experiment.code|json_script:"experiment" }}
 {{ blocks|json_script:"blocks" }}
-{{ sequences|json_script:"sequences" }}
-{{ experiment.resting_time|json_script:"rest-time" }}
+<script src="{% static 'gestureApp/js/dist/vue-countdown.js' %}"></script> 
 <script src="{% static 'gestureApp/js/experiment.js' %}"></script> 
 {% endblock javascript %}
