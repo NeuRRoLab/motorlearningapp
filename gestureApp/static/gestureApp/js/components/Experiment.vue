@@ -56,7 +56,7 @@
               Time left:
               <countdown
                 ref="timerTrial"
-                :time="blocks[current_block].time_per_trial * 10"
+                :time="blocks[current_block].time_per_trial * 1000"
                 :interval="1000"
                 :auto-start="true"
                 @end="trialEnded"
@@ -73,7 +73,7 @@
               Time left:
               <countdown
                 ref="timerRest"
-                :time="blocks[current_block].resting_time * 10"
+                :time="blocks[current_block].resting_time * 1000"
                 :interval="1000"
                 :auto-start="true"
                 @end="restEnded"
