@@ -14,7 +14,7 @@ from django.views.generic.edit import CreateView, FormView
 from django.forms import inlineformset_factory
 
 
-from .forms import ExperimentCode, UserRegisterForm, ExperimentForm
+from .forms import ExperimentCode, UserRegisterForm
 from .models import Experiment, Subject, Trial, User, Keypress, Block
 
 
@@ -88,23 +88,21 @@ def create_trials(request):
     data = {}
     return JsonResponse(data)
 
+@login_required
 def create_experiment(request):
-    BlockInlineFormSet = inlineformset_factory(Experiment, Block, fields=('sequence', 'time_per_trial','resting_time','num_trials'))
     if request.method == "POST":
-        experiment_form = ExperimentForm(request.POST)
-        print('Hola')
-        if experiment_form.is_valid():
-            print('Como')
-            experiment = experiment_form.save(commit=False)
-            experiment.creator = request.user
-            formset = formset = BlockInlineFormSet(request.POST, instance=experiment)
-            if formset.is_valid():
-                print('Estas')
-                experiment.save()
-                formset.save()
-                # Do something. Should generally end with a redirect. For example:
-                return HttpResponseRedirect(reverse('gestureApp:profile'))
-    else:
-        experiment_form = ExperimentForm()
-        formset = BlockInlineFormSet()
-    return render(request, 'gestureApp/create_experiment.html', {'formset': formset, 'form': experiment_form})
+        exp_info = json.loads(request.body)
+        experiment = Experiment.objects.create(name=exp_info['name'], creator=request.user)
+        for block in exp_info['blocks']:
+            block_obj = Block(
+                experiment=experiment, 
+                sequence=block['sequence'],
+                max_time_per_trial=block['max_time_per_trial'],
+                resting_time=block['resting_time'],
+                type=Block.BlockTypes(block['block_type']),
+                max_time=block['max_time'],
+                num_trials=block['num_trials']
+                )
+            block_obj.full_clean()
+            block_obj.save()
+    return render(request, 'gestureApp/create_experiment.html', {})

@@ -17,8 +17,3 @@ class ExperimentForm(forms.ModelForm):
     class Meta:
         model = Experiment
         fields = ['name']
-
-class BlockForm(forms.ModelForm):
-    class Meta:
-        model = Block
-        fields = ['sequence', 'time_per_trial','resting_time','num_trials']

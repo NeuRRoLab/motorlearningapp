@@ -2,6 +2,7 @@ from django.db import models, IntegrityError
 import random, string
 from django.utils import timezone
 from django.contrib.auth.models import AbstractUser
+from django.core.exceptions import ValidationError
 
 class User(AbstractUser):
     organization = models.CharField(max_length=50)
@@ -38,7 +39,7 @@ class Experiment(models.Model):
     code = models.CharField(max_length=4, blank=True, editable=False, primary_key=True)
     name = models.CharField(max_length=100)
     created_at = models.DateTimeField(auto_now_add=True)
-    creator = models.ForeignKey(User, models.SET_NULL, null=True, related_name='experiments')
+    creator = models.ForeignKey(User, models.CASCADE, related_name='experiments')
 
     def save(self, *args, **kwargs):
         print('Buenaaa')
@@ -64,11 +65,23 @@ class Experiment(models.Model):
         return self.code + ' | ' + self.name
 
 class Block(models.Model):
+    class BlockTypes(models.TextChoices):
+        MAX_TIME = 'max_time'
+        NUM_TRIALS = 'num_trials'
     experiment = models.ForeignKey(Experiment, related_name='blocks', on_delete=models.CASCADE)
     sequence = models.CharField(max_length=15)
-    time_per_trial = models.IntegerField(default=5)
+    max_time_per_trial = models.IntegerField(default=5)
     resting_time = models.IntegerField(default=10)
-    num_trials = models.IntegerField(default=10)
+
+    type = models.CharField(max_length=12, choices=BlockTypes.choices)
+    max_time = models.IntegerField(default=None, null=True, blank=True)
+    num_trials = models.IntegerField(default=None, null=True, blank=True)
+
+    def clean(self):
+        if self.type == Block.BlockTypes.MAX_TIME and self.max_time is None:
+            raise ValidationError('Block type is of max time, but no max time supplied')
+        elif self.type == Block.BlockTypes.NUM_TRIALS and self.num_trials is None:
+            raise ValidationError('Block type is of num trials, but num trials not supplied')
 
 
 class Trial(models.Model):

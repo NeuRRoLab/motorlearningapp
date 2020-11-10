@@ -26,13 +26,15 @@
           ></b-progress-bar>
         </b-progress>
         <br>
+        <!-- Show block type -->
+        <p class="text-center">Block type: {{ isTypeNumTrials ? 'Maximum number of trials -> ' + blocks[current_block].num_trials : 'Maximum time -> ' + blocks[current_block].max_time + ' seconds'}}</p>
         <div v-if="!block_started" class="text-center">
           <button class="btn btn-primary" @click="startBlock">Start Block</button>
         </div>
         
         <template v-else>
           <h4>Block Progress</h4>
-          <b-progress height="2rem" :max="blocks[current_block].num_trials" show-progress>
+          <b-progress v-if="isTypeNumTrials" height="2rem" :max="blocks[current_block].num_trials" show-progress>
             <b-progress-bar
               :value="current_trial + 1"
               :label="
@@ -43,20 +45,41 @@
               "
             ></b-progress-bar>
           </b-progress>
+          <div v-else>
+            <countdown
+                ref="timerBlock"
+                :time="blocks[current_block].max_time * 1000"
+                :interval="1000"
+                :auto-start="true"
+                @progress="blockTimerProgress"
+                @end="blockEnded(true)"
+              >
+              </countdown>
+            <b-progress height="2rem" :max="blocks[current_block].max_time" show-progress>
+              <b-progress-bar
+                :value="current_block_time"
+                :label="
+                  (current_block_time).toString() +
+                  ' seconds of ' +
+                  blocks[current_block].max_time.toString()
+                "
+              ></b-progress-bar>
+            </b-progress>
+          </div>
           <br>
           
           <template v-if="!resting">
             <h4 class="text-center">Enter Key Sequence:</h4>
             <div class="text-center">
-              <div :ref="'seq-'+index.toString()" :value="charact" v-for="(charact, index) in blocks[current_block].sequence" class="seq-charact" :key="index">
-                {{ charact }}
+              <div :ref="'seq-'+(index-1)" :value="blocks[current_block].sequence[index-1]" v-for="index in blocks[current_block].sequence.length" class="seq-charact" :key="index-1">
+                {{ blocks[current_block].sequence[index-1] }}
               </div>
             </div>
             <p class="text-center">
               Time left:
               <countdown
                 ref="timerTrial"
-                :time="blocks[current_block].time_per_trial * 1000"
+                :time="blocks[current_block].max_time_per_trial * 1000"
                 :interval="1000"
                 :auto-start="true"
                 @end="trialEnded"
@@ -100,7 +123,7 @@
           </b-progress>
         </template>
       </template>
-      <div class="text-center" v-else>
+      <div v-else class="text-center">
           <button class="btn btn-primary" @click="$emit('send-data',experiment_blocks)">Send Data</button>
       </div>
     </div>
@@ -115,6 +138,7 @@ module.exports = {
       experiment_finished: false,
       block_started: false,
       current_block: 0,
+      current_block_time: 0,
       current_trial: 0,
       num_correct_seq: 0,
       num_incorrect_seq: 0,
@@ -139,7 +163,13 @@ module.exports = {
   components: {
     'nav-bar': httpVueLoader('/static/gestureApp/js/components/NavBar.vue'),
   },
-  computed: {},
+  computed: {
+    isTypeNumTrials() {
+      if (this.blocks[this.current_block].type === 'num_trials')
+        return true;
+      return false;
+    }
+  },
   watch: {},
   methods: {
     startExperiment: function () {
@@ -149,6 +179,7 @@ module.exports = {
     startBlock: function () {
       this.block_started = true;
       this.capturing_keypresses = true;
+      this.current_block_time = 0;
       this.startTrial();
     },
     startTrial: function () {
@@ -192,8 +223,9 @@ module.exports = {
         console.log("restEnded");
         this.resting = false;
         //   Go to the next trial if there is one
-        if (this.current_trial + 1 < this.blocks[this.current_block].num_trials)
+        if (!this.isTypeNumTrials || (this.isTypeNumTrials && this.current_trial + 1 < this.blocks[this.current_block].num_trials))
         {
+          console.log('rest ended')
             this.capturing_keypresses = true;
             this.current_trial++;
             this.startTrial();
@@ -204,20 +236,26 @@ module.exports = {
         } 
         else this.experimentEnded();
     },
-    blockEnded: function () {
-        this.current_block++;
+    blockEnded: function (from_timer=false) {
+        this.experiment_blocks.push(this.block_trials)
+        this.block_trials = new Array();
         this.current_trial = 0;
         this.num_correct_seq = 0;
         this.num_incorrect_seq = 0;
         this.block_started = false;
         this.capturing_keypresses = false;
 
-        this.experiment_blocks.push(this.block_trials)
-        this.block_trials = new Array();
+        if (from_timer) {
+          if (this.current_block + 1 >= this.blocks.length)
+            this.experimentEnded();
+        }
+        this.current_block++;
+
+        
     },
     experimentEnded: function () {
         console.log('experiment ended');
-        this.experiment_blocks.push(this.block_trials)
+        // this.experiment_blocks.push(this.block_trials)
         this.block_trials = new Array();
         this.current_block = 0;
         this.current_trial = 0;
@@ -247,13 +285,18 @@ module.exports = {
                 this.$refs['seq-'+index.toString()][0].style.backgroundColor = 'red';
                 this.incorrectInputSequence();
             }
+            // Correct sequence!
+            if (this.current_inputted_sequence.join("") === this.blocks[this.current_block].sequence)
+              this.$refs.timerTrial.end();
         }
     },
     incorrectInputSequence: function () {
         // this.capturing_keypresses = false;
         console.log('incorrectInputSequence')
-        
-        // setTimeout(() => this.$refs.timerTrial.end(), 1000);
+        this.$refs.timerTrial.end();
+    },
+    blockTimerProgress(data) {
+      this.current_block_time = this.blocks[this.current_block].max_time - data.seconds;
     }
   },
 };
