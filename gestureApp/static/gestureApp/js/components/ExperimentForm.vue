@@ -17,7 +17,7 @@
                         placeholder="Name"
                     ></b-form-input>
                 </b-form-group>
-                <h5>Sequences:</h5>
+                <h5>Blocks:</h5>
                 <div class="block-form"
                     v-for="(block, index) in experiment_blocks"
                     :key="index">

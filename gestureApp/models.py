@@ -85,10 +85,11 @@ class Block(models.Model):
 
 
 class Trial(models.Model):
-    block = models.ForeignKey(Block, on_delete=models.CASCADE)
-    subject = models.ForeignKey(Subject, on_delete=models.PROTECT)
+    block = models.ForeignKey(Block, on_delete=models.CASCADE, related_name='trials')
+    subject = models.ForeignKey(Subject, on_delete=models.PROTECT, related_name='trials')
     started_at = models.DateTimeField()
     time = models.FloatField(null=True)
+    correct = models.BooleanField()
 
     def __str__(self):
         return str(timezone.localtime(self.started_at))

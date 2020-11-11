@@ -98,7 +98,9 @@
                 ref="timerRest"
                 :time="blocks[current_block].resting_time * 1000"
                 :interval="1000"
-                :auto-start="true"
+                :auto-start="false"
+                :emit-events="true"
+                @progress="restProgress"
                 @end="restEnded"
               >
                 <span slot-scope="props"
@@ -191,10 +193,8 @@ module.exports = {
       console.log("Trial ended");
       this.resting = true;
       this.capturing_keypresses = false;
+      this.was_correct = false;
     
-      this.block_trials.push({started_at: this.started_trial_at, keypresses: this.keypresses_trial});
-      this.started_trial_at = null;
-      this.keypresses_trial = new Array(); 
       if (this.current_inputted_sequence.join("") === this.blocks[this.current_block].sequence) {
         console.log('Correct sequence!!');
         this.$notify({
@@ -203,9 +203,10 @@ module.exports = {
           type: 'success',
         });
         this.num_correct_seq++;
+        this.was_correct = true;
       }
       else {
-          console.log('incorrect sequence')
+        console.log('incorrect sequence')
           this.$notify({
             group: 'alerts',
             title: 'Error in input sequence',
@@ -215,8 +216,15 @@ module.exports = {
             type: `error`,
             });
           this.num_incorrect_seq++;
+          this.was_correct = false;
       }
-        
+      this.block_trials.push({started_at: this.started_trial_at, keypresses: this.keypresses_trial, correct: this.was_correct});
+      this.started_trial_at = null;
+      this.keypresses_trial = new Array(); 
+      
+      this.$nextTick(() => {
+        this.$refs.timerRest.start();
+      })
       this.current_inputted_sequence = []
     },
     restEnded: function () {
@@ -234,7 +242,10 @@ module.exports = {
         else if (this.current_block + 1 < this.blocks.length) {
             this.blockEnded();
         } 
-        else this.experimentEnded();
+        else this.blockEnded(true);
+    },
+    restProgress() {
+      console.log('rest progress')
     },
     blockEnded: function (from_timer=false) {
         this.experiment_blocks.push(this.block_trials)
@@ -249,7 +260,8 @@ module.exports = {
           if (this.current_block + 1 >= this.blocks.length)
             this.experimentEnded();
         }
-        this.current_block++;
+        else
+          this.current_block++;
 
         
     },
@@ -296,7 +308,7 @@ module.exports = {
         this.$refs.timerTrial.end();
     },
     blockTimerProgress(data) {
-      this.current_block_time = this.blocks[this.current_block].max_time - data.seconds;
+      this.current_block_time = this.blocks[this.current_block].max_time - (data.hours * 3600 + data.minutes * 60 + data.seconds);
     }
   },
 };

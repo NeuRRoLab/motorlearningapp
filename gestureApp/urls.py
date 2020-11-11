@@ -15,5 +15,6 @@ urlpatterns = [
     path('profile', views.Profile.as_view(), name='profile'),
     path('profile/create_experiment', views.create_experiment, name='create-experiment'),
     path('experiment/', views.experiment, name='experiment'),
+    path('download_experiment/', views.download_experiment, name='download_experiment'),
     path('ajax/create_trials', views.create_trials, name='create_trials')
 ]

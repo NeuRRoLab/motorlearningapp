@@ -71,12 +71,14 @@ def create_trials(request):
     subject.save()
     # Save the trials to database.
     experiment_trials = json.loads(data.get('experiment_trials'))
+    print(experiment_trials)
     for i,block in enumerate(experiment_trials):
         for trial in block:
             t = Trial(
                 block=experiment.blocks.all()[i],
                 subject=subject,
-                started_at=make_aware(datetime.fromtimestamp(trial['started_at']/1000)))
+                started_at=make_aware(datetime.fromtimestamp(trial['started_at']/1000)),
+                correct=trial['correct'])
             t.save()
             for keypress in trial['keypresses']:
                 value = keypress['value']
@@ -106,3 +108,13 @@ def create_experiment(request):
             block_obj.full_clean()
             block_obj.save()
     return render(request, 'gestureApp/create_experiment.html', {})
+
+@login_required
+def download_experiment(request):
+    from djqscsv import render_to_csv_response
+    form = ExperimentCode(request.GET)
+    if form.is_valid():
+        code = form.cleaned_data['code']
+        qs = Experiment.objects.filter(pk=code).values('code','blocks', 'blocks__trials__subject__code', 'blocks__trials__id', 'blocks__trials__correct', 'blocks__trials__keypresses__timestamp')
+        return render_to_csv_response(qs, filename='experiment_'+code+'.csv')
+
