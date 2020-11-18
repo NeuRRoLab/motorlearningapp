@@ -1,7 +1,5 @@
 <template>
-  <div>
-    <nav-bar> </nav-bar>
-    <div class="container">
+  <div class="container">
       <!-- Will have to do a practice example -->
       <notifications group="alerts" position="top right" :max="2" :duration="6000"></notifications>
       <h2>Experiment {{ code }}</h2>
@@ -128,7 +126,6 @@
       <div v-else class="text-center">
           <button class="btn btn-primary" @click="$emit('send-data',experiment_blocks)">Send Data</button>
       </div>
-    </div>
   </div>
 </template>
 

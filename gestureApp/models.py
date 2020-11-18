@@ -42,7 +42,6 @@ class Experiment(models.Model):
     creator = models.ForeignKey(User, models.CASCADE, related_name='experiments')
 
     def save(self, *args, **kwargs):
-        print('Buenaaa')
         if not self.code:
             self.code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=4))
             # using your function as above or anything else

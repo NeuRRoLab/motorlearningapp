@@ -1,15 +1,14 @@
 {% extends 'gestureApp/base.html' %}
 {% block content %}
-
-<h1>{{ user.first_name }} {{ user.last_name }}</h1>
-
-<a href="{% url 'gestureApp:create-experiment' %}">Create Experiment</a>
-
-<h3>Experiments:</h3>
-<ul>
-{% for experiment in experiments %}
-    <li>{{ experiment.name }}: <a href="{% url 'gestureApp:experiment' %}?code={{ experiment.code }}">do experiment</a>,<a href="{% url 'gestureApp:download_experiment' %}?code={{ experiment.code }}">download data</a></li>
-{% endfor %}
-</ul>
+    <div id="app">
+        <App/>
+    </div>
+    
 
 {% endblock content %}
+{% block javascript %}
+{% load static %}
+<script src="https://unpkg.com/http-vue-loader"></script>
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<script src="{% static 'gestureApp/js/profile.js' %}"></script> 
+{% endblock %}

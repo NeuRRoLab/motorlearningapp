@@ -1,35 +1,26 @@
 <template>
-    <div>
-        <nav-bar></nav-bar>
-        <br>
-        <div class="container-fluid justify-content-center">
-            <div class="experiment-form">
-                <b-form action="/experiment">
-                    <b-form-group
-                        id="input-group"
-                        label="Experiment Code:"
-                        label-for="input"
-                    >
-                        <b-form-input
-                            name="code"
-                            id="input"
-                            v-model="experiment_code"
-                            type="text"
-                            :maxlength="4"
-                            required
-                            placeholder="Code"
-                            @input="onInput"
-                        ></b-form-input>
-                    </b-form-group>
-                    <b-button type="submit" class="btn btn-block" variant="primary">Submit</b-button>
-                </b-form>
-            </div>
+    <div class="container justify-content-center">
+        <div class="experiment-form">
+            <b-form action="/experiment">
+                <b-form-group
+                    id="input-group"
+                    label="Experiment Code:"
+                    label-for="input"
+                >
+                    <b-form-input
+                        name="code"
+                        id="input"
+                        v-model="experiment_code"
+                        type="text"
+                        :maxlength="4"
+                        required
+                        placeholder="Code"
+                        @input="onInput"
+                    ></b-form-input>
+                </b-form-group>
+                <b-button type="submit" class="btn btn-block" variant="primary">Submit</b-button>
+            </b-form>
         </div>
-  
-        <!-- <form action="{% url 'gestureApp:experiment' %}">
-            {{form.as_p}}
-            <input type="submit" value="Enter">
-        </form> -->
     </div>
     
 </template>

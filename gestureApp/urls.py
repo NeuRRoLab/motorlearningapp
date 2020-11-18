@@ -16,5 +16,9 @@ urlpatterns = [
     path('profile/create_experiment', views.create_experiment, name='create-experiment'),
     path('experiment/', views.experiment, name='experiment'),
     path('download_experiment/', views.download_experiment, name='download_experiment'),
-    path('ajax/create_trials', views.create_trials, name='create_trials')
+
+    # API
+    path('api/create_trials', views.create_trials, name='create_trials'),
+    path('api/current_user', views.current_user, name='current_user'),
+    path('api/user_experiments', views.user_experiments, name='user_experiments'),
 ]

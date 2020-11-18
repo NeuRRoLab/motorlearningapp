@@ -13,6 +13,7 @@ from django.views.generic.detail import DetailView
 from django.views.generic.edit import CreateView, FormView
 from django.forms import inlineformset_factory
 
+from django.forms.models import model_to_dict
 
 from .forms import ExperimentCode, UserRegisterForm
 from .models import Experiment, Subject, Trial, User, Keypress, Block
@@ -118,3 +119,22 @@ def download_experiment(request):
         qs = Experiment.objects.filter(pk=code).values('code','blocks', 'blocks__trials__subject__code', 'blocks__trials__id', 'blocks__trials__correct', 'blocks__trials__keypresses__timestamp')
         return render_to_csv_response(qs, filename='experiment_'+code+'.csv')
 
+def current_user(request):
+    if request.method == 'GET':
+        if request.user.is_anonymous:
+            return JsonResponse({})
+        
+        user = model_to_dict(request.user, fields=['first_name', 'last_name', 'username', 'email'])
+        return JsonResponse(user)
+
+@login_required
+def user_experiments(request):
+    if request.method == 'GET':
+        exp_array = []
+        for experiment in request.user.experiments.all():
+            exp_obj = {}
+            exp_obj['code'] = experiment.code
+            exp_obj['name'] = experiment.name
+            exp_obj['responses'] = Subject.objects.filter(trials__block__experiment=experiment).distinct().count()
+            exp_array.append(exp_obj)
+        return JsonResponse({'experiments': exp_array})
