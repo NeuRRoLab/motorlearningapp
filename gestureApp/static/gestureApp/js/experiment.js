@@ -34,7 +34,7 @@ var app = new Vue({
           console.log(this.$refs.experiment)
           console.log(experiment_blocks);
           // console.log(this.)
-          axios.post('/ajax/create_trials', {
+          axios.post('/api/create_trials', {
             'experiment_trials': JSON.stringify(experiment_blocks),
             'experiment': this.experiment}
             ).then(response =>{
