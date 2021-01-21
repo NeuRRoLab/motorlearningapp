@@ -19,122 +19,158 @@ from .forms import ExperimentCode, UserRegisterForm
 from .models import Experiment, Subject, Trial, User, Keypress, Block
 
 
-@method_decorator([login_required], name='dispatch')
+@method_decorator([login_required], name="dispatch")
 class Profile(DetailView):
     model = User
-    template_name = 'gestureApp/profile.html'
+    template_name = "gestureApp/profile.html"
 
     def get_object(self):
         return self.request.user
-    
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["experiments"] = self.request.user.experiments.all()
         return context
-    
+
 
 class SignUpView(CreateView):
-  template_name = 'gestureApp/register.html'
-  success_url = reverse_lazy('gestureApp:profile')
-  form_class = UserRegisterForm
+    template_name = "gestureApp/register.html"
+    success_url = reverse_lazy("gestureApp:profile")
+    form_class = UserRegisterForm
 
 
 # Create your views here.
 def experiment(request):
     form = ExperimentCode(request.GET)
     if form.is_valid():
-        code = form.cleaned_data['code']
+        code = form.cleaned_data["code"]
         experiment = get_object_or_404(Experiment, pk=code)
-        return render(request, 'gestureApp/experiment.html', {
-            'experiment': experiment,
-            'blocks': list(experiment.blocks.all().values())
-            })
+        return render(
+            request,
+            "gestureApp/experiment.html",
+            {
+                "experiment": experiment,
+                "blocks": list(experiment.blocks.all().values()),
+            },
+        )
     else:
         form = ExperimentCode()
-        return render(request, 'gestureApp/home.html', {
-            'form':form,
-            'error_message': 'Form invalid'
-            })
-    
+        return render(
+            request,
+            "gestureApp/home.html",
+            {"form": form, "error_message": "Form invalid"},
+        )
+
 
 def home(request):
     form = ExperimentCode()
-    return render(request, 'gestureApp/home.html', {'form':form})
+    return render(request, "gestureApp/home.html", {"form": form})
+
 
 def create_trials(request):
     data = json.loads(request.body)
-    exp_code = data.get('experiment')
+    exp_code = data.get("experiment")
     print(exp_code)
     experiment = get_object_or_404(Experiment, pk=exp_code)
-    
+
     # Create a new subject
     subject = Subject(age=25)
     subject.save()
     # Save the trials to database.
-    experiment_trials = json.loads(data.get('experiment_trials'))
+    experiment_trials = json.loads(data.get("experiment_trials"))
     print(experiment_trials)
-    for i,block in enumerate(experiment_trials):
+    for i, block in enumerate(experiment_trials):
         for trial in block:
             t = Trial(
                 block=experiment.blocks.all()[i],
                 subject=subject,
-                started_at=make_aware(datetime.fromtimestamp(trial['started_at']/1000)),
-                correct=trial['correct'])
+                started_at=make_aware(
+                    datetime.fromtimestamp(trial["started_at"] / 1000)
+                ),
+                correct=trial["correct"],
+            )
             t.save()
-            for keypress in trial['keypresses']:
-                value = keypress['value']
-                timestamp = keypress['timestamp']
-                keypress = Keypress(trial=t, value=value, timestamp=make_aware(datetime.fromtimestamp(timestamp/1000)))
+            for keypress in trial["keypresses"]:
+                value = keypress["value"]
+                timestamp = keypress["timestamp"]
+                keypress = Keypress(
+                    trial=t,
+                    value=value,
+                    timestamp=make_aware(datetime.fromtimestamp(timestamp / 1000)),
+                )
                 keypress.save()
-    
+
     # Create response
     data = {}
     return JsonResponse(data)
+
 
 @login_required
 def create_experiment(request):
     if request.method == "POST":
         exp_info = json.loads(request.body)
-        experiment = Experiment.objects.create(name=exp_info['name'], creator=request.user)
-        for block in exp_info['blocks']:
+        experiment = Experiment.objects.create(
+            name=exp_info["name"],
+            creator=request.user,
+            num_practice_trials=exp_info["practice_trials"],
+        )
+        for block in exp_info["blocks"]:
             block_obj = Block(
-                experiment=experiment, 
-                sequence=block['sequence'],
-                max_time_per_trial=block['max_time_per_trial'],
-                resting_time=block['resting_time'],
-                type=Block.BlockTypes(block['block_type']),
-                max_time=block['max_time'],
-                num_trials=block['num_trials']
-                )
+                experiment=experiment,
+                sequence=block["sequence"],
+                max_time_per_trial=block["max_time_per_trial"],
+                resting_time=block["resting_time"],
+                type=Block.BlockTypes(block["block_type"]),
+                max_time=block["max_time"],
+                num_trials=block["num_trials"],
+            )
             block_obj.full_clean()
             block_obj.save()
-    return render(request, 'gestureApp/create_experiment.html', {})
+    return render(request, "gestureApp/create_experiment.html", {})
+
 
 @login_required
 def download_experiment(request):
     from djqscsv import render_to_csv_response
+
     form = ExperimentCode(request.GET)
     if form.is_valid():
-        code = form.cleaned_data['code']
-        qs = Experiment.objects.filter(pk=code).values('code','blocks', 'blocks__trials__subject__code', 'blocks__trials__id', 'blocks__trials__correct', 'blocks__trials__keypresses__timestamp')
-        return render_to_csv_response(qs, filename='experiment_'+code+'.csv')
+        code = form.cleaned_data["code"]
+        qs = Experiment.objects.filter(pk=code).values(
+            "code",
+            "blocks",
+            "blocks__trials__subject__code",
+            "blocks__trials__id",
+            "blocks__trials__correct",
+            "blocks__trials__keypresses__timestamp",
+        )
+        return render_to_csv_response(qs, filename="experiment_" + code + ".csv")
+
 
 def current_user(request):
-    if request.method == 'GET':
+    if request.method == "GET":
         if request.user.is_anonymous:
             return JsonResponse({})
-        
-        user = model_to_dict(request.user, fields=['first_name', 'last_name', 'username', 'email'])
+
+        user = model_to_dict(
+            request.user, fields=["first_name", "last_name", "username", "email"]
+        )
         return JsonResponse(user)
+
 
 @login_required
 def user_experiments(request):
-    if request.method == 'GET':
+    if request.method == "GET":
         exp_array = []
         for experiment in request.user.experiments.all():
             exp_obj = {}
-            exp_obj['code'] = experiment.code
-            exp_obj['name'] = experiment.name
-            exp_obj['responses'] = Subject.objects.filter(trials__block__experiment=experiment).distinct().count()
+            exp_obj["code"] = experiment.code
+            exp_obj["name"] = experiment.name
+            exp_obj["responses"] = (
+                Subject.objects.filter(trials__block__experiment=experiment)
+                .distinct()
+                .count()
+            )
             exp_array.append(exp_obj)
-        return JsonResponse({'experiments': exp_array})
+        return JsonResponse({"experiments": exp_array})
+

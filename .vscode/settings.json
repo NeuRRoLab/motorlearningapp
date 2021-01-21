@@ -1,3 +1,4 @@
 {
-    "python.pythonPath": "/home/lhcubillos/anaconda3/envs/gestureApp/bin/python"
+  "python.pythonPath": "/home/lhcubillos/anaconda3/envs/gestureApp/bin/python",
+  "prettier.disableLanguages": ["html"]
 }

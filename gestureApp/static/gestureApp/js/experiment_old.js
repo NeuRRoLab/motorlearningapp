@@ -56,7 +56,7 @@ const possible_states = {
 //     trial.time_limit = blocks[current_block].time_per_trial
 //     $("#time-left").html(trial.time_limit); 
 //     // console.log(trial.time_limit)
-    
+
 //     // Trial ends after X milliseconds, and then we rest for Y milliseconds
 //     setTimeout(()=> trialEnds(n), trial.time_limit * 1000);
 //     $(document).keydown(keydownEvent)
@@ -121,7 +121,7 @@ const possible_states = {
 //         }
 //       });
 
-    
+
 // }
 
 // $(document).ready(function () 
@@ -215,7 +215,7 @@ const possible_states = {
 //         break;
 //     case possible_states.EndExperiment:
 //         $("#experiment-info").hide();
-        
+
 //         $("#send-data-btn").show();
 //         $("#send-data-btn").click(sendData);
 //         current_state = possible_states.WaitSendData;
@@ -229,7 +229,7 @@ const possible_states = {
 
 class Experiment {
     constructor(experiment, blocks, sequences) {
-        
+
         this.experiment = experiment;
         this.blocks = blocks;
         this.sequences = sequences;
@@ -263,15 +263,15 @@ class Experiment {
             next();
         }
         $("#div-content")
-        .append("<p id='start-message'>Starting experiment in ... <b id='start-message-number'></b></p>")
-        .queue(subs)
-        .delay(1000)
-        .queue(subs)
-        .delay(1000)
-        .queue(subs)
-        .delay(1000)
-        .queue((next) => {$("#start-message").remove(); next()})
-        .queue(() => this.current_state = possible_states.StartBlock);
+            .append("<p id='start-message'>Starting experiment in ... <b id='start-message-number'></b></p>")
+            .queue(subs)
+            .delay(1000)
+            .queue(subs)
+            .delay(1000)
+            .queue(subs)
+            .delay(1000)
+            .queue((next) => { $("#start-message").remove(); next() })
+            .queue(() => this.current_state = possible_states.StartBlock);
     }
 
     startBlock() {
@@ -294,30 +294,30 @@ class Experiment {
 
         // Add the initial timestamp
         var time_limit = this.blocks[this.current_block]['time_per_trial']
-        $("#time-left").html(time_limit); 
-        
+        $("#time-left").html(time_limit);
+
         // Trial ends after X milliseconds, and then we rest for Y milliseconds
-        setTimeout(()=> this.doRest(), time_limit * 1000);
+        setTimeout(() => this.doRest(), time_limit * 1000);
         $(document).keydown(this.keydownEvent.bind(this))
 
         // Show timer
-         this.timer_trial = setInterval(() => {
+        this.timer_trial = setInterval(() => {
             var now = new Date().getTime();
             var distance = (starting_date + time_limit * 1000 - now) / 1000
-            $("#time-left").html(Math.round(distance)); 
+            $("#time-left").html(Math.round(distance));
         }, 1000);
     }
 
     keydownEvent(e) {
-        
+
         var timestamp = new Date().getTime();
-        this.keypresses_trial.push({value: e.key, timestamp: timestamp});
+        this.keypresses_trial.push({ value: e.key, timestamp: timestamp });
         // trial.seq_timestamps.push(timestamp)
     }
 
     trialEnds() {
 
-        this.block_trials.push({started_at: this.started_trial_at, keypresses: this.keypresses_trial})
+        this.block_trials.push({ started_at: this.started_trial_at, keypresses: this.keypresses_trial })
         this.started_trial_at = null;
         this.keypresses_trial = new Array();
         // rest starts
@@ -329,7 +329,7 @@ class Experiment {
             this.runTrial();
         else
             this.current_state = possible_states.EndBlock
-        
+
         // if (n - 1 > 0)
         //     trialStarts(n - 1);
         // else
@@ -341,12 +341,12 @@ class Experiment {
         $(document).off("keydown")
 
         // Reset timer
-        $("#time-left").html(this.blocks[this.current_block]['time_per_trial']); 
+        $("#time-left").html(this.blocks[this.current_block]['time_per_trial']);
         clearInterval(this.timer_trial)
         this.timer_trial = null
 
         var resting_time = this.blocks[this.current_block]['resting_time'];
-        $("#time-left-rest").html(resting_time); 
+        $("#time-left-rest").html(resting_time);
         // For the timer
         var starting_date = new Date().getTime();
 
@@ -354,7 +354,7 @@ class Experiment {
         $("#rest-info").show();
 
         // Rest ends after X milliseconds
-        setTimeout(()=> {
+        setTimeout(() => {
             this.trialEnds();
             $("#rest-info").hide();
         }, resting_time * 1000);
@@ -363,7 +363,7 @@ class Experiment {
         this.timer_rest = setInterval(() => {
             var now = new Date().getTime();
             var distance = (starting_date + resting_time * 1000 - now) / 1000
-            $("#time-left-rest").html(Math.round(distance)); 
+            $("#time-left-rest").html(Math.round(distance));
         }, 1000);
 
     }
@@ -378,7 +378,7 @@ class Experiment {
         this.current_block++;
         if (this.current_block < blocks.length)
             this.current_state = possible_states.StartBlock;
-        else 
+        else
             this.current_state = possible_states.EndExperiment;
 
     }
@@ -397,9 +397,9 @@ class Experiment {
             type: "POST",
             url: '/ajax/create_trials',
             data: {
-            'experiment_trials': JSON.stringify(this.experiment_trials),
-            'experiment': this.experiment,
-            'csrfmiddlewaretoken' : $("input[name=csrfmiddlewaretoken]").val()
+                'experiment_trials': JSON.stringify(this.experiment_trials),
+                'experiment': this.experiment,
+                'csrfmiddlewaretoken': $("input[name=csrfmiddlewaretoken]").val()
             },
             dataType: 'json',
             success: function (data) {
@@ -440,18 +440,17 @@ class Experiment {
                 break;
             default:
                 break;
-          }
+        }
     }
 }
 
-$(document).ready(function () 
-{
+$(document).ready(function () {
     // When the webpage loads, we'll start a timer, and show in screen something like: 'Starting in 3,2,1...'
     let exp = new Experiment(
         JSON.parse(document.getElementById('experiment').textContent),
         JSON.parse(document.getElementById('blocks').textContent),
         JSON.parse(document.getElementById('sequences').textContent)
     )
-    $("#start-btn").click(()=>setInterval(exp.run.bind(exp), 100))
+    $("#start-btn").click(() => setInterval(exp.run.bind(exp), 100))
 })
 

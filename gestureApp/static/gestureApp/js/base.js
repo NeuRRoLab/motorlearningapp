@@ -4,7 +4,7 @@ axios.defaults.xsrfHeaderName = "X-CSRFTOKEN"
 
 var app = new Vue({
     el: '#navbar',
-    data:() => ({
+    data: () => ({
         current_user: {},
     }),
     components: {
@@ -31,20 +31,20 @@ var app = new Vue({
         <br>
     </div>
   `,
-  methods: {
-    getCurrentUser() {
-        axios.get('/api/current_user').then(response => {
-            this.current_user = response.data;
-        })
+    methods: {
+        getCurrentUser() {
+            axios.get('/api/current_user').then(response => {
+                this.current_user = response.data;
+            })
+        },
+        isObjectEmpty: function (obj) {
+            return Object.keys(obj).length === 0 && obj.constructor === Object;
+        },
     },
-    isObjectEmpty: function (obj) {
-        return Object.keys(obj).length === 0 && obj.constructor === Object;
-    },
-  },
-  computed: {
+    computed: {
 
-  },
-  created() {
-    this.getCurrentUser();
-  },
-  });
+    },
+    created() {
+        this.getCurrentUser();
+    },
+});
