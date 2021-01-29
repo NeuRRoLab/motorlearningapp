@@ -18,7 +18,7 @@
           class="btn btn-primary"
           @click="startPractice"
         >
-          Practice
+          Start Practice
         </button>
         <button v-else class="btn btn-primary" @click="startExperiment">
           Start Experiment
@@ -26,6 +26,9 @@
       </div>
     </div>
     <template v-else-if="practicing">
+      <p class="text-success text-center">
+        {{ remaining_practice_trials }} practice trials remaining
+      </p>
       <div class="col-md-12 text-center">
         <button class="btn btn-primary text-center" @click="stopPractice">
           Stop Practice
@@ -37,6 +40,7 @@
         :practice="true"
         :max_time_per_trial="5"
         :resting_time="5"
+        :capturing_keypresses="true"
         @trial-ended="practiceTrialEnded"
       ></trial>
     </template>
@@ -56,11 +60,15 @@
       <br />
       <!-- Show block type -->
       <p class="text-center">
-        Block type:
+        Instructions:
         {{
           isTypeNumTrials
-            ? "Maximum number of trials -> " + blocks[current_block].num_trials
-            : "Maximum time -> " + blocks[current_block].max_time + " seconds"
+            ? "You will need to complete " +
+              blocks[current_block].num_trials +
+              " trials in this block."
+            : "You will have " +
+              blocks[current_block].max_time +
+              " seconds on this block, and should try to do as many trials as possible."
         }}
       </p>
       <div v-if="!block_started" class="text-center">
@@ -181,7 +189,6 @@ module.exports = {
     practice_trials: Number,
   },
   mounted: function () {
-    console.log(this.blocks);
     // window.addEventListener('keydown', this.keydownHandler);
     this.remaining_practice_trials = this.practice_trials;
   },
@@ -195,6 +202,7 @@ module.exports = {
         resting: this.resting,
         max_time_per_trial: this.blocks[this.current_block].max_time_per_trial,
         resting_time: this.blocks[this.current_block].resting_time,
+        capturing_keypresses: this.capturing_keypresses,
       };
     },
     isTypeNumTrials() {
@@ -212,7 +220,6 @@ module.exports = {
       this.practicing = true;
     },
     stopPractice() {
-      console.log(this.$refs["practice-trial"]);
       this.$refs["practice-trial"].stopPractice();
       this.practicing = false;
     },
@@ -225,18 +232,15 @@ module.exports = {
     startTrial: function () {
       //   setTimeout(() => this.$refs.timerTrial.start(), 5);
       this.started_trial_at = new Date().getTime();
-      console.log("starting trial");
     },
     practiceTrialEnded(correct, keypresses_trial, inputted_sequence, sequence) {
       if (correct) {
-        console.log("Correct sequence!!");
         this.$notify({
           group: "alerts",
           title: "Correct input sequence",
           type: "success",
         });
       } else {
-        console.log("incorrect sequence");
         this.$notify({
           group: "alerts",
           title: "Error in input sequence",
@@ -257,10 +261,7 @@ module.exports = {
       inputted_sequence,
       sequence
     ) {
-      console.log("Trial ended");
-
       if (correct) {
-        console.log("Correct sequence!!");
         this.$notify({
           group: "alerts",
           title: "Correct input sequence",
@@ -268,7 +269,6 @@ module.exports = {
         });
         this.num_correct_seq++;
       } else {
-        console.log("incorrect sequence");
         this.$notify({
           group: "alerts",
           title: "Error in input sequence",
@@ -289,14 +289,12 @@ module.exports = {
       this.started_trial_at = null;
     },
     restEnded: function () {
-      console.log("restEnded");
       //   Go to the next trial if there is one
       if (
         !this.isTypeNumTrials ||
         (this.isTypeNumTrials &&
           this.current_trial + 1 < this.blocks[this.current_block].num_trials)
       ) {
-        console.log("rest ended");
         this.current_trial++;
         this.startTrial();
       }
@@ -317,10 +315,10 @@ module.exports = {
       if (from_timer) {
         if (this.current_block + 1 >= this.blocks.length)
           this.experimentEnded();
+        else this.current_block++;
       } else this.current_block++;
     },
     experimentEnded: function () {
-      console.log("experiment ended");
       // this.experiment_blocks.push(this.block_trials)
       this.block_trials = new Array();
       this.current_block = 0;

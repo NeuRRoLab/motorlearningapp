@@ -60,6 +60,7 @@ module.exports = {
     max_time_per_trial: Number,
     resting_time: Number,
     practice: Boolean,
+    capturing_keypresses: Boolean,
   },
   mounted: function () {
     window.addEventListener("keydown", this.keydownHandler);
@@ -81,7 +82,6 @@ module.exports = {
       return result;
     },
     stopPractice() {
-      console.log("stopping practice");
       this.trialEnded(false);
     },
     trialEnded(do_rest = true) {
@@ -106,22 +106,18 @@ module.exports = {
       this.current_inputted_sequence = new Array();
     },
     restEnded() {
-      console.log("rest ended");
       this.$emit("rest-ended");
       this.resting = false;
       if (this.practice) this.practice_sequence = this.makeid(5);
     },
     incorrectSequence() {
-      console.log("trying this");
       this.$refs.timerTrial.end();
     },
     keydownHandler: function (e) {
-      if (!this.resting) {
+      if (!this.resting && this.capturing_keypresses) {
         // TODO: Only count digits as keypresses
         let sequence = this.sequence;
-        console.log("antees");
         if (this.practice) {
-          console.log("holaa");
           sequence = this.practice_sequence;
         }
 
@@ -133,7 +129,6 @@ module.exports = {
         if (this.current_inputted_sequence.length > sequence.length) {
           this.incorrectSequence();
         } else if (sequence[index] === e.key) {
-          console.log("they are equal!!");
           this.$refs["seq-" + index.toString()][0].style.backgroundColor =
             "green";
         } else {
@@ -146,6 +141,9 @@ module.exports = {
           this.$refs.timerTrial.end();
       }
     },
+  },
+  destroyed() {
+    window.removeEventListener("keydown", this.keydownHandler);
   },
 };
 </script>

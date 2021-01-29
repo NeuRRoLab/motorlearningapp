@@ -14,6 +14,7 @@ from django.views.generic.edit import CreateView, FormView
 from django.forms import inlineformset_factory
 
 from django.forms.models import model_to_dict
+from django.db.models import F
 
 from .forms import ExperimentCode, UserRegisterForm
 from .models import Experiment, Subject, Trial, User, Keypress, Block
@@ -137,12 +138,14 @@ def download_experiment(request):
     if form.is_valid():
         code = form.cleaned_data["code"]
         qs = Experiment.objects.filter(pk=code).values(
-            "code",
-            "blocks",
-            "blocks__trials__subject__code",
-            "blocks__trials__id",
-            "blocks__trials__correct",
-            "blocks__trials__keypresses__timestamp",
+            experiment_code=F("code"),
+            subject_code=F("blocks__trials__subject__code"),
+            block_id=F("blocks"),
+            block_sequence=F("blocks__sequence"),
+            trial_id=F("blocks__trials__id"),
+            correct_input=F("blocks__trials__correct"),
+            keypress_timestamp=F("blocks__trials__keypresses__timestamp"),
+            keypress_value=F("blocks__trials__keypresses__value"),
         )
         return render_to_csv_response(qs, filename="experiment_" + code + ".csv")
 
