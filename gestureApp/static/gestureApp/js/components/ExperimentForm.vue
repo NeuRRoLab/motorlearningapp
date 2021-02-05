@@ -12,18 +12,53 @@
           placeholder="Name"
         ></b-form-input>
       </b-form-group>
-      <b-form-group
-        label="Number of practice trials:"
-        label-for="practice-trials"
-      >
-        <b-form-input
-          id="practice-trials"
-          v-model="practice_trials"
-          type="text"
-          required
-          placeholder=""
-        ></b-form-input>
+      <b-form-group>
+        <b-form-checkbox
+          switch
+          id="checkbox-practice-trials"
+          v-model="with_practice_trials"
+          name="checkbox-practice-trials"
+        >
+          Practice Trials
+        </b-form-checkbox>
       </b-form-group>
+      <template v-if="with_practice_trials">
+        <b-form-group
+          label="Number of practice trials:"
+          label-for="practice-trials"
+        >
+          <b-form-input
+            id="practice-trials"
+            v-model="practice_trials"
+            type="text"
+            required
+            placeholder=""
+          ></b-form-input>
+        </b-form-group>
+        <div class="form-row">
+          <b-form-group
+            class="col-3"
+            label="Practice Trials Sequence:"
+            label-for="practice-seq"
+          >
+            <b-form-checkbox
+              switch
+              v-model="is_random_sequence"
+              name="checkbox-random_seq"
+            >
+              Random Sequence
+            </b-form-checkbox>
+            <b-form-input
+              id="practice-seq"
+              v-model="practice_sequence"
+              type="text"
+              required
+              placeholder=""
+              :disabled="is_random_sequence"
+            ></b-form-input>
+          </b-form-group>
+        </div>
+      </template>
       <h5>Blocks:</h5>
       <div
         class="block-form"
@@ -116,9 +151,28 @@
             ></b-form-input>
           </b-form-group>
         </div>
-        <button @click="removeBlock" class="btn btn-link text-danger">
-          Remove block
-        </button>
+        <div class="form-row">
+          <b-form-group
+            class="col-6"
+            label="`Resting time (seconds) until next block:"
+            :label-for="'betw-blocks-' + index"
+            description="Set to 0 if you want the next block to start immediately"
+          >
+            <b-form-input
+              name="name"
+              :id="'betw-blocks-' + index"
+              v-model="block.sec_until_next"
+              type="number"
+              required
+              placeholder="Seconds until next block"
+            ></b-form-input>
+          </b-form-group>
+        </div>
+        <div class="form-row">
+          <button @click="removeBlock" class="btn btn-link text-danger">
+            Remove block
+          </button>
+        </div>
       </div>
       <button @click="addBlock" class="btn btn-link">Add block</button>
       <div class="form-row">
@@ -142,7 +196,10 @@ module.exports = {
   data: function () {
     return {
       experiment_name: null,
+      with_practice_trials: false,
       practice_trials: null,
+      is_random_sequence: true,
+      practice_sequence: "",
       experiment_blocks: [
         {
           sequence: null,
@@ -151,6 +208,7 @@ module.exports = {
           block_type: null,
           num_trials: null,
           max_time: null,
+          sec_until_next: 0,
         },
       ],
       block_types: [
@@ -176,6 +234,7 @@ module.exports = {
         block_type: null,
         num_trials: null,
         max_time: null,
+        sec_until_next: 0,
       });
     },
     removeBlock(index) {
@@ -187,12 +246,16 @@ module.exports = {
       this.$emit(
         "submit-experiment",
         this.experiment_name,
+        this.with_practice_trials,
         this.practice_trials,
+        this.is_random_sequence,
+        this.practice_sequence,
         this.experiment_blocks
       );
     },
     resetExperiment(evt) {
       evt.preventDefault();
+      console.log(this.experiment_blocks);
 
       (this.experiment_name = null),
         (this.experiment_blocks = [
@@ -203,6 +266,7 @@ module.exports = {
             block_type: null,
             num_trials: null,
             max_time: null,
+            sec_until_next: 0,
           },
         ]);
     },

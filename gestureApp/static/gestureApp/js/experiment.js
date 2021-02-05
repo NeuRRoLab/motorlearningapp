@@ -10,7 +10,10 @@ var app = new Vue({
     return {
       experiment: '',
       blocks: [],
-      practice_trials: 0,
+      with_practice_trials: false,
+      num_practice_trials: 0,
+      practice_is_random_seq: false,
+      practice_seq: null
     }
   },
   template: `
@@ -27,7 +30,10 @@ var app = new Vue({
       return {
         code: this.experiment,
         blocks: this.blocks,
-        practice_trials: this.practice_trials,
+        with_practice_trials: this.with_practice_trials,
+        num_practice_trials: this.num_practice_trials,
+        practice_is_random_seq: this.practice_is_random_seq,
+        practice_seq: this.practice_seq
       }
     },
   },
@@ -63,7 +69,10 @@ var app = new Vue({
   created: function () {
     this.experiment = JSON.parse(document.getElementById('experiment').textContent);
     this.blocks = JSON.parse(document.getElementById('blocks').textContent);
-    this.practice_trials = JSON.parse(document.getElementById('practice_trials').textContent);
+    this.with_practice_trials = JSON.parse(document.getElementById('with_practice_trials').textContent);
+    this.num_practice_trials = JSON.parse(document.getElementById('num_practice_trials').textContent);
+    this.practice_is_random_seq = JSON.parse(document.getElementById('practice_is_random_seq').textContent);
+    this.practice_seq = JSON.parse(document.getElementById('practice_seq').textContent);
   },
 });
 

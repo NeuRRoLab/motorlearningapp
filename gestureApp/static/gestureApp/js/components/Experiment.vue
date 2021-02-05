@@ -14,7 +14,7 @@
     <div v-if="!experiment_started && !practicing" class="row">
       <div class="col text-center">
         <button
-          v-if="remaining_practice_trials > 0"
+          v-if="with_practice_trials && remaining_practice_trials > 0"
           class="btn btn-primary"
           @click="startPractice"
         >
@@ -38,6 +38,8 @@
       <trial
         ref="practice-trial"
         :practice="true"
+        :random_seq="practice_is_random_seq"
+        :practice_sequence="practice_seq"
         :max_time_per_trial="5"
         :resting_time="5"
         :capturing_keypresses="true"
@@ -72,7 +74,21 @@
         }}
       </p>
       <div v-if="!block_started" class="text-center">
-        <button class="btn btn-primary" @click="startBlock">Start Block</button>
+        Time until next block:
+        <countdown
+          ref="timerBlock"
+          :time="
+            blocks[current_block - 1]
+              ? blocks[current_block - 1].sec_until_next * 1000
+              : 0
+          "
+          :interval="1000"
+          :auto-start="true"
+          :emit-events="true"
+          @end="startBlock"
+        >
+          <span slot-scope="props">{{ props.seconds }} seconds.</span>
+        </countdown>
       </div>
 
       <template v-else>
@@ -186,11 +202,14 @@ module.exports = {
   props: {
     code: String,
     blocks: Array,
-    practice_trials: Number,
+    with_practice_trials: Boolean,
+    num_practice_trials: Number,
+    practice_is_random_seq: Boolean,
+    practice_seq: String,
   },
   mounted: function () {
     // window.addEventListener('keydown', this.keydownHandler);
-    this.remaining_practice_trials = this.practice_trials;
+    this.remaining_practice_trials = this.num_practice_trials;
   },
   components: {
     trial: httpVueLoader("/static/gestureApp/js/components/Trial.vue"),

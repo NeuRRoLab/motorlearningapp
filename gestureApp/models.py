@@ -50,7 +50,10 @@ class Experiment(models.Model):
     name = models.CharField(max_length=100)
     created_at = models.DateTimeField(auto_now_add=True)
     creator = models.ForeignKey(User, models.CASCADE, related_name="experiments")
-    num_practice_trials = models.IntegerField(default=5)
+    with_practice_trials = models.BooleanField(default=True)
+    num_practice_trials = models.IntegerField(default=5, null=True)
+    practice_is_random_seq = models.BooleanField(default=True, null=True)
+    practice_seq = models.CharField(max_length=15, default="", null=True)
 
     def save(self, *args, **kwargs):
         if not self.code:
@@ -96,6 +99,9 @@ class Block(models.Model):
     type = models.CharField(max_length=12, choices=BlockTypes.choices)
     max_time = models.IntegerField(default=None, null=True, blank=True)
     num_trials = models.IntegerField(default=None, null=True, blank=True)
+
+    # Seconds between blocks
+    sec_until_next = models.IntegerField(default=0)
 
     def clean(self):
         if self.type == Block.BlockTypes.MAX_TIME and self.max_time is None:

@@ -113,7 +113,10 @@ def create_experiment(request):
         experiment = Experiment.objects.create(
             name=exp_info["name"],
             creator=request.user,
+            with_practice_trials=exp_info["with_practice_trials"],
             num_practice_trials=exp_info["practice_trials"],
+            practice_is_random_seq=exp_info["practice_is_random_seq"],
+            practice_seq=exp_info["practice_seq"],
         )
         for block in exp_info["blocks"]:
             block_obj = Block(
@@ -124,6 +127,7 @@ def create_experiment(request):
                 type=Block.BlockTypes(block["block_type"]),
                 max_time=block["max_time"],
                 num_trials=block["num_trials"],
+                sec_until_next=block["sec_until_next"],
             )
             block_obj.full_clean()
             block_obj.save()

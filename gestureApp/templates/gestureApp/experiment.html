@@ -31,7 +31,10 @@
   Vue.use(vueNotification);
 </script>
 {{ experiment.code|json_script:"experiment" }} {{ blocks|json_script:"blocks" }}
-{{ experiment.num_practice_trials|json_script:"practice_trials" }}
+{{ experiment.with_practice_trials|json_script:"with_practice_trials" }}
+{{ experiment.num_practice_trials|json_script:"num_practice_trials" }}
+{{ experiment.practice_is_random_seq|json_script:"practice_is_random_seq" }}
+{{ experiment.practice_seq|json_script:"practice_seq" }}
 <script src="{% static 'gestureApp/js/dist/vue-countdown.js' %}"></script>
 <script src="{% static 'gestureApp/js/experiment.js' %}"></script>
 {% endblock javascript %}

@@ -61,10 +61,15 @@ module.exports = {
     resting_time: Number,
     practice: Boolean,
     capturing_keypresses: Boolean,
+    random_seq: Boolean,
+    practice_sequence: [String, Object],
   },
   mounted: function () {
     window.addEventListener("keydown", this.keydownHandler);
-    if (this.practice) this.practice_sequence = this.makeid(5);
+    if (this.practice && this.random_seq)
+      this.practice_sequence = this.makeid(5);
+    else if (this.practice && !this.random_seq)
+      this.practice_sequence = this.sequence;
   },
   components: {},
   computed: {},
