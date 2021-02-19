@@ -28,7 +28,7 @@ var app = new Vue({
   computed: {
     getExperimentObj: function () {
       return {
-        code: this.experiment,
+        experiment: this.experiment,
         blocks: this.blocks,
         with_practice_trials: this.with_practice_trials,
         num_practice_trials: this.num_practice_trials,
@@ -44,7 +44,7 @@ var app = new Vue({
       // console.log(this.)
       axios.post('/api/create_trials', {
         'experiment_trials': JSON.stringify(experiment_blocks),
-        'experiment': this.experiment
+        'experiment': this.experiment.code
       }
       ).then(response => {
         console.log(response);
@@ -69,10 +69,6 @@ var app = new Vue({
   created: function () {
     this.experiment = JSON.parse(document.getElementById('experiment').textContent);
     this.blocks = JSON.parse(document.getElementById('blocks').textContent);
-    this.with_practice_trials = JSON.parse(document.getElementById('with_practice_trials').textContent);
-    this.num_practice_trials = JSON.parse(document.getElementById('num_practice_trials').textContent);
-    this.practice_is_random_seq = JSON.parse(document.getElementById('practice_is_random_seq').textContent);
-    this.practice_seq = JSON.parse(document.getElementById('practice_seq').textContent);
   },
 });
 

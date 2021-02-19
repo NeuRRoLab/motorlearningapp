@@ -8,13 +8,15 @@
       :duration="6000"
     ></notifications>
     <h2>
-      Experiment {{ code
+      Experiment {{ experiment.code
       }}<span class="text-success">{{ practicing ? ": Practicing" : "" }}</span>
     </h2>
     <div v-if="!experiment_started && !practicing" class="row">
       <div class="col text-center">
         <button
-          v-if="with_practice_trials && remaining_practice_trials > 0"
+          v-if="
+            experiment.with_practice_trials && remaining_practice_trials > 0
+          "
           class="btn btn-primary"
           @click="startPractice"
         >
@@ -38,10 +40,10 @@
       <trial
         ref="practice-trial"
         :practice="true"
-        :random_seq="practice_is_random_seq"
-        :practice_sequence="practice_seq"
-        :max_time_per_trial="5"
-        :resting_time="5"
+        :random_seq="false"
+        :sequence="experiment.practice_seq"
+        :max_time_per_trial="experiment.practice_trial_time"
+        :resting_time="experiment.practice_rest_time"
         :capturing_keypresses="true"
         @trial-ended="practiceTrialEnded"
       ></trial>
@@ -163,11 +165,12 @@
       </template>
     </template>
     <div v-else class="text-center">
-      <button
-        class="btn btn-primary"
-        @click="$emit('send-data', experiment_blocks)"
-      >
-        Send Data
+      <p>Experiment Completed</p>
+      <!-- Show total score -->
+      <p>Total score: 23</p>
+      <!-- Redirect home -->
+      <button class="btn btn-primary" @click="leaveExperiment">
+        Click to Finish
       </button>
     </div>
   </div>
@@ -200,16 +203,12 @@ module.exports = {
     };
   },
   props: {
-    code: String,
+    experiment: Object,
     blocks: Array,
-    with_practice_trials: Boolean,
-    num_practice_trials: Number,
-    practice_is_random_seq: Boolean,
-    practice_seq: String,
   },
   mounted: function () {
     // window.addEventListener('keydown', this.keydownHandler);
-    this.remaining_practice_trials = this.num_practice_trials;
+    this.remaining_practice_trials = this.experiment.num_practice_trials;
   },
   components: {
     trial: httpVueLoader("/static/gestureApp/js/components/Trial.vue"),
@@ -348,11 +347,17 @@ module.exports = {
       this.capturing_keypresses = false;
 
       this.experiment_finished = true;
+
+      // To send the data automatically
+      this.$emit("send-data", this.experiment_blocks);
     },
     blockTimerProgress(data) {
       this.current_block_time =
         this.blocks[this.current_block].max_time -
         (data.hours * 3600 + data.minutes * 60 + data.seconds);
+    },
+    leaveExperiment() {
+      window.location.href = "/";
     },
   },
 };

@@ -23,40 +23,86 @@
         </b-form-checkbox>
       </b-form-group>
       <template v-if="with_practice_trials">
-        <b-form-group
-          label="Number of practice trials:"
-          label-for="practice-trials"
-        >
-          <b-form-input
-            id="practice-trials"
-            v-model="practice_trials"
-            type="text"
-            required
-            placeholder=""
-          ></b-form-input>
-        </b-form-group>
         <div class="form-row">
           <b-form-group
-            class="col-3"
+            class="col"
+            label="Number of practice trials:"
+            label-for="practice-trials"
+          >
+            <b-form-input
+              id="practice-trials"
+              v-model.number="practice_trials"
+              type="number"
+              required
+              placeholder=""
+            ></b-form-input>
+          </b-form-group>
+          <b-form-group
+            class="col"
+            label="Maximum time (s) per trial:"
+            :label-for="'prac-max-time'"
+          >
+            <b-form-input
+              name="name"
+              :id="'prac-max-time'"
+              v-model.number="practice_trial_time"
+              type="number"
+              step="0.1"
+              required
+              placeholder="Maximum time per trial"
+            ></b-form-input>
+          </b-form-group>
+          <b-form-group
+            class="col"
+            label="Resting time (s):"
+            :label-for="'prac-resting-'"
+          >
+            <b-form-input
+              name="name"
+              :id="'prac-resting-'"
+              v-model.number="practice_rest_time"
+              type="number"
+              step="0.1"
+              required
+              placeholder="Resting time between trials"
+            ></b-form-input>
+          </b-form-group>
+        </div>
+        <div class="form-row">
+          <b-form-group
+            class="col-4"
             label="Practice Trials Sequence:"
             label-for="practice-seq"
           >
-            <b-form-checkbox
-              switch
-              v-model="is_random_sequence"
-              name="checkbox-random_seq"
-            >
-              Random Sequence
-            </b-form-checkbox>
             <b-form-input
               id="practice-seq"
               v-model="practice_sequence"
               type="text"
               required
               placeholder=""
-              :disabled="is_random_sequence"
+              :disabled="practice_is_random_sequence"
             ></b-form-input>
+            <b-form-checkbox
+              switch
+              v-model="practice_is_random_sequence"
+              name="checkbox-random_seq"
+            >
+              Random Sequence
+            </b-form-checkbox>
           </b-form-group>
+          <b-form-group
+            class="col-2"
+            v-if="practice_is_random_sequence"
+            label="Sequence length:"
+            label-for="seq-length"
+          >
+            <b-form-input
+              id="seq-length"
+              v-model.number="practice_seq_length"
+              type="number"
+              required
+              placeholder=""
+            ></b-form-input>
         </div>
       </template>
       <h5>Blocks:</h5>
@@ -78,7 +124,11 @@
               type="text"
               required
               placeholder="Sequence of characters"
+              :disabled="block.is_random_sequence"
             ></b-form-input>
+            <b-form-checkbox switch v-model="block.is_random_sequence">
+              Random Sequence
+            </b-form-checkbox>
           </b-form-group>
           <b-form-group
             class="col"
@@ -88,8 +138,9 @@
             <b-form-input
               name="name"
               :id="'max-time-' + index"
-              v-model="block.max_time_per_trial"
+              v-model.number="block.max_time_per_trial"
               type="number"
+              step="0.1"
               required
               placeholder="Maximum time per trial"
             ></b-form-input>
@@ -102,10 +153,27 @@
             <b-form-input
               name="name"
               :id="'resting-' + index"
-              v-model="block.resting_time"
+              v-model.number="block.resting_time"
               type="number"
+              step="0.1"
               required
               placeholder="Resting time between trials"
+            ></b-form-input>
+          </b-form-group>
+        </div>
+        <div class="form-row" v-if="block.is_random_sequence">
+          <b-form-group
+            class="col-3"
+            label="Sequence length:"
+            :label-for="'block-seq-length-' + index"
+          >
+            <b-form-input
+              name="name"
+              :id="'block-seq-length-' + index"
+              v-model.number="block.seq_length"
+              type="number"
+              required
+              placeholder="Random sequence length"
             ></b-form-input>
           </b-form-group>
         </div>
@@ -130,7 +198,7 @@
           >
             <b-form-input
               :id="'num-trials-' + index"
-              v-model="block.num_trials"
+              v-model.number="block.num_trials"
               type="number"
               required
               placeholder="Total number of trials"
@@ -144,8 +212,9 @@
           >
             <b-form-input
               :id="'max-time-' + index"
-              v-model="block.max_time"
+              v-model.number="block.max_time"
               type="number"
+              step="0.1"
               required
               placeholder="Maximum time (seconds)"
             ></b-form-input>
@@ -161,8 +230,9 @@
             <b-form-input
               name="name"
               :id="'betw-blocks-' + index"
-              v-model="block.sec_until_next"
+              v-model.number="block.sec_until_next"
               type="number"
+              step="0.1"
               required
               placeholder="Seconds until next block"
             ></b-form-input>
@@ -198,8 +268,11 @@ module.exports = {
       experiment_name: null,
       with_practice_trials: false,
       practice_trials: null,
-      is_random_sequence: true,
+      practice_is_random_sequence: true,
+      practice_seq_length: null,
       practice_sequence: "",
+      practice_trial_time: null,
+      practice_rest_time: null,
       experiment_blocks: [
         {
           sequence: null,
@@ -209,6 +282,8 @@ module.exports = {
           num_trials: null,
           max_time: null,
           sec_until_next: 0,
+          is_random_sequence: false,
+          seq_length: null,
         },
       ],
       block_types: [
@@ -235,6 +310,8 @@ module.exports = {
         num_trials: null,
         max_time: null,
         sec_until_next: 0,
+        is_random_sequence: false,
+        seq_length: null,
       });
     },
     removeBlock(index) {
@@ -248,8 +325,11 @@ module.exports = {
         this.experiment_name,
         this.with_practice_trials,
         this.practice_trials,
-        this.is_random_sequence,
+        this.practice_is_random_sequence,
+        this.practice_seq_length,
         this.practice_sequence,
+        this.practice_trial_time,
+        this.practice_rest_time,
         this.experiment_blocks
       );
     },
@@ -267,6 +347,8 @@ module.exports = {
             num_trials: null,
             max_time: null,
             sec_until_next: 0,
+            is_random_sequence: false,
+            seq_length: null,
           },
         ]);
     },

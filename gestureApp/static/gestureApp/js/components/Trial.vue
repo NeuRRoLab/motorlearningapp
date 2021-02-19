@@ -18,11 +18,16 @@
         <countdown
           ref="timerTrial"
           :time="max_time_per_trial * 1000"
-          :interval="1000"
+          :interval="100"
           :auto-start="true"
           @end="trialEnded"
         >
-          <template slot-scope="props">{{ props.seconds }} seconds.</template>
+          <template slot-scope="props"
+            >{{ props.seconds }}.{{
+              props.milliseconds / 100
+            }}
+            seconds.</template
+          >
         </countdown>
       </p>
     </template>
@@ -33,12 +38,14 @@
         <countdown
           ref="timerRest"
           :time="resting_time * 1000"
-          :interval="1000"
+          :interval="100"
           :auto-start="false"
           :emit-events="true"
           @end="restEnded"
         >
-          <span slot-scope="props">{{ props.seconds }} seconds.</span>
+          <span slot-scope="props"
+            >{{ props.seconds }}.{{ props.milliseconds / 100 }} seconds.</span
+          >
         </countdown>
       </p>
     </template>
@@ -52,7 +59,7 @@ module.exports = {
       current_inputted_sequence: [],
       keypresses_trial: [],
       resting: false,
-      practice_sequence: "12345",
+      practice_sequence: "",
     };
   },
   props: {
@@ -62,7 +69,6 @@ module.exports = {
     practice: Boolean,
     capturing_keypresses: Boolean,
     random_seq: Boolean,
-    practice_sequence: [String, Object],
   },
   mounted: function () {
     window.addEventListener("keydown", this.keydownHandler);
@@ -113,12 +119,24 @@ module.exports = {
     restEnded() {
       this.$emit("rest-ended");
       this.resting = false;
-      if (this.practice) this.practice_sequence = this.makeid(5);
+      if (this.practice && this.random_seq)
+        this.practice_sequence = this.makeid(5);
+      else if (this.practice && !this.random_seq)
+        this.practice_sequence = this.sequence;
     },
     incorrectSequence() {
       this.$refs.timerTrial.end();
     },
     keydownHandler: function (e) {
+      // Do not count special keys
+      if (
+        e.key === "Alt" ||
+        e.key === "Control" ||
+        e.key === "Fn" ||
+        e.key === "Shift" ||
+        e.key === "s"
+      )
+        return;
       if (!this.resting && this.capturing_keypresses) {
         // TODO: Only count digits as keypresses
         let sequence = this.sequence;
@@ -131,18 +149,19 @@ module.exports = {
         this.keypresses_trial.push({ value: e.key, timestamp: timestamp });
         // Check if the inputted key is correct
         var index = this.current_inputted_sequence.length - 1;
-        if (this.current_inputted_sequence.length > sequence.length) {
-          this.incorrectSequence();
-        } else if (sequence[index] === e.key) {
+        if (sequence[index] === e.key) {
           this.$refs["seq-" + index.toString()][0].style.backgroundColor =
             "green";
         } else {
           this.$refs["seq-" + index.toString()][0].style.backgroundColor =
             "red";
-          this.incorrectSequence();
+          // this.incorrectSequence();
         }
-        // Correct sequence!
-        if (this.current_inputted_sequence.join("") === sequence)
+        // Finished sequence!
+        if (
+          this.current_inputted_sequence.join("") === sequence ||
+          this.current_inputted_sequence.length >= sequence.length
+        )
           this.$refs.timerTrial.end();
       }
     },

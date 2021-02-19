@@ -21,14 +21,17 @@ var app = new Vue({
   computed: {
   },
   methods: {
-    submitExperiment(name, with_practice_trials, practice_trials, is_random_sequence, practice_sequence, blocks) {
+    submitExperiment(name, with_practice_trials, practice_trials, practice_is_random_sequence, practice_seq_length, practice_sequence, practice_trial_time, practice_rest_time, blocks) {
       let obj = {
         name: name,
         practice_trials: practice_trials,
         blocks: blocks,
         with_practice_trials: with_practice_trials,
-        practice_is_random_seq: is_random_sequence,
-        practice_seq: practice_sequence
+        practice_is_random_seq: practice_is_random_sequence,
+        practice_seq_length: practice_seq_length,
+        practice_seq: practice_sequence,
+        practice_trial_time: practice_trial_time,
+        practice_rest_time: practice_rest_time,
       }
       axios.post('/profile/create_experiment', obj).then(response => {
         console.log(response);

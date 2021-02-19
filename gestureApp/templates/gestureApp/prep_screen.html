@@ -1,0 +1,15 @@
+{% extends 'gestureApp/base.html' %}
+{% block content %}
+    <div id="app">
+        <App/>
+    </div>
+    
+
+{% endblock content %}
+{% block javascript %}
+{% load static %}
+{{ exp_code|json_script:"exp_code" }}
+<script src="https://unpkg.com/http-vue-loader"></script>
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<script src="{% static 'gestureApp/js/preparation_screen.js' %}"></script> 
+{% endblock %}

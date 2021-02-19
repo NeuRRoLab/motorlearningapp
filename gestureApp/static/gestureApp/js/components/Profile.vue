@@ -2,7 +2,7 @@
   <div v-if="!isObjectEmpty(current_user)" class="container">
     <h1 class="text-center">Profile</h1>
     <h4>Active experiments:</h4>
-    <b-list-group class="col-7">
+    <b-list-group class="col">
       <b-list-group-item
         v-for="experiment in experiments"
         :key="experiment.code"
@@ -10,9 +10,11 @@
       >
         {{ experiment.name }} ({{ experiment.code }})
         <span>
-          <a :href="'/experiment/?code=' + experiment.code">Do Experiment</a> /
-          <a :href="'/download_experiment/?code=' + experiment.code"
-            >Download Results</a
+          <a :href="'/prep_screen/?code=' + experiment.code">Do Experiment</a> |
+          <a :href="'/raw_data/?code=' + experiment.code">Download raw data</a>
+          |
+          <a :href="'/processed_data/?code=' + experiment.code">
+            Download processed data</a
           >
           <b-badge
             variant="primary"

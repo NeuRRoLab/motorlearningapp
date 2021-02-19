@@ -22,7 +22,11 @@ urlpatterns = [
         "profile/create_experiment", views.create_experiment, name="create-experiment"
     ),
     path("experiment/", views.experiment, name="experiment"),
-    path("download_experiment/", views.download_experiment, name="download_experiment"),
+    path("prep_screen/", views.preparation_screen, name="prep_screen"),
+    path("raw_data/", views.download_raw_data, name="download_raw_data"),
+    path(
+        "processed_data/", views.download_processed_data, name="download_processed_data"
+    ),
     # API
     path("api/create_trials", views.create_trials, name="create_trials"),
     path("api/current_user", views.current_user, name="current_user"),

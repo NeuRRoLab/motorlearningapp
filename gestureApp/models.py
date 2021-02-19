@@ -50,10 +50,14 @@ class Experiment(models.Model):
     name = models.CharField(max_length=100)
     created_at = models.DateTimeField(auto_now_add=True)
     creator = models.ForeignKey(User, models.CASCADE, related_name="experiments")
+    # TODO: maybe get all of the practice info into a block type
     with_practice_trials = models.BooleanField(default=True)
     num_practice_trials = models.IntegerField(default=5, null=True)
     practice_is_random_seq = models.BooleanField(default=True, null=True)
     practice_seq = models.CharField(max_length=15, default="", null=True)
+    practice_seq_length = models.IntegerField(default=5, null=True)
+    practice_trial_time = models.FloatField(default=5)
+    practice_rest_time = models.FloatField(default=5)
 
     def save(self, *args, **kwargs):
         if not self.code:
@@ -83,6 +87,21 @@ class Experiment(models.Model):
     def __str__(self):
         return self.code + " | " + self.name
 
+    def to_dict(self):
+        return {
+            "code": self.code,
+            "name": self.name,
+            "created_at": self.created_at,
+            "creator": self.creator.username,
+            "with_practice_trials": self.with_practice_trials,
+            "num_practice_trials": self.num_practice_trials,
+            "practice_is_random_seq": self.practice_is_random_seq,
+            "practice_seq": self.practice_seq,
+            "practice_seq_length": self.practice_seq_length,
+            "practice_trial_time": self.practice_trial_time,
+            "practice_rest_time": self.practice_rest_time,
+        }
+
 
 class Block(models.Model):
     class BlockTypes(models.TextChoices):
@@ -92,16 +111,21 @@ class Block(models.Model):
     experiment = models.ForeignKey(
         Experiment, related_name="blocks", on_delete=models.CASCADE
     )
-    sequence = models.CharField(max_length=15)
-    max_time_per_trial = models.IntegerField(default=5)
-    resting_time = models.IntegerField(default=10)
+    sequence = models.CharField(max_length=50)
+    seq_length = models.IntegerField(null=True)
+    is_random = models.BooleanField(default=False)
+    # Whether or not to show the same sequence everytime
+    is_fixed = models.BooleanField(default=True)
+
+    max_time_per_trial = models.FloatField(default=5)
+    resting_time = models.FloatField(default=10)
 
     type = models.CharField(max_length=12, choices=BlockTypes.choices)
-    max_time = models.IntegerField(default=None, null=True, blank=True)
+    max_time = models.FloatField(default=None, null=True, blank=True)
     num_trials = models.IntegerField(default=None, null=True, blank=True)
 
     # Seconds between blocks
-    sec_until_next = models.IntegerField(default=0)
+    sec_until_next = models.FloatField(default=0)
 
     def clean(self):
         if self.type == Block.BlockTypes.MAX_TIME and self.max_time is None:

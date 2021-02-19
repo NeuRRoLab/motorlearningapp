@@ -1,7 +1,7 @@
 <template>
   <div class="container justify-content-center">
     <div class="experiment-form">
-      <b-form action="/experiment">
+      <b-form action="/prep_screen">
         <b-form-group
           id="input-group"
           label="Experiment Code:"
