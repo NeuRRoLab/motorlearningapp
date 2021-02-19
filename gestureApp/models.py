@@ -150,6 +150,9 @@ class Trial(models.Model):
 
 
 class Keypress(models.Model):
+    class Meta:
+        ordering = ["timestamp"]
+
     trial = models.ForeignKey(
         Trial, related_name="keypresses", on_delete=models.CASCADE
     )

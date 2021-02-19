@@ -67,7 +67,7 @@ def experiment(request):
             "gestureApp/experiment.html",
             {
                 "experiment": experiment.to_dict(),
-                "blocks": list(experiment.blocks.all().values()),
+                "blocks": list(experiment.blocks.order_by("id").values()),
             },
         )
     else:
@@ -99,7 +99,7 @@ def create_trials(request):
     for i, block in enumerate(experiment_trials):
         for trial in block:
             t = Trial(
-                block=experiment.blocks.all()[i],
+                block=experiment.blocks.order_by("id")[i],
                 subject=subject,
                 started_at=make_aware(
                     datetime.fromtimestamp(trial["started_at"] / 1000)
@@ -198,6 +198,7 @@ def download_processed_data(request):
         #   Block type
         #   Subject code
         #   Block code
+        # a.values("code","trials__block").annotate(num_correct=Count("trials", filter=Q(trials__correct=True)))
         qs = Experiment.objects.filter(pk=code).values(
             experiment_code=F("code"),
             subject_code=F("blocks__trials__subject__code"),
