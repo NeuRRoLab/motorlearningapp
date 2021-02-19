@@ -56,8 +56,8 @@ class Experiment(models.Model):
     practice_is_random_seq = models.BooleanField(default=True, null=True)
     practice_seq = models.CharField(max_length=15, default="", null=True)
     practice_seq_length = models.IntegerField(default=5, null=True)
-    practice_trial_time = models.FloatField(default=5)
-    practice_rest_time = models.FloatField(default=5)
+    practice_trial_time = models.FloatField(default=5, null=True)
+    practice_rest_time = models.FloatField(default=5, null=True)
 
     def save(self, *args, **kwargs):
         if not self.code:
