@@ -1,24 +1,25 @@
+import csv
 import json
+import random
+import string
 from datetime import datetime
 from urllib import parse
-import random, string
 
 from django.contrib.auth.decorators import login_required
-from django.http import JsonResponse, HttpResponseRedirect
+from django.db.models import Count, F, Max, Min, Q
+from django.forms import inlineformset_factory
+from django.forms.models import model_to_dict
+from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404, render
-from django.urls import reverse_lazy, reverse
+from django.urls import reverse, reverse_lazy
 from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.utils.timezone import make_aware, now
 from django.views.generic.detail import DetailView
 from django.views.generic.edit import CreateView, FormView
-from django.forms import inlineformset_factory
-
-from django.forms.models import model_to_dict
-from django.db.models import F
 
 from .forms import ExperimentCode, UserRegisterForm
-from .models import Experiment, Subject, Trial, User, Keypress, Block
+from .models import Block, Experiment, Keypress, Subject, Trial, User
 
 
 @method_decorator([login_required], name="dispatch")
@@ -192,23 +193,61 @@ def download_processed_data(request):
     form = ExperimentCode(request.GET)
     if form.is_valid():
         code = form.cleaned_data["code"]
-        # In the processed data, there should be:
-        #   Number of correct sequences in each block
-        #   Execution time for each of the correct sequences
-        #   Block type
-        #   Subject code
-        #   Block code
-        # a.values("code","trials__block").annotate(num_correct=Count("trials", filter=Q(trials__correct=True)))
-        qs = Experiment.objects.filter(pk=code).values(
-            experiment_code=F("code"),
-            subject_code=F("blocks__trials__subject__code"),
-            block_id=F("blocks"),
-            block_sequence=F("blocks__sequence"),
-            # Block type
-            # Number of correct trials
-            # Average execution time
+        # When not working with sqlite, we will be able to do something like this:
+        #   Trial.objects.filter(block__experiment__code="952P", block=12,subject="E7kMfKZHIZjL375d",correct=True).annotate(first_keypress=Min("keypresses__timestamp")).annotate(last_keypress=Max("keypresses__timestamp")).aggregate(avg_diff=Avg(F("first_keypress")-F("last_keypress")))
+        no_et = (
+            Experiment.objects.filter(pk=code)
+            .values("code", "blocks", "blocks__trials__subject")
+            .distinct()
+            .annotate(
+                num_correct_trials=Count(
+                    "blocks__trials", filter=Q(blocks__trials__correct=True)
+                )
+            )
+            .annotate(total_trials=Count("blocks__trials"))
         )
-        return render_to_csv_response(qs, filename="experiment_" + code + ".csv")
+        no_et = list(no_et)
+        for values_dict in no_et:
+            values_dict["experiment_code"] = values_dict.pop("code")
+            values_dict["block_id"] = values_dict.pop("blocks")
+            values_dict["subject_code"] = values_dict.pop("blocks__trials__subject")
+            values_dict["num_correct_trials"] = values_dict.pop("num_correct_trials")
+            values_dict["total_trials"] = values_dict.pop("total_trials")
+
+        for values_dict in no_et:
+            # TODO: if the difference between the starting timestamp of trial and last keypress is desired, change
+            qs = (
+                Trial.objects.filter(
+                    block__experiment__code=values_dict["experiment_code"],
+                    block=values_dict["block_id"],
+                    subject=values_dict["subject_code"],
+                    correct=True,
+                )
+                .annotate(first_keypress=Min("keypresses__timestamp"))
+                .annotate(last_keypress=Max("keypresses__timestamp"))
+            )
+            if len(qs) > 0:
+                values_dict["avg_execution_time_ms"] = (
+                    sum(
+                        [t.last_keypress - t.first_keypress for t in qs],
+                        start=timezone.timedelta(0),
+                    ).total_seconds()
+                    * 1000
+                    / len(qs)
+                )
+            else:
+                values_dict["avg_execution_time_ms"] = None
+
+        # Output csv
+        response = HttpResponse(content_type="text/csv")
+        response[
+            "Content-Disposition"
+        ] = 'attachment; filename="experiment_{}.csv"'.format(code)
+
+        writer = csv.DictWriter(response, no_et[0].keys())
+        writer.writeheader()
+        writer.writerows(no_et)
+        return response
 
 
 def current_user(request):
