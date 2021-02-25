@@ -15,7 +15,10 @@ var app = new Vue({
             <b-navbar-brand href="/">Experiment App</b-navbar-brand>
 
             <b-navbar-nav class="ml-auto">
-                <b-nav-item v-if="isObjectEmpty(current_user)" href="/login">Login</b-nav-item>
+                <template v-if="isObjectEmpty(current_user)">
+                    <b-nav-item href="/login">Login</b-nav-item>
+                    <b-nav-item href="/register">Register</b-nav-item>
+                </template>
                 <template v-else>
                     <b-nav-item-dropdown right>
                         <template #button-content>

@@ -1,34 +1,23 @@
 {% extends "gestureApp/base.html" %}
 {% load static %}
+{% load crispy_forms_tags %}
 {% block content %}
-    <link rel="stylesheet" type="text/css" href="{% static 'gestureApp/css/login.css' %}">
-    {% comment %} {% if register %}
-        <!-- Go back to Login -->
-        <a href="{% url 'gestureApp:login' %}">Back</a>
-    {% else %}
-        <!-- Go to registration page -->
-        <a href="{% url 'gestureApp:register' %}">Register</a>
-    {% endif %}
-    <h2>{{ title }}</h2> {% endcomment %}
-
+    {% comment %} <link rel="stylesheet" type="text/css" href="{% static 'gestureApp/css/login.css' %}"> {% endcomment %}
+    <h1 class="text-center">Login</h1>
     <!-- From to start session -->
-    <form method="POST">
-        {% csrf_token %}
-        <div class="imgcontainer">
-            <img src="{% static 'gestureApp/img/img_avatar2.png' %}" alt="Avatar" class="avatar">
-        </div>
-        <div class="container">
-            {{ form.as_p }}
+    <div class="container">
+        <form method="POST">
+            {% csrf_token %}
+            {% comment %} <div class="imgcontainer">
+                <img src="{% static 'gestureApp/img/img_avatar2.png' %}" alt="Avatar" class="avatar">
+            </div> {% endcomment %}
+                {{ form|crispy }}
+                {% comment %} {{ form.as_p }} {% endcomment %}
 
-            <input type="hidden" name="next" value="{% url 'gestureApp:profile' %}"/>
-            <button type="submit">Login</button>
-            {% comment %} <label> {% endcomment %}
-            {% comment %} <input type="checkbox" checked="checked" name="remember"> Remember me {% endcomment %}
-            {% comment %} </label> {% endcomment %}
-        </div>
-        {% comment %} {{ form }} {% endcomment %}
-        {% comment %} <button type="submit">Submit</button> {% endcomment %}
-    </form>
+                <input type="hidden" name="next" value="{% url 'gestureApp:profile' %}"/>
+                <button type="submit" class="btn btn-primary btn-block">Login</button>
+        </form>
+    </div>
     <p>{{ txt }}</p>
 {% endblock content %}
 

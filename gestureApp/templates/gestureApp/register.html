@@ -1,9 +1,14 @@
-{% extends 'gestureApp/base.html' %}
+{% extends 'gestureApp/base.html' %} 
+{% load crispy_forms_tags %} 
 {% block content %}
-    <form method="post">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <input type="submit" value="Submit">
-    </form>
+<h1 class="text-center">Register</h1>
+<div class="container">
+  <form method="post">
+    {% csrf_token %} 
+    {{ form|crispy }}
+    <input type="hidden" name="next" value="{% url 'gestureApp:profile' %}"/>
+    <button type="submit" class="btn btn-primary btn-block">Register</button>
+  </form>
+</div>
 
 {% endblock content %}

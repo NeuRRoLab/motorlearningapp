@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html>
+    {% load static %}
     <head>
         <!-- Required meta tags -->
         <meta charset="utf-8">
@@ -12,7 +13,7 @@
         <link
         type="text/css"
         rel="stylesheet"
-        href="https://unpkg.com/bootstrap/dist/css/bootstrap.min.css"
+        href="{% static 'gestureApp/css/bootstrap.min.css' %}"
         />
         <link
         type="text/css"
@@ -31,7 +32,6 @@
         <script src="https://unpkg.com/vue@latest/dist/vue.js"></script>
         <script src="https://unpkg.com/bootstrap-vue@latest/dist/bootstrap-vue.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-        {% load static %}
         <script type="module" src="{% static 'gestureApp/js/base.js' %}"></script>
         {% block javascript %}{% endblock %}
     </body>

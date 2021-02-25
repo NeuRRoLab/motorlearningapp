@@ -379,4 +379,18 @@ h2 {
 .top-buffer {
   margin-top: 10px;
 }
+/* .my-notification.success {
+  background: #85c0f9;
+  border-left-color: #85c1f9bd;
+}
+
+.my-notification.warn {
+  background: #ffb648;
+  border-left-color: #f48a06;
+}
+
+.my-notification.error {
+  background: #f5793a;
+  border-left-color: #f5783abe;
+} */
 </style>

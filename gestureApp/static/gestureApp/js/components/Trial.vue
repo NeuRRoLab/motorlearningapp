@@ -151,10 +151,10 @@ module.exports = {
         var index = this.current_inputted_sequence.length - 1;
         if (sequence[index] === e.key) {
           this.$refs["seq-" + index.toString()][0].style.backgroundColor =
-            "green";
+            "#85C0F9";
         } else {
           this.$refs["seq-" + index.toString()][0].style.backgroundColor =
-            "red";
+            "#F5793A";
           // this.incorrectSequence();
         }
         // Finished sequence!

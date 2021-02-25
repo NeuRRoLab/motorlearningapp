@@ -6,6 +6,7 @@ from datetime import datetime
 from urllib import parse
 
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth import authenticate, login
 from django.db.models import Count, F, Max, Min, Q
 from django.forms import inlineformset_factory
 from django.forms.models import model_to_dict
@@ -40,6 +41,16 @@ class SignUpView(CreateView):
     template_name = "gestureApp/register.html"
     success_url = reverse_lazy("gestureApp:profile")
     form_class = UserRegisterForm
+
+    def form_valid(self, form):
+        valid = super(SignUpView, self).form_valid(form)
+        username, password = (
+            form.cleaned_data.get("username"),
+            form.cleaned_data.get("password"),
+        )
+        # new_user = authenticate(username=username, password=password)
+        login(self.request, self.object)
+        return valid
 
 
 def preparation_screen(request):
