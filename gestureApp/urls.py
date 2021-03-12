@@ -27,6 +27,10 @@ urlpatterns = [
     path(
         "processed_data/", views.download_processed_data, name="download_processed_data"
     ),
+    # Test
+    path(
+        "experiment_create", views.ExperimentCreate.as_view(), name="experiment_create"
+    ),
     # API
     path("api/create_trials", views.create_trials, name="create_trials"),
     path("api/current_user", views.current_user, name="current_user"),

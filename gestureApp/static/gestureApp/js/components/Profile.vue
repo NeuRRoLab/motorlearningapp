@@ -24,6 +24,7 @@
             >{{ experiment.responses }}</b-badge
           >
         </span>
+        <!-- Missing a button to publish, to edit, view and to delete -->
       </b-list-group-item>
     </b-list-group>
     <br />

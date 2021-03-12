@@ -8,6 +8,7 @@ from urllib import parse
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login
 from django.db.models import Count, F, Max, Min, Q
+from django.db import transaction
 from django.forms import inlineformset_factory
 from django.forms.models import model_to_dict
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
@@ -17,9 +18,9 @@ from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.utils.timezone import make_aware, now
 from django.views.generic.detail import DetailView
-from django.views.generic.edit import CreateView, FormView
+from django.views.generic.edit import CreateView, FormView, UpdateView
 
-from .forms import ExperimentCode, UserRegisterForm
+from .forms import ExperimentCode, UserRegisterForm, BlockFormSet, ExperimentForm
 from .models import Block, Experiment, Keypress, Subject, Trial, User
 
 
@@ -51,6 +52,33 @@ class SignUpView(CreateView):
         # new_user = authenticate(username=username, password=password)
         login(self.request, self.object)
         return valid
+
+
+class ExperimentCreate(CreateView):
+    model = Experiment
+    template_name = "gestureApp/experiment_form.html"
+    form_class = ExperimentForm
+    success_url = None
+
+    def get_context_data(self, **kwargs):
+        data = super(ExperimentCreate, self).get_context_data(**kwargs)
+        if self.request.POST:
+            data["blocks"] = BlockFormSet(self.request.POST)
+        else:
+            data["blocks"] = BlockFormSet()
+        return data
+
+    def form_valid(self, form):
+        context = self.get_context_data()
+        blocks = context["blocks"]
+        with transaction.atomic():
+            print(form.instance)
+        return super(ExperimentCreate, self).form_valid(form)
+
+    def get_success_url(self):
+        return reverse_lazy(
+            "gestureApp:experiment_create", kwargs={"pk": self.object.pk}
+        )
 
 
 def preparation_screen(request):
@@ -155,8 +183,6 @@ def create_experiment(request):
             practice_rest_time=exp_info["practice_rest_time"],
         )
         for block in exp_info["blocks"]:
-            print("hola")
-            print(block)
             sequence = block["sequence"]
             if block["is_random_sequence"]:
                 sequence = "".join(random.choices(string.digits, k=block["seq_length"]))
@@ -208,46 +234,44 @@ def download_processed_data(request):
         #   Trial.objects.filter(block__experiment__code="952P", block=12,subject="E7kMfKZHIZjL375d",correct=True).annotate(first_keypress=Min("keypresses__timestamp")).annotate(last_keypress=Max("keypresses__timestamp")).aggregate(avg_diff=Avg(F("first_keypress")-F("last_keypress")))
         no_et = (
             Experiment.objects.filter(pk=code)
-            .values("code", "blocks", "blocks__trials__subject")
-            .distinct()
-            .annotate(
-                num_correct_trials=Count(
-                    "blocks__trials", filter=Q(blocks__trials__correct=True)
-                )
+            .values(
+                "code",
+                "blocks",
+                "blocks__trials__subject",
+                "blocks__trials",
+                "blocks__trials__correct",
             )
-            .annotate(total_trials=Count("blocks__trials"))
+            .distinct()
+            # .annotate(
+            #     num_correct_trials=Count(
+            #         "blocks__trials", filter=Q(blocks__trials__correct=True)
+            #     )
+            # )
+            # .annotate(total_trials=Count("blocks__trials"))
         )
         no_et = list(no_et)
         for values_dict in no_et:
             values_dict["experiment_code"] = values_dict.pop("code")
             values_dict["block_id"] = values_dict.pop("blocks")
             values_dict["subject_code"] = values_dict.pop("blocks__trials__subject")
-            values_dict["num_correct_trials"] = values_dict.pop("num_correct_trials")
-            values_dict["total_trials"] = values_dict.pop("total_trials")
+            values_dict["trial_id"] = values_dict.pop("blocks__trials")
+            values_dict["correct_trial"] = values_dict.pop("blocks__trials__correct")
+            # values_dict["num_correct_trials"] = values_dict.pop("num_correct_trials")
+            # values_dict["total_trials"] = values_dict.pop("total_trials")
 
         for values_dict in no_et:
             # TODO: if the difference between the starting timestamp of trial and last keypress is desired, change
             qs = (
-                Trial.objects.filter(
-                    block__experiment__code=values_dict["experiment_code"],
-                    block=values_dict["block_id"],
-                    subject=values_dict["subject_code"],
-                    correct=True,
-                )
+                Trial.objects.filter(pk=values_dict["trial_id"], correct=True)
                 .annotate(first_keypress=Min("keypresses__timestamp"))
                 .annotate(last_keypress=Max("keypresses__timestamp"))
             )
             if len(qs) > 0:
-                values_dict["avg_execution_time_ms"] = (
-                    sum(
-                        [t.last_keypress - t.first_keypress for t in qs],
-                        start=timezone.timedelta(0),
-                    ).total_seconds()
-                    * 1000
-                    / len(qs)
-                )
+                values_dict["execution_time_ms"] = (
+                    qs[0].last_keypress - qs[0].first_keypress
+                ).total_seconds() * 1000
             else:
-                values_dict["avg_execution_time_ms"] = None
+                values_dict["execution_time_ms"] = None
 
         # Output csv
         response = HttpResponse(content_type="text/csv")

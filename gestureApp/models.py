@@ -50,6 +50,10 @@ class Experiment(models.Model):
     name = models.CharField(max_length=100)
     created_at = models.DateTimeField(auto_now_add=True)
     creator = models.ForeignKey(User, models.CASCADE, related_name="experiments")
+
+    # flag to know if the experiment should be shown or not
+    published = models.BooleanField(default=False)
+
     # TODO: maybe get all of the practice info into a block type
     with_practice_trials = models.BooleanField(default=True)
     num_practice_trials = models.IntegerField(default=5, null=True)

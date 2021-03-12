@@ -63,7 +63,7 @@
       </b-progress>
       <br />
       <!-- Show block type -->
-      <p class="text-center">
+      <p class="text-center h3">
         Instructions:
         {{
           isTypeNumTrials
@@ -75,22 +75,25 @@
               " seconds on this block, and should try to do as many trials as possible."
         }}
       </p>
-      <div v-if="!block_started" class="text-center">
-        Time until next block:
+      <div v-if="!block_started" class="text-center h2">
+        Block starting in:
         <countdown
           ref="timerBlock"
-          :time="
-            blocks[current_block - 1]
-              ? blocks[current_block - 1].sec_until_next * 1000
-              : 0
-          "
+          :time="3000"
           :interval="1000"
           :auto-start="true"
           :emit-events="true"
+          @start="playCountdown"
           @end="startBlock"
         >
-          <span slot-scope="props">{{ props.seconds }} seconds.</span>
+          <span slot-scope="props" class="h1">{{ props.seconds }}</span>
         </countdown>
+        <p class="text-center h4">
+          Sequence:
+          <span class="text-center h1">{{
+            blocks[current_block].sequence
+          }}</span>
+        </p>
       </div>
 
       <template v-else>
@@ -358,6 +361,10 @@ module.exports = {
     },
     leaveExperiment() {
       window.location.href = "/";
+    },
+    playCountdown() {
+      var audio = new Audio("/static/gestureApp/sound/countdown.wav");
+      audio.play();
     },
   },
 };
