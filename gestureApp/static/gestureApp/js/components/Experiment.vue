@@ -1,5 +1,5 @@
 <template>
-  <div class="container">
+  <div id="experiment" class="container">
     <!-- Will have to do a practice example -->
     <notifications
       group="alerts"
@@ -242,6 +242,16 @@ module.exports = {
     },
     startPractice() {
       this.practicing = true;
+      var elem = document.documentElement;
+      if (elem.requestFullscreen) {
+        elem.requestFullscreen();
+      } else if (elem.webkitRequestFullscreen) {
+        /* Safari */
+        elem.webkitRequestFullscreen();
+      } else if (elem.msRequestFullscreen) {
+        /* IE11 */
+        elem.msRequestFullscreen();
+      }
     },
     stopPractice() {
       this.$refs["practice-trial"].stopPractice();
