@@ -53,7 +53,7 @@ var app = new Vue({
           title: 'Success sending data',
           type: 'success',
         });
-        this.$refs.experiment.experiment_finished = false;
+        // this.$refs.experiment.experiment_finished = false;
         this.$refs.experiment.experiment_started = false;
       }
       ).catch(error => {

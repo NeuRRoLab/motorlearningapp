@@ -11,7 +11,10 @@
       Experiment {{ experiment.code
       }}<span class="text-success">{{ practicing ? ": Practicing" : "" }}</span>
     </h2>
-    <div v-if="!experiment_started && !practicing" class="row">
+    <div
+      v-if="!experiment_started && !practicing && !experiment_finished"
+      class="row"
+    >
       <div class="col text-center">
         <button
           v-if="
@@ -167,7 +170,7 @@
         </b-progress>
       </template>
     </template>
-    <div v-else class="text-center">
+    <div v-if="experiment_finished" class="text-center">
       <p>Experiment Completed</p>
       <!-- Show total score -->
       <p>Total score: 23</p>
