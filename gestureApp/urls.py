@@ -1,4 +1,4 @@
-from django.urls import path
+from django.urls import path, re_path
 from django.contrib.auth.views import LoginView, logout_then_login
 from django.urls import reverse_lazy
 
@@ -35,5 +35,25 @@ urlpatterns = [
     path("api/create_trials", views.create_trials, name="create_trials"),
     path("api/current_user", views.current_user, name="current_user"),
     path("api/user_experiments", views.user_experiments, name="user_experiments"),
+    re_path(
+        r"^api/experiment/delete/(?P<pk>[A-Z0-9]{4})/$",
+        views.delete_experiment,
+        name="experiment_delete",
+    ),
+    re_path(
+        r"^api/experiment/disable/(?P<pk>[A-Z0-9]{4})/$",
+        views.disable_experiment,
+        name="experiment_disable",
+    ),
+    re_path(
+        r"^api/experiment/enable/(?P<pk>[A-Z0-9]{4})/$",
+        views.enable_experiment,
+        name="experiment_enable",
+    ),
+    re_path(
+        r"^api/experiment/publish/(?P<pk>[A-Z0-9]{4})/$",
+        views.publish_experiment,
+        name="experiment_publish",
+    ),
 ]
 

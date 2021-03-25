@@ -108,7 +108,7 @@ LOGIN_URL = "/login"
 
 LANGUAGE_CODE = "en-us"
 
-TIME_ZONE = "America/Santiago"
+TIME_ZONE = "America/New_York"
 
 USE_I18N = True
 

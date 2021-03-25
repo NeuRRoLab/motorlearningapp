@@ -53,6 +53,8 @@ class Experiment(models.Model):
 
     # flag to know if the experiment should be shown or not
     published = models.BooleanField(default=False)
+    published_timestamp = models.DateTimeField(null=True, default=None)
+    enabled = models.BooleanField(default=True)
 
     # TODO: maybe get all of the practice info into a block type
     with_practice_trials = models.BooleanField(default=True)

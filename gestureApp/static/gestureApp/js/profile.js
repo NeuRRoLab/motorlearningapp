@@ -11,9 +11,20 @@ var app = new Vue({
     }
   },
   template: `
+  <div>
+    <notifications
+        group="alerts"
+        position="top center"
+        :max="2"
+        :duration="6000"
+    ></notifications>
       <Profile
         v-bind="getProfileObj"
+        @publish-experiment="publishExperiment"
+        @disable-experiment="disableExperiment"
+        @enable-experiment="enableExperiment"
       />
+  </div>
       `,
   components: {
     'Profile': httpVueLoader('/static/gestureApp/js/components/Profile.vue'),
@@ -33,9 +44,43 @@ var app = new Vue({
       })
     },
     getUserExperiments() {
+      console.log("holaa")
       axios.get('/api/user_experiments').then(response => {
         this.experiments = response.data.experiments;
       })
+    },
+    publishExperiment(code) {
+      axios.post(`/api/experiment/publish/${code}/`).then(response => {
+        this.getUserExperiments();
+        this.$notify({
+          group: 'alerts',
+          title: `Experiment ${code} successfully published`,
+          type: 'success',
+        });
+      });
+    },
+    enableExperiment(code) {
+      axios.post(`/api/experiment/enable/${code}/`).then(response => {
+        this.getUserExperiments();
+        this.$notify({
+          group: 'alerts',
+          title: `Experiment ${code} successfully enabled`,
+          type: 'success',
+        });
+      });
+    },
+    disableExperiment(code) {
+      axios.post(`/api/experiment/disable/${code}/`).then(response => {
+        this.getUserExperiments();
+        this.$notify({
+          group: 'alerts',
+          title: `Experiment ${code} successfully disabled`,
+          type: 'success',
+        });
+      });
+    },
+    deleteExperiment() {
+
     },
   },
   mounted() {

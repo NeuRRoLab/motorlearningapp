@@ -1,14 +1,21 @@
-{% extends 'gestureApp/base.html' %}
-{% block content %}
-    <div id="app">
-        <App/>
-    </div>
-    
+{% extends 'gestureApp/base.html' %} {% block content %}
+<div id="app">
+  <App />
+</div>
 
-{% endblock content %}
-{% block javascript %}
-{% load static %}
+{% endblock content %} {% block javascript %} {% load static %}
 <script src="https://unpkg.com/http-vue-loader"></script>
 <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-<script src="{% static 'gestureApp/js/profile.js' %}"></script> 
+<script type="text/javascript">
+  window.vue = window.Vue; // quick fix for vue-notification
+</script>
+<script
+  type="text/javascript"
+  src="https://unpkg.com/vue-notification"
+></script>
+<script type="text/javascript">
+  window.vueNotification = window["vue-notification"].default;
+  Vue.use(vueNotification);
+</script>
+<script src="{% static 'gestureApp/js/profile.js' %}"></script>
 {% endblock %}

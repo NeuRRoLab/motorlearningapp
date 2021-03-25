@@ -11,7 +11,7 @@ from django.db.models import Count, F, Max, Min, Q
 from django.db import transaction
 from django.forms import inlineformset_factory
 from django.forms.models import model_to_dict
-from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
+from django.http import HttpResponse, HttpResponseRedirect, JsonResponse, Http404
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse, reverse_lazy
 from django.utils import timezone
@@ -98,10 +98,13 @@ def preparation_screen(request):
 
 # Create your views here.
 def experiment(request):
+    # TODO: prevent users from accessing unpublished or disabled experiment
     form = ExperimentCode(request.GET)
     if form.is_valid():
         code = form.cleaned_data["code"]
         experiment = get_object_or_404(Experiment, pk=code)
+        if not experiment.published:
+            raise Http404
         return render(
             request,
             "gestureApp/experiment.html",
@@ -127,7 +130,6 @@ def home(request):
 def create_trials(request):
     data = json.loads(request.body)
     exp_code = data.get("experiment")
-    print(exp_code, type(exp_code))
     experiment = get_object_or_404(Experiment, pk=exp_code)
 
     # Create a new subject
@@ -205,6 +207,7 @@ def create_experiment(request):
 
 @login_required
 def download_raw_data(request):
+    # TODO:Edit to separate published from non published data
     from djqscsv import render_to_csv_response
 
     form = ExperimentCode(request.GET)
@@ -225,6 +228,7 @@ def download_raw_data(request):
 
 @login_required
 def download_processed_data(request):
+    # TODO: Edit to separate published from non published data
     from djqscsv import render_to_csv_response
 
     form = ExperimentCode(request.GET)
@@ -304,10 +308,59 @@ def user_experiments(request):
             exp_obj = {}
             exp_obj["code"] = experiment.code
             exp_obj["name"] = experiment.name
-            exp_obj["responses"] = (
-                Subject.objects.filter(trials__block__experiment=experiment)
-                .distinct()
-                .count()
-            )
+            exp_obj["published"] = experiment.published
+            if experiment.published:
+                exp_obj["responses"] = (
+                    Subject.objects.filter(
+                        trials__block__experiment=experiment,
+                        trials__started_at__gt=experiment.published_timestamp,
+                    )
+                    .distinct()
+                    .count()
+                )
+            else:
+                exp_obj["responses"] = (
+                    Subject.objects.filter(trials__block__experiment=experiment)
+                    .distinct()
+                    .count()
+                )
+            exp_obj["enabled"] = experiment.enabled
             exp_array.append(exp_obj)
         return JsonResponse({"experiments": exp_array})
+
+
+@login_required
+def publish_experiment(request, pk):
+    # Get experiment from code
+    # Change the published status to true, and add the published timestamp
+    experiment = get_object_or_404(Experiment, pk=pk)
+    if experiment.published:
+        return JsonResponse({})
+    experiment.published = True
+    experiment.published_timestamp = timezone.now()
+    experiment.save()
+    return JsonResponse({})
+
+
+@login_required
+def delete_experiment(request, pk):
+    experiment = get_object_or_404(Experiment, pk=pk)
+    experiment.delete()
+    return JsonResponse({})
+
+
+@login_required
+def disable_experiment(request, pk):
+    experiment = get_object_or_404(Experiment, pk=pk)
+    experiment.enabled = False
+    experiment.save()
+    return JsonResponse({})
+
+
+@login_required
+def enable_experiment(request, pk):
+    experiment = get_object_or_404(Experiment, pk=pk)
+    experiment.enabled = True
+    experiment.save()
+    return JsonResponse({})
+

@@ -239,9 +239,6 @@ module.exports = {
     startExperiment: function () {
       this.experiment_started = true;
       //   this.startTrial();
-    },
-    startPractice() {
-      this.practicing = true;
       var elem = document.documentElement;
       if (elem.requestFullscreen) {
         elem.requestFullscreen();
@@ -252,6 +249,9 @@ module.exports = {
         /* IE11 */
         elem.msRequestFullscreen();
       }
+    },
+    startPractice() {
+      this.practicing = true;
     },
     stopPractice() {
       this.$refs["practice-trial"].stopPractice();
