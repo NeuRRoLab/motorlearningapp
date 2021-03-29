@@ -7,6 +7,7 @@ var app = new Vue({
   data: function () {
     return {
       experiment_code: null,
+      is_experiment_published: false,
       experiment_name: null,
       with_practice_trials: false,
       practice_trials: null,
@@ -53,6 +54,7 @@ var app = new Vue({
       return {
         experiment_code: this.experiment_code,
         editing: this.editing,
+        published: this.is_experiment_published,
 
         prop_experiment_name: this.experiment_name,
         prop_with_practice_trials: this.with_practice_trials,
@@ -99,6 +101,7 @@ var app = new Vue({
       this.editing = true;
       html_experiment = JSON.parse(document.getElementById('experiment').textContent);
       this.experiment_code = html_experiment.code;
+      this.is_experiment_published = html_experiment.published;
       this.experiment_name = html_experiment.name;
       this.with_practice_trials = html_experiment.with_practice_trials;
       this.practice_trials = html_experiment.num_practice_trials;

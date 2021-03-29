@@ -106,6 +106,7 @@ class Experiment(models.Model):
             "practice_seq_length": self.practice_seq_length,
             "practice_trial_time": self.practice_trial_time,
             "practice_rest_time": self.practice_rest_time,
+            "published": self.published,
         }
 
 

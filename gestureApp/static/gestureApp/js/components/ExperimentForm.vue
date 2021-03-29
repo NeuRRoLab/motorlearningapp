@@ -1,6 +1,7 @@
 <template>
   <div class="container">
     <h1 v-if="!editing" class="text-center">Create new Experiment</h1>
+    <h1 v-else-if="published" class="text-center">View experiment {{ experiment_code }}</h1>
     <h1 v-else class="text-center">Edit experiment {{ experiment_code }}</h1>
     <b-form @submit="onSubmitExperiment" @reset="resetExperiment">
       <b-form-group label="Experiment Name:" label-for="name">
@@ -11,6 +12,7 @@
           type="text"
           required
           placeholder="Name"
+          :disabled="published"
         ></b-form-input>
       </b-form-group>
       <b-form-group>
@@ -19,6 +21,7 @@
           id="checkbox-practice-trials"
           v-model="with_practice_trials"
           name="checkbox-practice-trials"
+          :disabled="published"
         >
           Practice Trials
         </b-form-checkbox>
@@ -36,6 +39,7 @@
               type="number"
               required
               placeholder=""
+              :disabled="published"
             ></b-form-input>
           </b-form-group>
           <b-form-group
@@ -51,6 +55,7 @@
               step="0.1"
               required
               placeholder="Maximum time per trial"
+              :disabled="published"
             ></b-form-input>
           </b-form-group>
           <b-form-group
@@ -66,6 +71,7 @@
               step="0.1"
               required
               placeholder="Resting time between trials"
+              :disabled="published"
             ></b-form-input>
           </b-form-group>
         </div>
@@ -81,12 +87,13 @@
               type="text"
               required
               placeholder=""
-              :disabled="practice_is_random_sequence"
+              :disabled="practice_is_random_sequence || published"
             ></b-form-input>
             <b-form-checkbox
               switch
               v-model="practice_is_random_sequence"
               name="checkbox-random_seq"
+              :disabled="published"
             >
               Random Sequence
             </b-form-checkbox>
@@ -103,6 +110,7 @@
               type="number"
               required
               placeholder=""
+              :disabled="published"
             ></b-form-input>
         </div>
       </template>
@@ -125,9 +133,9 @@
               type="text"
               required
               placeholder="Sequence of characters"
-              :disabled="block.is_random_sequence"
+              :disabled="block.is_random_sequence || published"
             ></b-form-input>
-            <b-form-checkbox switch v-model="block.is_random_sequence">
+            <b-form-checkbox switch v-model="block.is_random_sequence" :disabled="published">
               Random Sequence
             </b-form-checkbox>
           </b-form-group>
@@ -144,6 +152,7 @@
               step="0.1"
               required
               placeholder="Maximum time per trial"
+              :disabled="published"
             ></b-form-input>
           </b-form-group>
           <b-form-group
@@ -159,6 +168,7 @@
               step="0.1"
               required
               placeholder="Resting time between trials"
+              :disabled="published"
             ></b-form-input>
           </b-form-group>
         </div>
@@ -175,6 +185,7 @@
               type="number"
               required
               placeholder="Random sequence length"
+              :disabled="published"
             ></b-form-input>
           </b-form-group>
         </div>
@@ -189,6 +200,7 @@
               v-model="block.block_type"
               :options="block_types"
               required
+              :disabled="published"
             ></b-form-select>
           </b-form-group>
           <b-form-group
@@ -203,6 +215,7 @@
               type="number"
               required
               placeholder="Total number of trials"
+              :disabled="published"
             ></b-form-input>
           </b-form-group>
           <b-form-group
@@ -218,6 +231,7 @@
               step="0.1"
               required
               placeholder="Maximum time (seconds)"
+              :disabled="published"
             ></b-form-input>
           </b-form-group>
         </div>
@@ -236,24 +250,25 @@
               step="0.1"
               required
               placeholder="Seconds until next block"
+              :disabled="published"
             ></b-form-input>
           </b-form-group>
         </div>
         <div class="form-row">
-          <button @click="removeBlock" class="btn btn-link text-danger">
+          <button @click="removeBlock" class="btn btn-link text-danger" :disabled="published">
             Remove block
           </button>
         </div>
       </div>
-      <button @click="addBlock" class="btn btn-link">Add block</button>
+      <button @click="addBlock" class="btn btn-link" :disabled="published">Add block</button>
       <div class="form-row">
         <div class="col">
-          <b-button type="reset" class="btn btn-block" variant="danger"
+          <b-button type="reset" class="btn btn-block" variant="danger" :disabled="published"
             >Reset</b-button
           >
         </div>
         <div class="col">
-          <b-button type="submit" class="btn btn-block" variant="primary"
+          <b-button type="submit" class="btn btn-block" variant="primary" :disabled="published"
             >Submit</b-button
           >
         </div>
@@ -281,6 +296,7 @@ module.exports = {
   props: {
     experiment_code: String,
     editing: Boolean,
+    published: Boolean,
     prop_experiment_name: String,
     prop_with_practice_trials: Boolean,
     prop_practice_trials: Number,
