@@ -1,14 +1,11 @@
-{% extends "gestureApp/base.html" %}
-{% load crispy_forms_tags %}
-{% block content %}
-<div class="container">
-    <div class="card">
-        <div class="card-header">
-            Create experiment
-        </div>
-        <div class="card-body">
-             {% crispy form %}
-        </div>
-    </div>
+{% extends 'gestureApp/base.html' %} {% block content %}
+<div id="app">
+  <App />
 </div>
-{% endblock content %}
+
+{% endblock content %} {% block javascript %} {% load static %}
+{{ experiment|json_script:"experiment" }} {{ blocks|json_script:"blocks" }}
+<script src="https://unpkg.com/http-vue-loader"></script>
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<script src="{% static 'gestureApp/js/experiment_form.js' %}"></script>
+{% endblock %}

@@ -11,13 +11,17 @@
         >
           {{ experiment.name }} ({{ experiment.code }})
           <span>
+            <a :href="`/profile/experiment/edit/${experiment.code}`"> Edit </a>
+            |
+            <a href="#" @click="$emit('delete-experiment', experiment.code)">
+              Delete
+            </a>
+            |
             <a href="#" @click="$emit('publish-experiment', experiment.code)">
               Publish
             </a>
             |
-            <a :href="'/prep_screen/?code=' + experiment.code"
-              >Test Experiment</a
-            >
+            <a :href="`/test_experiment/${experiment.code}`">Test Experiment</a>
             |
             <a :href="'/raw_data/?code=' + experiment.code"
               >Download raw data</a
@@ -62,6 +66,10 @@
               href="#"
               @click="$emit('enable-experiment', experiment.code)"
               >Enable
+            </a>
+            |
+            <a href="#" @click="$emit('delete-experiment', experiment.code)">
+              Delete
             </a>
             |
             <a :href="'/prep_screen/?code=' + experiment.code">Do Experiment</a>

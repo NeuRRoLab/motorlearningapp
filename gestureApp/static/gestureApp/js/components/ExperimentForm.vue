@@ -1,6 +1,7 @@
 <template>
   <div class="container">
-    <h1 class="text-center">Create new Experiment</h1>
+    <h1 v-if="!editing" class="text-center">Create new Experiment</h1>
+    <h1 v-else class="text-center">Edit experiment {{ experiment_code }}</h1>
     <b-form @submit="onSubmitExperiment" @reset="resetExperiment">
       <b-form-group label="Experiment Name:" label-for="name">
         <b-form-input
@@ -265,35 +266,32 @@
 module.exports = {
   data: function () {
     return {
-      experiment_name: null,
-      with_practice_trials: false,
-      practice_trials: null,
-      practice_is_random_sequence: true,
-      practice_seq_length: null,
-      practice_sequence: "",
-      practice_trial_time: null,
-      practice_rest_time: null,
-      experiment_blocks: [
-        {
-          sequence: null,
-          max_time_per_trial: null,
-          resting_time: null,
-          block_type: null,
-          num_trials: null,
-          max_time: null,
-          sec_until_next: 0,
-          is_random_sequence: false,
-          seq_length: null,
-        },
-      ],
-      block_types: [
-        { value: null, text: "Please select a block type" },
-        { value: "max_time", text: "Maximum time" },
-        { value: "num_trials", text: "Number of trials" },
-      ],
+      experiment_name: this.prop_experiment_name,
+      with_practice_trials: this.prop_with_practice_trials,
+      practice_trials: this.prop_practice_trials,
+      practice_is_random_sequence: this.prop_practice_is_random_sequence,
+      practice_seq_length: this.prop_practice_seq_length,
+      practice_sequence: this.prop_practice_sequence,
+      practice_trial_time: this.prop_practice_trial_time,
+      practice_rest_time: this.prop_practice_rest_time,
+      experiment_blocks: this.prop_experiment_blocks,
+      block_types: this.prop_block_types
     };
   },
-  props: {},
+  props: {
+    experiment_code: String,
+    editing: Boolean,
+    prop_experiment_name: String,
+    prop_with_practice_trials: Boolean,
+    prop_practice_trials: Number,
+    prop_practice_is_random_sequence: Boolean,
+    prop_practice_seq_length: Number,
+    prop_practice_sequence: String,
+    prop_practice_trial_time: Number,
+    prop_practice_rest_time: Number,
+    prop_experiment_blocks: Array,
+    prop_block_types: Array,
+  },
   mounted: function () {},
   components: {
     "nav-bar": httpVueLoader("/static/gestureApp/js/components/NavBar.vue"),
@@ -303,6 +301,7 @@ module.exports = {
   methods: {
     addBlock() {
       this.experiment_blocks.push({
+        block_id: null,
         sequence: null,
         max_time_per_trial: null,
         resting_time: null,
@@ -337,20 +336,9 @@ module.exports = {
       evt.preventDefault();
       console.log(this.experiment_blocks);
 
-      (this.experiment_name = null),
-        (this.experiment_blocks = [
-          {
-            sequence: null,
-            max_time_per_trial: null,
-            resting_time: null,
-            block_type: null,
-            num_trials: null,
-            max_time: null,
-            sec_until_next: 0,
-            is_random_sequence: false,
-            seq_length: null,
-          },
-        ]);
+      this.experiment_name = null;
+      this.experiment_blocks = [];
+      this.addBlock();
     },
   },
 };

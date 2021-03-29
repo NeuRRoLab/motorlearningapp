@@ -1,0 +1,14 @@
+{% extends "gestureApp/base.html" %}
+{% load crispy_forms_tags %}
+{% block content %}
+<div class="container">
+    <div class="card">
+        <div class="card-header">
+            Create experiment
+        </div>
+        <div class="card-body">
+             {% crispy form %}
+        </div>
+    </div>
+</div>
+{% endblock content %}

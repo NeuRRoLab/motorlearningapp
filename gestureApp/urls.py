@@ -21,16 +21,26 @@ urlpatterns = [
     path(
         "profile/create_experiment", views.create_experiment, name="create-experiment"
     ),
+    re_path(
+        r"^profile/experiment/edit/(?P<pk>[A-Z0-9]{4})/$",
+        views.edit_experiment,
+        name="edit_experiment",
+    ),
     path("experiment/", views.experiment, name="experiment"),
+    re_path(
+        r"^test_experiment/(?P<pk>[A-Z0-9]{4})/$",
+        views.test_experiment,
+        name="test_experiment",
+    ),
     path("prep_screen/", views.preparation_screen, name="prep_screen"),
     path("raw_data/", views.download_raw_data, name="download_raw_data"),
     path(
         "processed_data/", views.download_processed_data, name="download_processed_data"
     ),
-    # Test
-    path(
-        "experiment_create", views.ExperimentCreate.as_view(), name="experiment_create"
-    ),
+    # # Test
+    # path(
+    #     "experiment_create", views.ExperimentCreate.as_view(), name="experiment_create"
+    # ),
     # API
     path("api/create_trials", views.create_trials, name="create_trials"),
     path("api/current_user", views.current_user, name="current_user"),

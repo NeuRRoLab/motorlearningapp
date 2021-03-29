@@ -23,6 +23,7 @@ var app = new Vue({
         @publish-experiment="publishExperiment"
         @disable-experiment="disableExperiment"
         @enable-experiment="enableExperiment"
+        @delete-experiment="deleteExperiment"
       />
   </div>
       `,
@@ -79,8 +80,17 @@ var app = new Vue({
         });
       });
     },
-    deleteExperiment() {
-
+    deleteExperiment(code) {
+      if (confirm(`Are you sure you want to delete Experiment ${code} and all its data?`)) {
+        axios.post(`/api/experiment/delete/${code}/`).then(response => {
+          this.getUserExperiments();
+          this.$notify({
+            group: 'alerts',
+            title: `Experiment ${code} successfully deleted`,
+            type: 'success',
+          });
+        });
+      }
     },
   },
   mounted() {

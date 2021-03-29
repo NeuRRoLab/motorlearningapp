@@ -7,6 +7,7 @@ from urllib import parse
 
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login
+from django.core.exceptions import PermissionDenied
 from django.db.models import Count, F, Max, Min, Q
 from django.db import transaction
 from django.forms import inlineformset_factory
@@ -81,11 +82,40 @@ class ExperimentCreate(CreateView):
         )
 
 
+class ExperimentUpdate(UpdateView):
+    model = Experiment
+    template_name = "gestureApp/experiment_form.html"
+    form_class = ExperimentForm
+    success_url = None
+
+    def get_context_data(self, **kwargs):
+        data = super(ExperimentUpdate, self).get_context_data(**kwargs)
+        if self.request.POST:
+            data["blocks"] = BlockFormSet(self.request.POST)
+        else:
+            data["blocks"] = BlockFormSet()
+        return data
+
+    def form_valid(self, form):
+        context = self.get_context_data()
+        blocks = context["blocks"]
+        with transaction.atomic():
+            print(form.instance)
+        return super(ExperimentCreate, self).form_valid(form)
+
+    def get_success_url(self):
+        return reverse_lazy(
+            "gestureApp:experiment_create", kwargs={"pk": self.object.pk}
+        )
+
+
 def preparation_screen(request):
     form = ExperimentCode(request.GET)
     if form.is_valid():
         code = form.cleaned_data["code"]
         experiment = get_object_or_404(Experiment, pk=code)
+        if not experiment.published or not experiment.enabled:
+            raise Http404
         return render(request, "gestureApp/prep_screen.html", {"exp_code": code},)
     else:
         form = ExperimentCode()
@@ -96,6 +126,19 @@ def preparation_screen(request):
         )
 
 
+@login_required
+def test_experiment(request, pk):
+    experiment = get_object_or_404(Experiment, pk=pk)
+    return render(
+        request,
+        "gestureApp/experiment.html",
+        {
+            "experiment": experiment.to_dict(),
+            "blocks": list(experiment.blocks.order_by("id").values()),
+        },
+    )
+
+
 # Create your views here.
 def experiment(request):
     # TODO: prevent users from accessing unpublished or disabled experiment
@@ -103,7 +146,7 @@ def experiment(request):
     if form.is_valid():
         code = form.cleaned_data["code"]
         experiment = get_object_or_404(Experiment, pk=code)
-        if not experiment.published:
+        if not experiment.published or not experiment.enabled:
             raise Http404
         return render(
             request,
@@ -202,7 +245,80 @@ def create_experiment(request):
             )
             block_obj.full_clean()
             block_obj.save()
-    return render(request, "gestureApp/create_experiment.html", {})
+    experiment = Experiment.objects.first()
+    return render(
+        request,
+        "gestureApp/experiment_form.html",
+        {
+            "experiment": experiment.to_dict(),
+            "blocks": list(experiment.blocks.order_by("id").values()),
+        },
+    )
+
+
+@login_required
+def edit_experiment(request, pk):
+    if request.method == "GET":
+        experiment = get_object_or_404(Experiment, pk=pk)
+        return render(
+            request,
+            "gestureApp/experiment_form.html",
+            {
+                "experiment": experiment.to_dict(),
+                "blocks": list(experiment.blocks.order_by("id").values()),
+            },
+        )
+    elif request.method == "POST":
+        exp_info = json.loads(request.body)
+        exp_practice_seq = exp_info["practice_seq"]
+        if exp_info["with_practice_trials"] and exp_info["practice_is_random_seq"]:
+            exp_practice_seq = "".join(
+                random.choices(string.digits, k=exp_info["practice_seq_length"])
+            )
+        experiment = Experiment.objects.get(pk=exp_info["code"])
+        Experiment.objects.filter(pk=exp_info["code"]).update(
+            name=exp_info["name"],
+            creator=request.user,
+            with_practice_trials=exp_info["with_practice_trials"],
+            num_practice_trials=exp_info["practice_trials"],
+            practice_is_random_seq=exp_info["practice_is_random_seq"],
+            practice_seq=exp_practice_seq,
+            practice_seq_length=len(exp_practice_seq),
+            practice_trial_time=exp_info["practice_trial_time"],
+            practice_rest_time=exp_info["practice_rest_time"],
+        )
+        for block in exp_info["blocks"]:
+            sequence = block["sequence"]
+            if block["is_random_sequence"]:
+                sequence = "".join(random.choices(string.digits, k=block["seq_length"]))
+            if block["block_id"] is None:
+                block_obj = Block(
+                    experiment=experiment,
+                    sequence=sequence,
+                    seq_length=len(sequence),
+                    is_random=block["is_random_sequence"],
+                    max_time_per_trial=block["max_time_per_trial"],
+                    resting_time=block["resting_time"],
+                    type=Block.BlockTypes(block["block_type"]),
+                    max_time=block["max_time"],
+                    num_trials=block["num_trials"],
+                    sec_until_next=block["sec_until_next"],
+                )
+                block_obj.full_clean()
+                block_obj.save()
+            else:
+                Block.objects.filter(pk=block["block_id"]).update(
+                    sequence=sequence,
+                    seq_length=len(sequence),
+                    is_random=block["is_random_sequence"],
+                    max_time_per_trial=block["max_time_per_trial"],
+                    resting_time=block["resting_time"],
+                    type=Block.BlockTypes(block["block_type"]),
+                    max_time=block["max_time"],
+                    num_trials=block["num_trials"],
+                    sec_until_next=block["sec_until_next"],
+                )
+        return HttpResponseRedirect(reverse("gestureApp:profile"))
 
 
 @login_required
@@ -213,7 +329,18 @@ def download_raw_data(request):
     form = ExperimentCode(request.GET)
     if form.is_valid():
         code = form.cleaned_data["code"]
-        qs = Experiment.objects.filter(pk=code).values(
+        experiment = get_object_or_404(Experiment, pk=code, creator=request.user)
+        # If the experiment hasn't been published, get all responses
+        starting_date_useful_data = experiment.created_at
+        # If it has, then only get those after the publishing timestamp
+        if experiment.published:
+            starting_date_useful_data = experiment.published_timestamp
+        # Make sure that the user downloading it is the owner of the experiment
+        qs = Experiment.objects.filter(
+            pk=code,
+            creator=request.user,
+            blocks__trials__started_at__gt=starting_date_useful_data,
+        ).values(
             experiment_code=F("code"),
             subject_code=F("blocks__trials__subject__code"),
             block_id=F("blocks"),
@@ -234,10 +361,21 @@ def download_processed_data(request):
     form = ExperimentCode(request.GET)
     if form.is_valid():
         code = form.cleaned_data["code"]
+        experiment = get_object_or_404(Experiment, pk=code, creator=request.user)
+        # If the experiment hasn't been published, get all responses
+        starting_date_useful_data = experiment.created_at
+        # If it has, then only get those after the publishing timestamp
+        if experiment.published:
+            starting_date_useful_data = experiment.published_timestamp
+        # Make sure that the user downloading it is the owner of the experiment
         # When not working with sqlite, we will be able to do something like this:
         #   Trial.objects.filter(block__experiment__code="952P", block=12,subject="E7kMfKZHIZjL375d",correct=True).annotate(first_keypress=Min("keypresses__timestamp")).annotate(last_keypress=Max("keypresses__timestamp")).aggregate(avg_diff=Avg(F("first_keypress")-F("last_keypress")))
         no_et = (
-            Experiment.objects.filter(pk=code)
+            Experiment.objects.filter(
+                pk=code,
+                creator=request.user,
+                blocks__trials__started_at__gt=starting_date_useful_data,
+            )
             .values(
                 "code",
                 "blocks",
