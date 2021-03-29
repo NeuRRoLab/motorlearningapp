@@ -55,6 +55,8 @@
             experiment.enabled ? "enabled" : "disabled"
           }})
           <span>
+            <a :href="`/profile/experiment/edit/${experiment.code}`"> View </a>
+            |
             <a
               v-if="experiment.enabled"
               href="#"
