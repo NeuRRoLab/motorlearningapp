@@ -4,6 +4,7 @@ import random
 import string
 from datetime import datetime
 from urllib import parse
+import os
 
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login
@@ -207,6 +208,31 @@ def create_trials(request):
     return JsonResponse(data)
 
 
+# TODO: check how would we have to do it when living inside the container
+def upload_files(request, pk):
+    if request.method == "POST":
+        handle_upload_file(request.FILES["consent"], pk, "consent.pdf")
+        handle_upload_file(
+            request.FILES["video"],
+            pk,
+            f"video.{str(request.FILES['video']).split('.')[1]}",
+        )
+        return HttpResponse("Successful")
+
+
+def handle_upload_file(file, code, filename):
+    if not os.path.exists(f"exp_files/{code}/"):
+        os.makedirs(f"exp_files/{code}/")
+    # Remove existing file before
+    for f in os.listdir(f"exp_files/{code}/"):
+        if f.startswith(filename.split(".")[0]):
+            os.remove(os.path.join(f"exp_files/{code}/", f))
+
+    with open(f"exp_files/{code}/{filename}", "wb+") as destination:
+        for chunk in file.chunks():
+            destination.write(chunk)
+
+
 @login_required
 def create_experiment(request):
     if request.method == "POST":
@@ -245,15 +271,10 @@ def create_experiment(request):
             )
             block_obj.full_clean()
             block_obj.save()
-    experiment = Experiment.objects.first()
-    return render(
-        request,
-        "gestureApp/experiment_form.html",
-        {
-            "experiment": experiment.to_dict(),
-            "blocks": list(experiment.blocks.order_by("id").values()),
-        },
-    )
+
+        return JsonResponse({"code": experiment.code})
+
+    return render(request, "gestureApp/experiment_form.html", {},)
 
 
 @login_required

@@ -15,6 +15,27 @@
           :disabled="published"
         ></b-form-input>
       </b-form-group>
+      <b-form-group label="Instructions video:" label-for="instructions-video">
+        <b-form-file
+          id="instructions-video"
+          v-model="video_file"
+          :state="Boolean(video_file)"
+          placeholder="Choose a file or drop it here..."
+          drop-placeholder="Drop file here..."
+          required
+        ></b-form-file>
+      </b-form-group>
+      <b-form-group label="Consent form:" label-for="consent-form">
+        <b-form-file
+          accept=".pdf"
+          id="consent-form"
+          v-model="consent_file"
+          :state="Boolean(consent_file)"
+          placeholder="Choose a file or drop it here..."
+          drop-placeholder="Drop file here..."
+          required
+        ></b-form-file>
+      </b-form-group>
       <b-form-group>
         <b-form-checkbox
           switch
@@ -290,7 +311,9 @@ module.exports = {
       practice_trial_time: this.prop_practice_trial_time,
       practice_rest_time: this.prop_practice_rest_time,
       experiment_blocks: this.prop_experiment_blocks,
-      block_types: this.prop_block_types
+      block_types: this.prop_block_types,
+      video_file: null,
+      consent_file: null,
     };
   },
   props: {
@@ -345,7 +368,9 @@ module.exports = {
         this.practice_sequence,
         this.practice_trial_time,
         this.practice_rest_time,
-        this.experiment_blocks
+        this.experiment_blocks,
+        this.video_file,
+        this.consent_file,
       );
     },
     resetExperiment(evt) {

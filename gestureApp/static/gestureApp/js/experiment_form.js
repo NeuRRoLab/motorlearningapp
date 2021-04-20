@@ -70,7 +70,7 @@ var app = new Vue({
     }
   },
   methods: {
-    submitExperiment(name, with_practice_trials, practice_trials, practice_is_random_sequence, practice_seq_length, practice_sequence, practice_trial_time, practice_rest_time, blocks) {
+    submitExperiment(name, with_practice_trials, practice_trials, practice_is_random_sequence, practice_seq_length, practice_sequence, practice_trial_time, practice_rest_time, blocks, video_file, consent_file) {
       let obj = {
         code: this.experiment_code,
         name: name,
@@ -83,21 +83,34 @@ var app = new Vue({
         practice_trial_time: practice_trial_time,
         practice_rest_time: practice_rest_time,
       }
+      let formData = new FormData();
+      formData.append("consent", consent_file);
+      formData.append("video", video_file);
       if (!this.editing)
         axios.post('/profile/create_experiment', obj).then(response => {
-          console.log(response);
-          window.location.href = '/profile';
+          axios.post(`/profile/experiment/upload_files/${response.data.code}/`, formData)
+            .then(response =>
+              window.location.href = '/profile'
+            );
         })
-      else
+      else {
+
         axios.post(`/profile/experiment/edit/${this.experiment_code}/`, obj).then(response => {
           console.log(response);
-          window.location.href = '/profile';
+          axios.post(`/profile/experiment/upload_files/${this.experiment_code}/`, formData)
+            .then(response =>
+              window.location.href = '/profile'
+            );
         })
+      }
     },
   },
   created() {
     // TODO: Read from HTML if existent
     if (document.getElementById("experiment") !== null && document.getElementById("blocks") !== null) {
+      // If no experiment data is available, then we are creating a new experiment
+      if (!JSON.parse(document.getElementById('experiment').textContent) || !JSON.parse(document.getElementById('blocks').textContent))
+        return;
       this.editing = true;
       html_experiment = JSON.parse(document.getElementById('experiment').textContent);
       this.experiment_code = html_experiment.code;

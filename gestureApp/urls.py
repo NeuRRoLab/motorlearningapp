@@ -22,6 +22,11 @@ urlpatterns = [
         "profile/create_experiment", views.create_experiment, name="create-experiment"
     ),
     re_path(
+        r"^profile/experiment/upload_files/(?P<pk>[A-Z0-9]{4})/$",
+        views.upload_files,
+        name="upload_files",
+    ),
+    re_path(
         r"^profile/experiment/edit/(?P<pk>[A-Z0-9]{4})/$",
         views.edit_experiment,
         name="edit_experiment",
