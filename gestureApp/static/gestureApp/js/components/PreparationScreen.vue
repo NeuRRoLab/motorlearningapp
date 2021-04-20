@@ -49,7 +49,7 @@ module.exports = {
       // videojs options
       playerOptions: {
         height: "640",
-        autoplay: false,
+        autoplay: true,
         muted: true,
         language: "en",
         playbackRates: [1.0],

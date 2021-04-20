@@ -7,27 +7,61 @@
       :max="2"
       :duration="6000"
     ></notifications>
-    <h2>
-      Experiment {{ experiment.code
-      }}<span class="text-success">{{ practicing ? ": Practicing" : "" }}</span>
-    </h2>
+    <h1 class="text-center">
+      Experiment "{{ experiment.name }}"<span class="text-success">{{
+        practicing ? ": Practicing" : ""
+      }}</span>
+    </h1>
     <div
       v-if="!experiment_started && !practicing && !experiment_finished"
       class="row"
     >
       <div class="col text-center">
-        <button
+        <template
           v-if="
             experiment.with_practice_trials && remaining_practice_trials > 0
           "
-          class="btn btn-primary"
-          @click="startPractice"
         >
-          Start Practice
-        </button>
-        <button v-else class="btn btn-primary" @click="startExperiment">
-          Start Experiment
-        </button>
+          <p class="h4">
+            Enter the sequence of characters in order when it appears on the
+            screen
+          </p>
+          <p class="h4">Try to do it as fast as you can</p>
+          <p class="h4">
+            You will complete {{ remaining_practice_trials }} practice trial(s)
+          </p>
+          <p class="h4">
+            Click on "Start Practice" when you're ready to begin practicing
+          </p>
+          <button class="btn btn-primary" @click="startPractice">
+            Start Practice
+          </button>
+        </template>
+        <template v-else>
+          <p class="h4">
+            Enter the sequence of characters in order when it appears on the
+            screen
+          </p>
+          <p class="h4">Try to do it as fast as you can</p>
+          <p class="h4">
+            You will complete {{ blocks.length }} block(s) of trials
+          </p>
+          <p class="h4" v-if="isTypeNumTrials">
+            On each block, you will have to do
+            {{ blocks[current_block].num_trials }} trials
+          </p>
+          <p class="h4" v-else>
+            On each block, you will have
+            {{ blocks[current_block].max_time }} seconds to do as many trials as
+            you can
+          </p>
+          <p class="h4">
+            Click on "Start Experiment" when you're ready to begin
+          </p>
+          <button class="btn btn-primary" @click="startExperiment">
+            Start Experiment
+          </button>
+        </template>
       </div>
     </div>
     <template v-else-if="practicing">
@@ -252,6 +286,16 @@ module.exports = {
     },
     startPractice() {
       this.practicing = true;
+      var elem = document.documentElement;
+      if (elem.requestFullscreen) {
+        elem.requestFullscreen();
+      } else if (elem.webkitRequestFullscreen) {
+        /* Safari */
+        elem.webkitRequestFullscreen();
+      } else if (elem.msRequestFullscreen) {
+        /* IE11 */
+        elem.msRequestFullscreen();
+      }
     },
     stopPractice() {
       this.$refs["practice-trial"].stopPractice();
