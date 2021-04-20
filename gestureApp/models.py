@@ -14,7 +14,6 @@ class User(AbstractUser):
 
 class Subject(models.Model):
     code = models.CharField(max_length=16, blank=True, editable=False, primary_key=True)
-    age = models.IntegerField()
 
     def save(self, *args, **kwargs):
         if not self.code:
@@ -168,3 +167,13 @@ class Keypress(models.Model):
 
     def __str__(self):
         return self.value + ", " + str(self.timestamp)
+
+
+class EndSurvey(models.Model):
+    experiment = models.ForeignKey(Experiment, on_delete=models.CASCADE)
+    subject = models.OneToOneField(
+        Subject, on_delete=models.SET_NULL, null=True, related_name="survey"
+    )
+    age = models.IntegerField()
+    gender = models.CharField(max_length=15)
+    comments = models.TextField()

@@ -13,13 +13,15 @@ var app = new Vue({
       with_practice_trials: false,
       num_practice_trials: 0,
       practice_is_random_seq: false,
-      practice_seq: null
+      practice_seq: null,
+      subject_code: null,
     }
   },
   template: `
       <Experiment ref="experiment"
         v-bind="getExperimentObj"
         @send-data="sendData"
+        @end-survey="sendSurvey"
       />
       `,
   components: {
@@ -55,6 +57,7 @@ var app = new Vue({
         });
         // this.$refs.experiment.experiment_finished = false;
         this.$refs.experiment.experiment_started = false;
+        this.subject_code = response.data.subject_code;
       }
       ).catch(error => {
         this.$refs.experiment.$notify({
@@ -64,6 +67,9 @@ var app = new Vue({
           type: 'error',
         });
       })
+    },
+    sendSurvey(questionnaire) {
+      axios.post(`/api/experiment/end_survey/${this.experiment.code}/`, { 'questionnaire': questionnaire, 'subject_code': this.subject_code }).then(response => window.location.href = "/");
     }
   },
   created: function () {

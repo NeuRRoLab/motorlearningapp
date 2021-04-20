@@ -23,7 +23,7 @@ from django.views.generic.detail import DetailView
 from django.views.generic.edit import CreateView, FormView, UpdateView
 
 from .forms import ExperimentCode, UserRegisterForm, BlockFormSet, ExperimentForm
-from .models import Block, Experiment, Keypress, Subject, Trial, User
+from .models import Block, Experiment, Keypress, Subject, Trial, User, EndSurvey
 
 
 @method_decorator([login_required], name="dispatch")
@@ -177,7 +177,7 @@ def create_trials(request):
     experiment = get_object_or_404(Experiment, pk=exp_code)
 
     # Create a new subject
-    subject = Subject(age=25)
+    subject = Subject()
     subject.save()
     # Save the trials to database.
     experiment_trials = json.loads(data.get("experiment_trials"))
@@ -204,7 +204,7 @@ def create_trials(request):
                 keypress.save()
 
     # Create response
-    data = {}
+    data = {"subject_code": subject.code}
     return JsonResponse(data)
 
 
@@ -521,5 +521,24 @@ def enable_experiment(request, pk):
     experiment = get_object_or_404(Experiment, pk=pk)
     experiment.enabled = True
     experiment.save()
+    return JsonResponse({})
+
+
+def end_survey(request, pk):
+    experiment = get_object_or_404(Experiment, pk=pk)
+    info = json.loads(request.body)
+    subject = None
+    try:
+        subject = Subject.objects.get(code=info["subject_code"])
+    except Subject.DoesNotExist:
+        pass
+    print("hola", experiment, subject)
+    survey = EndSurvey.objects.create(
+        experiment=experiment,
+        subject=subject,
+        age=info["questionnaire"]["age"],
+        gender=info["questionnaire"]["gender"],
+        comments=info["questionnaire"]["comment"],
+    )
     return JsonResponse({})
 

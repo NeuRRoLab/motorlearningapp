@@ -204,14 +204,49 @@
         </b-progress>
       </template>
     </template>
-    <div v-if="experiment_finished" class="text-center">
-      <p>Experiment Completed</p>
-      <!-- Show total score -->
-      <p>Total score: 23</p>
+    <div v-if="experiment_finished">
+      <h3 class="text-center">Tell us something about you</h3>
       <!-- Redirect home -->
-      <button class="btn btn-primary" @click="leaveExperiment">
-        Click to Finish
-      </button>
+      <b-form @submit="leaveExperiment">
+        <div class="form-row">
+          <b-form-group class="col-6" label="Age:" label-for="age">
+            <b-form-input
+              name="age"
+              id="age"
+              v-model="questionnaire.age"
+              type="number"
+              required
+              placeholder="Age"
+            ></b-form-input>
+          </b-form-group>
+          <b-form-group class="col-6" label="Gender:" label-for="gender">
+            <b-form-select
+              id="gender"
+              v-model="questionnaire.gender"
+              :options="gender_opts"
+              required
+            ></b-form-select>
+          </b-form-group>
+        </div>
+        <div class="form-row">
+          <b-form-group
+            label="Do you have any comments on your experience and what could be improved?"
+            label-for="comments"
+            class="col-6"
+          >
+            <b-form-textarea
+              id="comments"
+              v-model="questionnaire.comment"
+              placeholder="Enter your comments"
+              rows="3"
+              max-rows="6"
+            ></b-form-textarea>
+          </b-form-group>
+        </div>
+        <b-button type="submit" class="btn btn-block" variant="primary"
+          >Submit and exit</b-button
+        >
+      </b-form>
     </div>
   </div>
 </template>
@@ -240,6 +275,13 @@ module.exports = {
       keypresses_trial: [],
       block_trials: [],
       experiment_blocks: [],
+
+      questionnaire: {
+        age: null,
+        gender: null,
+        comment: null,
+      },
+      gender_opts: { male: "Male", female: "Female", other: "Other" },
     };
   },
   props: {
@@ -416,8 +458,10 @@ module.exports = {
         this.blocks[this.current_block].max_time -
         (data.hours * 3600 + data.minutes * 60 + data.seconds);
     },
-    leaveExperiment() {
-      window.location.href = "/";
+    leaveExperiment(evt) {
+      evt.preventDefault();
+      this.$emit("end-survey", this.questionnaire);
+      // window.location.href = "/";
     },
     playCountdown() {
       var audio = new Audio("/static/gestureApp/sound/countdown.wav");
