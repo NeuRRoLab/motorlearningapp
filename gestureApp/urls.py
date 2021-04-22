@@ -71,6 +71,11 @@ urlpatterns = [
         name="experiment_publish",
     ),
     re_path(
+        r"^api/experiment/duplicate/(?P<pk>[A-Z0-9]{4})/$",
+        views.duplicate_experiment,
+        name="experiment_duplicate",
+    ),
+    re_path(
         r"^api/experiment/end_survey/(?P<pk>[A-Z0-9]{4})/$",
         views.end_survey,
         name="end_survey",

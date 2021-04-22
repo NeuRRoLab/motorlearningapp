@@ -24,6 +24,7 @@ var app = new Vue({
         @disable-experiment="disableExperiment"
         @enable-experiment="enableExperiment"
         @delete-experiment="deleteExperiment"
+        @duplicate-experiment="duplicateExperiment"
       />
   </div>
       `,
@@ -91,6 +92,16 @@ var app = new Vue({
           });
         });
       }
+    },
+    duplicateExperiment(code) {
+      axios.post(`/api/experiment/duplicate/${code}/`).then(response => {
+        this.getUserExperiments();
+        this.$notify({
+          group: 'alerts',
+          title: `Experiment ${code} successfully duplicated`,
+          type: 'success',
+        });
+      });
     },
   },
   mounted() {

@@ -17,6 +17,10 @@
               Delete
             </a>
             |
+            <a href="#" @click="$emit('duplicate-experiment', experiment.code)">
+              Duplicate
+            </a>
+            |
             <a href="#" @click="$emit('publish-experiment', experiment.code)">
               Publish
             </a>

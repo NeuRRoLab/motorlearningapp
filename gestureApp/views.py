@@ -603,6 +603,15 @@ def enable_experiment(request, pk):
     return JsonResponse({})
 
 
+@login_required
+def duplicate_experiment(request, pk):
+    experiment = get_object_or_404(Experiment, pk=pk)
+    experiment.pk = None
+    experiment.name = "Copy of " + experiment.name
+    experiment.save()
+    return JsonResponse({})
+
+
 def end_survey(request, pk):
     experiment = get_object_or_404(Experiment, pk=pk)
     info = json.loads(request.body)
