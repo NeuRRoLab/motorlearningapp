@@ -138,13 +138,13 @@ def test_experiment(request, pk):
         {
             "experiment": experiment.to_dict(),
             "blocks": list(experiment.blocks.order_by("id").values()),
+            "test_run": True,
         },
     )
 
 
 # Create your views here.
 def experiment(request):
-    # TODO: prevent users from accessing unpublished or disabled experiment
     form = ExperimentCode(request.GET)
     if form.is_valid():
         code = form.cleaned_data["code"]
@@ -157,6 +157,7 @@ def experiment(request):
             {
                 "experiment": experiment.to_dict(),
                 "blocks": list(experiment.blocks.order_by("id").values()),
+                "test_run": False,
             },
         )
     else:
@@ -606,9 +607,9 @@ def enable_experiment(request, pk):
 @login_required
 def duplicate_experiment(request, pk):
     experiment = get_object_or_404(Experiment, pk=pk)
-    experiment.pk = None
-    experiment.name = "Copy of " + experiment.name
-    experiment.save()
+    experiment_clone = experiment.make_clone(
+        attrs={"name": "Copy of " + experiment.name}
+    )
     return JsonResponse({})
 
 

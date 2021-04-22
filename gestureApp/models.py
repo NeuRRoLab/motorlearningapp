@@ -3,6 +3,7 @@ import random, string
 from django.utils import timezone
 from django.contrib.auth.models import AbstractUser
 from django.core.exceptions import ValidationError
+from model_clone import CloneMixin
 
 
 class User(AbstractUser):
@@ -44,7 +45,7 @@ class Subject(models.Model):
         return self.code
 
 
-class Experiment(models.Model):
+class Experiment(CloneMixin, models.Model):
     code = models.CharField(max_length=4, blank=True, editable=False, primary_key=True)
     name = models.CharField(max_length=100)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -52,17 +53,19 @@ class Experiment(models.Model):
 
     # flag to know if the experiment should be shown or not
     published = models.BooleanField(default=False)
-    published_timestamp = models.DateTimeField(null=True, default=None)
+    published_timestamp = models.DateTimeField(blank=True, null=True, default=None)
     enabled = models.BooleanField(default=True)
 
     # TODO: maybe get all of the practice info into a block type
     with_practice_trials = models.BooleanField(default=True)
-    num_practice_trials = models.IntegerField(default=5, null=True)
-    practice_is_random_seq = models.BooleanField(default=True, null=True)
-    practice_seq = models.CharField(max_length=15, default="", null=True)
-    practice_seq_length = models.IntegerField(default=5, null=True)
-    practice_trial_time = models.FloatField(default=5, null=True)
-    practice_rest_time = models.FloatField(default=5, null=True)
+    num_practice_trials = models.IntegerField(default=5, null=True, blank=True)
+    practice_is_random_seq = models.BooleanField(default=True, null=True, blank=True)
+    practice_seq = models.CharField(max_length=15, default="", null=True, blank=True)
+    practice_seq_length = models.IntegerField(default=5, null=True, blank=True)
+    practice_trial_time = models.FloatField(default=5, null=True, blank=True)
+    practice_rest_time = models.FloatField(default=5, null=True, blank=True)
+
+    _clone_m2o_or_o2m_fields = ["blocks"]
 
     def save(self, *args, **kwargs):
         if not self.code:
@@ -109,7 +112,7 @@ class Experiment(models.Model):
         }
 
 
-class Block(models.Model):
+class Block(CloneMixin, models.Model):
     class BlockTypes(models.TextChoices):
         MAX_TIME = "max_time"
         NUM_TRIALS = "num_trials"
