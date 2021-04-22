@@ -372,7 +372,44 @@ def download_raw_data(request):
             keypress_timestamp=F("blocks__trials__keypresses__timestamp"),
             keypress_value=F("blocks__trials__keypresses__value"),
         )
-        return render_to_csv_response(qs, filename="raw_experiment_" + code + ".csv")
+        queryset_list = list(qs)
+        possible_subjects = unique([value["subject_code"] for value in queryset_list])
+        new_subject_codes = {
+            subject: index + 1 for index, subject in enumerate(possible_subjects)
+        }
+        possible_blocks = unique([value["block_id"] for value in queryset_list])
+        new_block_codes = {
+            block: index + 1 for index, block in enumerate(possible_blocks)
+        }
+        # Trials are not fixed across different experiments or blocks.
+        # If we are on the same experiment and block, start adding up
+        # for every combination of block-subject, we have a different count
+        # {(block, subject): [trial_1, trial_2, trial_3]}
+        aux_values = defaultdict(dict)
+        for values_dict in queryset_list:
+            trial_id_dict = aux_values[
+                (values_dict["block_id"], values_dict["subject_code"])
+            ]
+            if values_dict["trial_id"] not in trial_id_dict:
+                trial_id_dict[values_dict["trial_id"]] = len(trial_id_dict.keys()) + 1
+        # Change the subject, block and trials ids to a numbered code
+        for values_dict in queryset_list:
+            values_dict["trial_id"] = aux_values[
+                (values_dict["block_id"], values_dict["subject_code"])
+            ][values_dict["trial_id"]]
+            values_dict["subject_code"] = new_subject_codes[values_dict["subject_code"]]
+            values_dict["block_id"] = new_block_codes[values_dict["block_id"]]
+            # values_dict["trial_id"] = new_trial_codes[values_dict["trial_id"]]
+        # Output csv
+        response = HttpResponse(content_type="text/csv")
+        response[
+            "Content-Disposition"
+        ] = 'attachment; filename="raw_experiment_{}.csv"'.format(code)
+
+        writer = csv.DictWriter(response, queryset_list[0].keys())
+        writer.writeheader()
+        writer.writerows(queryset_list)
+        return response
 
 
 @login_required
@@ -453,7 +490,8 @@ def download_processed_data(request):
             trial_id_dict = aux_values[
                 (values_dict["block_id"], values_dict["subject_code"])
             ]
-            trial_id_dict[values_dict["trial_id"]] = len(trial_id_dict.keys()) + 1
+            if values_dict["trial_id"] not in trial_id_dict:
+                trial_id_dict[values_dict["trial_id"]] = len(trial_id_dict.keys()) + 1
         # Change the subject, block and trials ids to a numbered code
         for values_dict in no_et:
             values_dict["trial_id"] = aux_values[
