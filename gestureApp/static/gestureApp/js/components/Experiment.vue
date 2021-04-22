@@ -3,9 +3,10 @@
     <!-- Will have to do a practice example -->
     <notifications
       group="alerts"
-      position="top right"
+      position="top center"
       :max="2"
       :duration="6000"
+      :width="450"
     ></notifications>
     <h1 class="text-center">
       Experiment "{{ experiment.name }}"<span class="text-success">{{
@@ -364,11 +365,11 @@ module.exports = {
         this.$notify({
           group: "alerts",
           title: "Error in input sequence",
-          text: `
-                Target sequence was '${sequence}', and your input was '${inputted_sequence.join(
-            ""
-          )}'
-                `,
+          // text: `
+          //       Target sequence was '${sequence}', and your input was '${inputted_sequence.join(
+          //   ""
+          // )}'
+          //       `,
           type: `error`,
         });
       }
