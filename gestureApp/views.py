@@ -450,12 +450,20 @@ def download_processed_data(request):
             # .annotate(total_trials=Count("blocks__trials"))
         )
         no_et = list(no_et)
+        acc_correct_trials = defaultdict(lambda: 0)
         for values_dict in no_et:
             values_dict["experiment_code"] = values_dict.pop("code")
             values_dict["block_id"] = values_dict.pop("blocks")
             values_dict["subject_code"] = values_dict.pop("blocks__trials__subject")
             values_dict["trial_id"] = values_dict.pop("blocks__trials")
             values_dict["correct_trial"] = values_dict.pop("blocks__trials__correct")
+            if values_dict["correct_trial"]:
+                acc_correct_trials[
+                    (values_dict["block_id"], values_dict["subject_code"])
+                ] += 1
+            values_dict["accumulated_correct_trials"] = acc_correct_trials[
+                (values_dict["block_id"], values_dict["subject_code"])
+            ]
             # values_dict["num_correct_trials"] = values_dict.pop("num_correct_trials")
             # values_dict["total_trials"] = values_dict.pop("total_trials")
 
@@ -484,9 +492,10 @@ def download_processed_data(request):
         # Trials are not fixed across different experiments or blocks.
         # If we are on the same experiment and block, start adding up
         # for every combination of block-subject, we have a different count
-        # {(block, subject): [trial_1, trial_2, trial_3]}
+        # {(block, subject): {trial_1: 1, trial_2:2, trial_3:3}}
         aux_values = defaultdict(dict)
         for values_dict in no_et:
+            # To get the new id
             trial_id_dict = aux_values[
                 (values_dict["block_id"], values_dict["subject_code"])
             ]

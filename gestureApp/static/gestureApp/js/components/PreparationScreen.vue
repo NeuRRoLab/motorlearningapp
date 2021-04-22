@@ -26,7 +26,7 @@
     <h2>Consent</h2>
     <div class="d-flex justify-content-center">
       <embed
-        src="http://127.0.0.1:8887/B2ZC/consent.pdf"
+        :src="`http://127.0.0.1:8887/${exp_code}/consent.pdf`"
         width="640"
         height="480"
       />
@@ -57,7 +57,7 @@ module.exports = {
           {
             type: "video/mp4",
             // mp4
-            src: "http://127.0.0.1:8887/B2ZC/out.mp4",
+            src: `http://127.0.0.1:8887/${this.exp_code}/out.mp4`,
             // webm
             // src: "https://cdn.theguardian.tv/webM/2015/07/20/150716YesMen_synd_768k_vp8.webm"
           },
