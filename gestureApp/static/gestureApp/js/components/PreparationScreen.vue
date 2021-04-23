@@ -25,11 +25,7 @@
     <br />
     <h2>Consent</h2>
     <div class="d-flex justify-content-center">
-      <embed
-        :src="`http://127.0.0.1:8887/${exp_code}/consent.pdf`"
-        width="640"
-        height="480"
-      />
+      <embed :src="pdf_url" width="640" height="480" />
     </div>
     <br />
     <a
@@ -57,7 +53,7 @@ module.exports = {
           {
             type: "video/mp4",
             // mp4
-            src: `http://127.0.0.1:8887/${this.exp_code}/out.mp4`,
+            src: this.video_url,
             // webm
             // src: "https://cdn.theguardian.tv/webM/2015/07/20/150716YesMen_synd_768k_vp8.webm"
           },
@@ -67,6 +63,8 @@ module.exports = {
   },
   props: {
     exp_code: String,
+    video_url: String,
+    pdf_url: String,
   },
   mounted: function () {
     setTimeout(() => {

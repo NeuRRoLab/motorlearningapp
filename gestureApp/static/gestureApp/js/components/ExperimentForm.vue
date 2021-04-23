@@ -17,6 +17,7 @@
       </b-form-group>
       <b-form-group label="Instructions video:" label-for="instructions-video">
         <b-form-file
+          accept=".mp4"
           id="instructions-video"
           v-model="video_file"
           :state="Boolean(video_file)"

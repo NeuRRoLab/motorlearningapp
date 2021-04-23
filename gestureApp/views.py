@@ -15,7 +15,13 @@ from django.db.models import Count, F, Max, Min, Q
 from django.db import transaction
 from django.forms import inlineformset_factory
 from django.forms.models import model_to_dict
-from django.http import HttpResponse, HttpResponseRedirect, JsonResponse, Http404
+from django.http import (
+    HttpResponse,
+    HttpResponseRedirect,
+    JsonResponse,
+    Http404,
+    FileResponse,
+)
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse, reverse_lazy
 from django.utils import timezone
@@ -24,8 +30,12 @@ from django.utils.timezone import make_aware, now
 from django.views.generic.detail import DetailView
 from django.views.generic.edit import CreateView, FormView, UpdateView
 
+from google.cloud import storage
+
 from .forms import ExperimentCode, UserRegisterForm, BlockFormSet, ExperimentForm
 from .models import Block, Experiment, Keypress, Subject, Trial, User, EndSurvey
+
+BUCKET_NAME = "motor-learning"
 
 
 @method_decorator([login_required], name="dispatch")
@@ -211,29 +221,36 @@ def create_trials(request):
     return JsonResponse(data)
 
 
-# TODO: check how would we have to do it when living inside the container
 def upload_files(request, pk):
     if request.method == "POST":
-        handle_upload_file(request.FILES["consent"], pk, "consent.pdf")
+        cs_bucket = storage.Client().bucket(BUCKET_NAME)
         handle_upload_file(
+            cs_bucket, request.FILES["consent"], pk, "consent.pdf", "application/pdf"
+        )
+        handle_upload_file(
+            cs_bucket,
             request.FILES["video"],
             pk,
             f"video.{str(request.FILES['video']).split('.')[1]}",
+            "video/mp4",
         )
         return HttpResponse("Successful")
 
 
-def handle_upload_file(file, code, filename):
-    if not os.path.exists(f"exp_files/{code}/"):
-        os.makedirs(f"exp_files/{code}/")
-    # Remove existing file before
-    for f in os.listdir(f"exp_files/{code}/"):
-        if f.startswith(filename.split(".")[0]):
-            os.remove(os.path.join(f"exp_files/{code}/", f))
+def handle_upload_file(cs_bucket, file, code, filename, content_type):
+    # Upload file to cloud storage
+    blob = cs_bucket.blob(f"experiment_files/{code}/{filename}")
+    blob.upload_from_string(file.read(), content_type=content_type)
+    # if not os.path.exists(f"exp_files/{code}/"):
+    #     os.makedirs(f"exp_files/{code}/")
+    # # Remove existing file before
+    # for f in os.listdir(f"exp_files/{code}/"):
+    #     if f.startswith(filename.split(".")[0]):
+    #         os.remove(os.path.join(f"exp_files/{code}/", f))
 
-    with open(f"exp_files/{code}/{filename}", "wb+") as destination:
-        for chunk in file.chunks():
-            destination.write(chunk)
+    # with open(f"exp_files/{code}/{filename}", "wb+") as destination:
+    #     for chunk in file.chunks():
+    #         destination.write(chunk)
 
 
 @login_required
@@ -630,4 +647,3 @@ def end_survey(request, pk):
         comments=info["questionnaire"]["comment"],
     )
     return JsonResponse({})
-
