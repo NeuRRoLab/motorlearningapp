@@ -179,4 +179,5 @@ class EndSurvey(models.Model):
     )
     age = models.IntegerField()
     gender = models.CharField(max_length=15)
+    comp_type = models.CharField(max_length=35)
     comments = models.TextField(null=True)

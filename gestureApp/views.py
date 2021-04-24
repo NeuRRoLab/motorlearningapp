@@ -656,5 +656,6 @@ def end_survey(request, pk):
         age=info["questionnaire"]["age"],
         gender=info["questionnaire"]["gender"],
         comments=info["questionnaire"]["comment"],
+        comp_type=info["questionnaire"]["comp_type"],
     )
     return JsonResponse({})

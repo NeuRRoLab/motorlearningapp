@@ -217,7 +217,7 @@
       <!-- Redirect home -->
       <b-form @submit="leaveExperiment">
         <div class="form-row">
-          <b-form-group class="col-6" label="Age:" label-for="age">
+          <b-form-group class="col-4" label="Age:" label-for="age">
             <b-form-input
               name="age"
               id="age"
@@ -227,11 +227,23 @@
               placeholder="Age"
             ></b-form-input>
           </b-form-group>
-          <b-form-group class="col-6" label="Gender:" label-for="gender">
+          <b-form-group class="col-4" label="Gender:" label-for="gender">
             <b-form-select
               id="gender"
               v-model="questionnaire.gender"
               :options="gender_opts"
+              required
+            ></b-form-select>
+          </b-form-group>
+          <b-form-group
+            class="col-4"
+            label="Computer type:"
+            label-for="comp-type"
+          >
+            <b-form-select
+              id="comp-type"
+              v-model="questionnaire.comp_type"
+              :options="comp_type_opts"
               required
             ></b-form-select>
           </b-form-group>
@@ -289,9 +301,11 @@ module.exports = {
       questionnaire: {
         age: null,
         gender: null,
+        comp_type: null,
         comment: null,
       },
       gender_opts: { male: "Male", female: "Female", other: "Other" },
+      comp_type_opts: { laptop: "Laptop", desktop: "Desktop", other: "Other" },
     };
   },
   props: {
