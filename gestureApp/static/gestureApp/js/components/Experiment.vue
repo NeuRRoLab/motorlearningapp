@@ -117,14 +117,21 @@
         Block starting in:
         <countdown
           ref="timerBlock"
-          :time="3000"
-          :interval="1000"
+          :time="
+            Math.max(
+              3000,
+              blocks[current_block - 1]
+                ? blocks[current_block - 1].sec_until_next * 1000
+                : 0
+            )
+          "
+          :interval="50"
           :auto-start="true"
           :emit-events="true"
-          @start="playCountdown"
+          @progress="playCountdown"
           @end="startBlock"
         >
-          <span slot-scope="props" class="h1">{{ props.seconds }}</span>
+          <span slot-scope="props" class="h1">{{ props.seconds + 1 }}</span>
         </countdown>
         <p class="text-center h4">
           Sequence:
@@ -277,6 +284,8 @@ module.exports = {
       block_trials: [],
       experiment_blocks: [],
 
+      played_countdown: false,
+
       questionnaire: {
         age: null,
         gender: null,
@@ -345,6 +354,7 @@ module.exports = {
       this.practicing = false;
     },
     startBlock: function () {
+      this.played_countdown = false;
       this.block_started = true;
       this.capturing_keypresses = true;
       this.current_block_time = 0;
@@ -464,9 +474,12 @@ module.exports = {
       this.$emit("end-survey", this.questionnaire);
       // window.location.href = "/";
     },
-    playCountdown() {
-      var audio = new Audio("/static/gestureApp/sound/countdown.wav");
-      audio.play();
+    playCountdown(data) {
+      if (data.seconds <= 2 && !this.played_countdown) {
+        var audio = new Audio("/static/gestureApp/sound/countdown.wav");
+        audio.play();
+        this.played_countdown = true;
+      }
     },
   },
 };
