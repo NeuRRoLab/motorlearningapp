@@ -22,13 +22,11 @@
           :auto-start="true"
           @end="trialEnded"
         >
-          <template slot-scope="props"
-            >{{ props.seconds }}.{{
-              props.milliseconds / 100
-            }}
-            seconds.</template
+          <span class="h2" slot-scope="props"
+            >{{ props.seconds }}.{{ props.milliseconds / 100 }}</span
           >
         </countdown>
+        seconds
       </p>
     </template>
     <template v-else>
@@ -43,10 +41,11 @@
           :emit-events="true"
           @end="restEnded"
         >
-          <span slot-scope="props"
-            >{{ props.seconds }}.{{ props.milliseconds / 100 }} seconds.</span
+          <span class="h2" slot-scope="props"
+            >{{ props.seconds }}.{{ props.milliseconds / 100 }}</span
           >
         </countdown>
+        seconds
       </p>
     </template>
   </div>
