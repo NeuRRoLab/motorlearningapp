@@ -28,6 +28,7 @@ var app = new Vue({
           sec_until_next: 0,
           is_random_sequence: false,
           seq_length: null,
+          num_repetitions: 1,
         },
       ],
       block_types: [
@@ -138,7 +139,8 @@ var app = new Vue({
             max_time: block.max_time,
             sec_until_next: block.sec_until_next,
             is_random_sequence: block.is_random,
-            seq_length: block.seq_length
+            seq_length: block.seq_length,
+            num_repetitions: 1,
           });
         });
       }

@@ -277,20 +277,23 @@ def create_experiment(request):
             sequence = block["sequence"]
             if block["is_random_sequence"]:
                 sequence = "".join(random.choices(string.digits, k=block["seq_length"]))
-            block_obj = Block(
-                experiment=experiment,
-                sequence=sequence,
-                seq_length=len(sequence),
-                is_random=block["is_random_sequence"],
-                max_time_per_trial=block["max_time_per_trial"],
-                resting_time=block["resting_time"],
-                type=Block.BlockTypes(block["block_type"]),
-                max_time=block["max_time"],
-                num_trials=block["num_trials"],
-                sec_until_next=block["sec_until_next"],
-            )
-            block_obj.full_clean()
-            block_obj.save()
+            # Repeat the block n number of times
+            num_repetitions = block["num_repetitions"]
+            for _ in range(num_repetitions):
+                block_obj = Block(
+                    experiment=experiment,
+                    sequence=sequence,
+                    seq_length=len(sequence),
+                    is_random=block["is_random_sequence"],
+                    max_time_per_trial=block["max_time_per_trial"],
+                    resting_time=block["resting_time"],
+                    type=Block.BlockTypes(block["block_type"]),
+                    max_time=block["max_time"],
+                    num_trials=block["num_trials"],
+                    sec_until_next=block["sec_until_next"],
+                )
+                block_obj.full_clean()
+                block_obj.save()
 
         return JsonResponse({"code": experiment.code})
 
@@ -332,22 +335,25 @@ def edit_experiment(request, pk):
             sequence = block["sequence"]
             if block["is_random_sequence"]:
                 sequence = "".join(random.choices(string.digits, k=block["seq_length"]))
+            num_repetitions = block["num_repetitions"]
             if block["block_id"] is None:
-                block_obj = Block(
-                    experiment=experiment,
-                    sequence=sequence,
-                    seq_length=len(sequence),
-                    is_random=block["is_random_sequence"],
-                    max_time_per_trial=block["max_time_per_trial"],
-                    resting_time=block["resting_time"],
-                    type=Block.BlockTypes(block["block_type"]),
-                    max_time=block["max_time"],
-                    num_trials=block["num_trials"],
-                    sec_until_next=block["sec_until_next"],
-                )
-                block_obj.full_clean()
-                block_obj.save()
+                for _ in range(num_repetitions):
+                    block_obj = Block(
+                        experiment=experiment,
+                        sequence=sequence,
+                        seq_length=len(sequence),
+                        is_random=block["is_random_sequence"],
+                        max_time_per_trial=block["max_time_per_trial"],
+                        resting_time=block["resting_time"],
+                        type=Block.BlockTypes(block["block_type"]),
+                        max_time=block["max_time"],
+                        num_trials=block["num_trials"],
+                        sec_until_next=block["sec_until_next"],
+                    )
+                    block_obj.full_clean()
+                    block_obj.save()
             else:
+                block_obj = Block.objects.get(pk=block["block_id"])
                 Block.objects.filter(pk=block["block_id"]).update(
                     sequence=sequence,
                     seq_length=len(sequence),
@@ -359,6 +365,11 @@ def edit_experiment(request, pk):
                     num_trials=block["num_trials"],
                     sec_until_next=block["sec_until_next"],
                 )
+                if num_repetitions > 1:
+                    # Duplicate block as many times as necessary
+                    for _ in range(num_repetitions - 1):
+                        block_obj.pk = None
+                        block_obj.save()
         return HttpResponseRedirect(reverse("gestureApp:profile"))
 
 

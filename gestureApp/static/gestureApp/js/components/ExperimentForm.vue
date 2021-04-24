@@ -260,7 +260,7 @@
         <div class="form-row">
           <b-form-group
             class="col-6"
-            label="`Resting time (seconds) until next block:"
+            label="Resting time (seconds) until next block:"
             :label-for="'betw-blocks-' + index"
             description="Set to 0 if you want the next block to start immediately"
           >
@@ -272,6 +272,26 @@
               step="0.1"
               required
               placeholder="Seconds until next block"
+              :disabled="published"
+            ></b-form-input>
+          </b-form-group>
+        </div>
+        <div class="form-row">
+          <b-form-group
+            class="col-6"
+            label="Repeat block:"
+            :label-for="'rep-blocks-' + index"
+            description="Set to greater than 1 if you want N identical blocks"
+          >
+            <b-form-input
+              name="rep-blocks"
+              :id="'rep-blocks-' + index"
+              v-model.number="block.num_repetitions"
+              type="number"
+              step="1"
+              min="1"
+              required
+              placeholder="Number of repetitions"
               :disabled="published"
             ></b-form-input>
           </b-form-group>
@@ -351,6 +371,7 @@ module.exports = {
         sec_until_next: 0,
         is_random_sequence: false,
         seq_length: null,
+        num_repetitions: 1,
       });
     },
     removeBlock(index) {
