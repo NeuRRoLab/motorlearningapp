@@ -402,7 +402,16 @@ def download_raw_data(request):
             keypress_value=F("blocks__trials__keypresses__value"),
         )
         queryset_list = list(qs)
-        possible_subjects = unique([value["subject_code"] for value in queryset_list])
+        # Order subjects by time when they started the first trial
+        subjects = [
+            Subject.objects.get(pk=code)
+            for code in unique([value["subject_code"] for value in queryset_list])
+        ]
+        subjects.sort(key=lambda subj: subj.trials.first().started_at)
+        possible_subjects = [subj.code for subj in subjects]
+        new_subject_codes = {
+            subject: index + 1 for index, subject in enumerate(possible_subjects)
+        }
         new_subject_codes = {
             subject: index + 1 for index, subject in enumerate(possible_subjects)
         }
@@ -510,7 +519,13 @@ def download_processed_data(request):
             else:
                 values_dict["execution_time_ms"] = None
 
-        possible_subjects = unique([value["subject_code"] for value in no_et])
+        # Order subjects by time when they started the first trial
+        subjects = [
+            Subject.objects.get(pk=code)
+            for code in unique([value["subject_code"] for value in no_et])
+        ]
+        subjects.sort(key=lambda subj: subj.trials.first().started_at)
+        possible_subjects = [subj.code for subj in subjects]
         new_subject_codes = {
             subject: index + 1 for index, subject in enumerate(possible_subjects)
         }

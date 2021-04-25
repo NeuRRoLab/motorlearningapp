@@ -57,6 +57,10 @@
             you can
           </p>
           <p class="h4">
+            After clicking on "Start Experiment", and before each block, you
+            will hear an auditory cue
+          </p>
+          <p class="h4">
             Click on "Start Experiment" when you're ready to begin
           </p>
           <button class="btn btn-primary" @click="startExperiment">
