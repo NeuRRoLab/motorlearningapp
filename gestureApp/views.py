@@ -331,6 +331,16 @@ def edit_experiment(request, pk):
             practice_trial_time=exp_info["practice_trial_time"],
             practice_rest_time=exp_info["practice_rest_time"],
         )
+        # Delete blocks not in exp info blocks but that were originally on the experiment
+        edit_blocks = [
+            block_dict["block_id"]
+            for block_dict in exp_info["blocks"]
+            if block_dict["block_id"] is not None
+        ]
+        for block in experiment.blocks.all():
+            # if block not in exp_info["blocks"], delete
+            if block.id not in edit_blocks:
+                block.delete()
         for block in exp_info["blocks"]:
             sequence = block["sequence"]
             if block["is_random_sequence"]:
@@ -665,7 +675,6 @@ def end_survey(request, pk):
         subject = Subject.objects.get(code=info["subject_code"])
     except Subject.DoesNotExist:
         pass
-    print("hola", experiment, subject)
     survey = EndSurvey.objects.create(
         experiment=experiment,
         subject=subject,
