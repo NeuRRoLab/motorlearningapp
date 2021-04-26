@@ -45,6 +45,9 @@
           </p>
           <p class="h4">Try to do it as fast as you can</p>
           <p class="h4">
+            Do not change window or tab, or the experiment will restart
+          </p>
+          <p class="h4">
             You will complete {{ blocks.length }} block(s) of trials
           </p>
           <p class="h4" v-if="isTypeNumTrials">
@@ -319,6 +322,19 @@ module.exports = {
   mounted: function () {
     // window.addEventListener('keydown', this.keydownHandler);
     this.remaining_practice_trials = this.experiment.num_practice_trials;
+    // Handle page visibility change events
+    function visibilityListener() {
+      switch (document.visibilityState) {
+        case "hidden":
+          window.location.reload();
+          break;
+        case "visible":
+          console.log("visible");
+          break;
+      }
+    }
+
+    document.addEventListener("visibilitychange", visibilityListener);
   },
   components: {
     trial: httpVueLoader("/static/gestureApp/js/components/Trial.vue"),
