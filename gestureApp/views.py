@@ -31,6 +31,7 @@ from django.views.generic.detail import DetailView
 from django.views.generic.edit import CreateView, FormView, UpdateView
 
 from google.cloud import storage
+import numpy as np
 
 from .forms import ExperimentCode, UserRegisterForm, BlockFormSet, ExperimentForm
 from .models import Block, Experiment, Keypress, Subject, Trial, User, EndSurvey
@@ -449,6 +450,14 @@ def download_raw_data(request):
             values_dict["subject_code"] = new_subject_codes[values_dict["subject_code"]]
             values_dict["block_id"] = new_block_codes[values_dict["block_id"]]
             # values_dict["trial_id"] = new_trial_codes[values_dict["trial_id"]]
+        # Order the list by block and then subject
+        queryset_list.sort(
+            key=lambda value_dict: (
+                value_dict["block_id"],
+                value_dict["subject_code"],
+                value_dict["trial_id"],
+            )
+        )
         # Output csv
         response = HttpResponse(content_type="text/csv")
         response[
@@ -487,6 +496,7 @@ def download_processed_data(request):
                 "code",
                 "blocks",
                 "blocks__trials__subject",
+                "blocks__sequence",
                 "blocks__trials",
                 "blocks__trials__correct",
             )
@@ -504,6 +514,7 @@ def download_processed_data(request):
             values_dict["experiment_code"] = values_dict.pop("code")
             values_dict["block_id"] = values_dict.pop("blocks")
             values_dict["subject_code"] = values_dict.pop("blocks__trials__subject")
+            values_dict["block_sequence"] = values_dict.pop("blocks__sequence")
             values_dict["trial_id"] = values_dict.pop("blocks__trials")
             values_dict["correct_trial"] = values_dict.pop("blocks__trials__correct")
             if values_dict["correct_trial"]:
@@ -515,7 +526,8 @@ def download_processed_data(request):
             ]
             # values_dict["num_correct_trials"] = values_dict.pop("num_correct_trials")
             # values_dict["total_trials"] = values_dict.pop("total_trials")
-
+        accumulated_keypresses = defaultdict(lambda: 0)
+        accumulated_elapsed_time = defaultdict(lambda: 0)
         for values_dict in no_et:
             # TODO: if the difference between the starting timestamp of trial and last keypress is desired, change
             qs = (
@@ -524,12 +536,59 @@ def download_processed_data(request):
                 .annotate(last_keypress=Max("keypresses__timestamp"))
             )
             if len(qs) > 0:
-                values_dict["execution_time_ms"] = (
+                # Tapping speed
+                tap_speed = []
+                keypresses = qs[0].keypresses.order_by("timestamp")
+                for index, keypress in enumerate(keypresses):
+                    if index == 0:
+                        continue
+                    elapsed = (
+                        keypress.timestamp - keypresses[index - 1].timestamp
+                    ).total_seconds()
+                    tap_speed.append(1.0 / elapsed)
+                # Mean and std deviation of tapping speed
+                mean_tap_speed = np.mean(tap_speed)
+                std_dev_tap_speed = np.std(tap_speed)
+
+                # Execution time
+                execution_time_ms = (
                     qs[0].last_keypress - qs[0].first_keypress
                 ).total_seconds() * 1000
+                values_dict["execution_time_ms"] = execution_time_ms
+                # Tapping data
+                values_dict["tapping_speed_mean"] = mean_tap_speed
+                values_dict["tapping_speed_std_dev"] = std_dev_tap_speed
+
+                # Accumulated tapping data
+                # accumulated_keypresses[
+                #     (values_dict["block_id"], values_dict["subject_code"])
+                # ] += len(qs[0].block.sequence)
+                # accumulated_elapsed_time[
+                #     (values_dict["block_id"], values_dict["subject_code"])
+                # ] += (execution_time_ms / 1000.0)
+
             else:
                 values_dict["execution_time_ms"] = None
+                # Tapping data
+                values_dict["tapping_speed_mean"] = None
+                values_dict["tapping_speed_std_dev"] = None
 
+            # if (
+            #     accumulated_elapsed_time[
+            #         values_dict["block_id"], values_dict["subject_code"]
+            #     ]
+            #     != 0
+            # ):
+            #     values_dict["accumulated_tapping_speed"] = (
+            #         accumulated_keypresses[
+            #             (values_dict["block_id"], values_dict["subject_code"])
+            #         ]
+            #         / accumulated_elapsed_time[
+            #             (values_dict["block_id"], values_dict["subject_code"])
+            #         ]
+            #     )
+            # else:
+            #     values_dict["accumulated_tapping_speed"] = 0
         # Order subjects by time when they started the first trial
         subjects = [
             Subject.objects.get(pk=code)
@@ -564,7 +623,14 @@ def download_processed_data(request):
             values_dict["subject_code"] = new_subject_codes[values_dict["subject_code"]]
             values_dict["block_id"] = new_block_codes[values_dict["block_id"]]
             # values_dict["trial_id"] = new_trial_codes[values_dict["trial_id"]]
-
+        # Order the list by block and then subject
+        no_et.sort(
+            key=lambda value_dict: (
+                value_dict["block_id"],
+                value_dict["subject_code"],
+                value_dict["trial_id"],
+            )
+        )
         # Output csv
         response = HttpResponse(content_type="text/csv")
         response[
