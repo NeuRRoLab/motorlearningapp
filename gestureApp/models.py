@@ -65,6 +65,8 @@ class Experiment(CloneMixin, models.Model):
     practice_trial_time = models.FloatField(default=5, null=True, blank=True)
     practice_rest_time = models.FloatField(default=5, null=True, blank=True)
 
+    with_feedback = models.BooleanField(default=True)
+
     _clone_m2o_or_o2m_fields = ["blocks"]
 
     def save(self, *args, **kwargs):
@@ -109,6 +111,7 @@ class Experiment(CloneMixin, models.Model):
             "practice_trial_time": self.practice_trial_time,
             "practice_rest_time": self.practice_rest_time,
             "published": self.published,
+            "with_feedback": self.with_feedback,
         }
 
 

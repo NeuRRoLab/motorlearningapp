@@ -125,12 +125,9 @@
         <countdown
           ref="timerBlock"
           :time="
-            Math.max(
-              3000,
-              blocks[current_block - 1]
-                ? blocks[current_block - 1].sec_until_next * 1000
-                : 0
-            )
+            blocks[current_block - 1]
+              ? blocks[current_block - 1].sec_until_next * 1000
+              : 3000
           "
           :interval="50"
           :auto-start="true"
@@ -347,6 +344,7 @@ module.exports = {
         max_time_per_trial: this.blocks[this.current_block].max_time_per_trial,
         resting_time: this.blocks[this.current_block].resting_time,
         capturing_keypresses: this.capturing_keypresses,
+        with_feedback: this.experiment.with_feedback,
       };
     },
     isTypeNumTrials() {
@@ -399,23 +397,25 @@ module.exports = {
       this.started_trial_at = new Date().getTime();
     },
     practiceTrialEnded(correct, keypresses_trial, inputted_sequence, sequence) {
-      if (correct) {
-        this.$notify({
-          group: "alerts",
-          title: "Correct input sequence",
-          type: "success",
-        });
-      } else {
-        this.$notify({
-          group: "alerts",
-          title: "Error in input sequence",
-          // text: `
-          //       Target sequence was '${sequence}', and your input was '${inputted_sequence.join(
-          //   ""
-          // )}'
-          //       `,
-          type: `error`,
-        });
+      if (this.experiment.with_feedback) {
+        if (correct) {
+          this.$notify({
+            group: "alerts",
+            title: "Correct input sequence",
+            type: "success",
+          });
+        } else {
+          this.$notify({
+            group: "alerts",
+            title: "Error in input sequence",
+            // text: `
+            //       Target sequence was '${sequence}', and your input was '${inputted_sequence.join(
+            //   ""
+            // )}'
+            //       `,
+            type: `error`,
+          });
+        }
       }
       this.remaining_practice_trials--;
       if (this.remaining_practice_trials <= 0) this.stopPractice();
@@ -427,23 +427,27 @@ module.exports = {
       sequence
     ) {
       if (correct) {
-        this.$notify({
-          group: "alerts",
-          title: "Correct input sequence",
-          type: "success",
-        });
+        if (this.experiment.with_feedback) {
+          this.$notify({
+            group: "alerts",
+            title: "Correct input sequence",
+            type: "success",
+          });
+        }
         this.num_correct_seq++;
       } else {
-        this.$notify({
-          group: "alerts",
-          title: "Error in input sequence",
-          text: `
-                Target sequence was '${sequence}', and your input was '${inputted_sequence.join(
-            ""
-          )}'
-                `,
-          type: `error`,
-        });
+        if (this.experiment.with_feedback) {
+          this.$notify({
+            group: "alerts",
+            title: "Error in input sequence",
+            text: `
+                    Target sequence was '${sequence}', and your input was '${inputted_sequence.join(
+              ""
+            )}'
+                    `,
+            type: `error`,
+          });
+        }
         this.num_incorrect_seq++;
       }
       this.block_trials.push({
@@ -509,7 +513,7 @@ module.exports = {
       // window.location.href = "/";
     },
     playCountdown(data) {
-      if (data.seconds <= 2 && !this.played_countdown) {
+      if (data.seconds == 2 && !this.played_countdown) {
         var audio = new Audio("/static/gestureApp/sound/countdown.wav");
         audio.play();
         this.played_countdown = true;

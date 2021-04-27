@@ -16,6 +16,7 @@ var app = new Vue({
       practice_sequence: "",
       practice_trial_time: null,
       practice_rest_time: null,
+      with_feedback: true,
       experiment_blocks: [
         {
           block_id: null,
@@ -67,11 +68,12 @@ var app = new Vue({
         prop_practice_rest_time: this.practice_rest_time,
         prop_experiment_blocks: this.experiment_blocks,
         prop_block_types: this.block_types,
+        prop_with_feedback: this.with_feedback,
       }
     }
   },
   methods: {
-    submitExperiment(name, with_practice_trials, practice_trials, practice_is_random_sequence, practice_seq_length, practice_sequence, practice_trial_time, practice_rest_time, blocks, video_file, consent_file) {
+    submitExperiment(name, with_practice_trials, practice_trials, practice_is_random_sequence, practice_seq_length, practice_sequence, practice_trial_time, practice_rest_time, blocks, video_file, consent_file, with_feedback) {
       let obj = {
         code: this.experiment_code,
         name: name,
@@ -83,6 +85,7 @@ var app = new Vue({
         practice_seq: practice_sequence,
         practice_trial_time: practice_trial_time,
         practice_rest_time: practice_rest_time,
+        with_feedback: with_feedback,
       }
       let formData = new FormData();
       formData.append("consent", consent_file);
@@ -124,6 +127,7 @@ var app = new Vue({
       this.practice_sequence = html_experiment.practice_seq;
       this.practice_trial_time = html_experiment.practice_trial_time;
       this.practice_rest_time = html_experiment.practice_rest_time;
+      this.with_feedback = html_experiment.with_feedback;
 
       html_blocks = JSON.parse(document.getElementById('blocks').textContent);
       if (html_blocks !== undefined && html_blocks.length != 0) {

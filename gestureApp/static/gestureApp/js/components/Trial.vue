@@ -68,6 +68,7 @@ module.exports = {
     practice: Boolean,
     capturing_keypresses: Boolean,
     random_seq: Boolean,
+    with_feedback: Boolean,
   },
   mounted: function () {
     window.addEventListener("keydown", this.keydownHandler);
@@ -148,7 +149,8 @@ module.exports = {
         this.keypresses_trial.push({ value: e.key, timestamp: timestamp });
         // Check if the inputted key is correct
         var index = this.current_inputted_sequence.length - 1;
-        if (sequence[index] === e.key) {
+        // Color the key as correct both if it was correct, or if feedback is disabled
+        if (sequence[index] === e.key || !this.with_feedback) {
           this.$refs["seq-" + index.toString()][0].style.backgroundColor =
             "#85C0F9";
         } else {

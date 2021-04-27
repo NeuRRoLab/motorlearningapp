@@ -273,6 +273,7 @@ def create_experiment(request):
             practice_seq_length=len(exp_practice_seq),
             practice_trial_time=exp_info["practice_trial_time"],
             practice_rest_time=exp_info["practice_rest_time"],
+            with_feedback=exp_info["with_feedback"],
         )
         for block in exp_info["blocks"]:
             sequence = block["sequence"]
@@ -331,6 +332,7 @@ def edit_experiment(request, pk):
             practice_seq_length=len(exp_practice_seq),
             practice_trial_time=exp_info["practice_trial_time"],
             practice_rest_time=exp_info["practice_rest_time"],
+            with_feedback=exp_info["with_feedback"],
         )
         # Delete blocks not in exp info blocks but that were originally on the experiment
         edit_blocks = [
@@ -548,7 +550,7 @@ def download_processed_data(request):
                     tap_speed.append(1.0 / elapsed)
                 # Mean and std deviation of tapping speed
                 mean_tap_speed = np.mean(tap_speed)
-                std_dev_tap_speed = np.std(tap_speed)
+                std_dev_tap_speed = np.std(tap_speed, ddof=1)
 
                 # Execution time
                 execution_time_ms = (

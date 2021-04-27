@@ -40,6 +40,17 @@
       <b-form-group>
         <b-form-checkbox
           switch
+          id="checkbox-feedback"
+          v-model="with_feedback"
+          name="checkbox-feedback"
+          :disabled="published"
+        >
+          Show Feedback
+        </b-form-checkbox>
+      </b-form-group>
+      <b-form-group>
+        <b-form-checkbox
+          switch
           id="checkbox-practice-trials"
           v-model="with_practice_trials"
           name="checkbox-practice-trials"
@@ -336,6 +347,7 @@ module.exports = {
       block_types: this.prop_block_types,
       video_file: null,
       consent_file: null,
+      with_feedback: this.prop_with_feedback,
     };
   },
   props: {
@@ -352,6 +364,7 @@ module.exports = {
     prop_practice_rest_time: Number,
     prop_experiment_blocks: Array,
     prop_block_types: Array,
+    prop_with_feedback: Boolean,
   },
   mounted: function () {},
   components: {
@@ -398,6 +411,7 @@ module.exports = {
         this.experiment_blocks,
         this.video_file,
         this.consent_file,
+        this.with_feedback,
       );
     },
     resetExperiment(evt) {
