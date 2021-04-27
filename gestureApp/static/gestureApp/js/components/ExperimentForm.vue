@@ -137,6 +137,7 @@
         </div>
       </template>
       <h5>Blocks:</h5>
+      <button @click="removeAllBlocks" class="btn btn-link" :disabled="published">Remove all blocks</button>
       <div
         class="block-form"
         v-for="(block, index) in experiment_blocks"
@@ -376,6 +377,10 @@ module.exports = {
     },
     removeBlock(index) {
       this.experiment_blocks.splice(index, 1);
+    },
+    removeAllBlocks() {
+      this.experiment_blocks = [];
+      this.addBlock();
     },
     onSubmitExperiment(evt) {
       evt.preventDefault();
