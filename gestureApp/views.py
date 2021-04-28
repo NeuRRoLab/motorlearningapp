@@ -195,7 +195,7 @@ def create_trials(request):
     subject.save()
     # Save the trials to database.
     experiment_trials = json.loads(data.get("experiment_trials"))
-    print(experiment_trials)
+    # print(experiment_trials)
     for i, block in enumerate(experiment_trials):
         for trial in block:
             t = Trial(
@@ -274,6 +274,7 @@ def create_experiment(request):
             practice_trial_time=exp_info["practice_trial_time"],
             practice_rest_time=exp_info["practice_rest_time"],
             with_feedback=exp_info["with_feedback"],
+            with_feedback_blocks=exp_info["with_feedback_blocks"],
         )
         for block in exp_info["blocks"]:
             sequence = block["sequence"]
@@ -333,6 +334,7 @@ def edit_experiment(request, pk):
             practice_trial_time=exp_info["practice_trial_time"],
             practice_rest_time=exp_info["practice_rest_time"],
             with_feedback=exp_info["with_feedback"],
+            with_feedback_blocks=exp_info["with_feedback_blocks"],
         )
         # Delete blocks not in exp info blocks but that were originally on the experiment
         edit_blocks = [

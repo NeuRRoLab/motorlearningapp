@@ -198,23 +198,25 @@
         >
         </trial>
 
-        <h4>Block performance</h4>
-        <b-progress
-          height="2rem"
-          :max="num_correct_seq + num_incorrect_seq"
-          show-progress
-        >
-          <b-progress-bar
-            :value="num_correct_seq"
-            :label="num_correct_seq.toString() + ' correct'"
-            variant="success"
-          ></b-progress-bar>
-          <b-progress-bar
-            :value="num_incorrect_seq"
-            :label="num_incorrect_seq.toString() + ' incorrect'"
-            variant="danger"
-          ></b-progress-bar>
-        </b-progress>
+        <template v-if="experiment.with_feedback_blocks">
+          <h4>Block performance</h4>
+          <b-progress
+            height="2rem"
+            :max="num_correct_seq + num_incorrect_seq"
+            show-progress
+          >
+            <b-progress-bar
+              :value="num_correct_seq"
+              :label="num_correct_seq.toString() + ' correct'"
+              variant="success"
+            ></b-progress-bar>
+            <b-progress-bar
+              :value="num_incorrect_seq"
+              :label="num_incorrect_seq.toString() + ' incorrect'"
+              variant="danger"
+            ></b-progress-bar>
+          </b-progress>
+        </template>
       </template>
     </template>
     <div v-if="experiment_finished">

@@ -44,8 +44,21 @@
           v-model="with_feedback"
           name="checkbox-feedback"
           :disabled="published"
+          description="Switch on if you want the user to know when they input the wrong key in a sequence"
         >
-          Show Feedback
+          Show Feedback in Trials
+        </b-form-checkbox>
+      </b-form-group>
+      <b-form-group>
+        <b-form-checkbox
+          switch
+          id="checkbox-feedback-blocks"
+          v-model="with_feedback_blocks"
+          name="checkbox-feedback-blocks"
+          :disabled="published"
+          description="Switch on if you want the user to know their performance across one block"
+        >
+          Show Block Performance Bar
         </b-form-checkbox>
       </b-form-group>
       <b-form-group>
@@ -348,6 +361,7 @@ module.exports = {
       video_file: null,
       consent_file: null,
       with_feedback: this.prop_with_feedback,
+      with_feedback_blocks: this.prop_with_feedback_blocks,
     };
   },
   props: {
@@ -365,6 +379,7 @@ module.exports = {
     prop_experiment_blocks: Array,
     prop_block_types: Array,
     prop_with_feedback: Boolean,
+    prop_with_feedback_blocks: Boolean,
   },
   mounted: function () {},
   components: {
@@ -412,6 +427,7 @@ module.exports = {
         this.video_file,
         this.consent_file,
         this.with_feedback,
+        this.with_feedback_blocks,
       );
     },
     resetExperiment(evt) {
