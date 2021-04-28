@@ -44,7 +44,7 @@
             screen
           </p>
           <p class="h4">Try to do it as fast as you can</p>
-          <p class="h4">
+          <p class="h4 text-danger">
             Do not change window or tab, or the experiment will restart
           </p>
           <p class="h4">
@@ -60,13 +60,15 @@
             you can
           </p>
           <p class="h4">
-            After clicking on "Start Experiment", and before each block, you
-            will hear an auditory cue
+            After clicking on "Start Experiment", and before each block, you MAY
+            hear an auditory cue
           </p>
           <p class="h4">
             Click on "Start Experiment" when you're ready to begin
           </p>
-          <button class="btn btn-primary" @click="startExperiment">
+          <br />
+          <br />
+          <button class="btn btn-primary btn-lg" @click="startExperiment">
             Start Experiment
           </button>
         </template>
