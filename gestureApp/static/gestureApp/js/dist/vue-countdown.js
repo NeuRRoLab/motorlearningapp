@@ -10,9 +10,10 @@
 
 (function (global, factory) {
   typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
-  typeof define === 'function' && define.amd ? define(factory) :
-  (global = global || self, global.VueCountdown = factory());
-}(this, (function () { 'use strict';
+    typeof define === 'function' && define.amd ? define(factory) :
+      (global = global || self, global.VueCountdown = factory());
+}(this, (function () {
+  'use strict';
 
   var MILLISECONDS_SECOND = 1000;
   var MILLISECONDS_MINUTE = 60 * MILLISECONDS_SECOND;
@@ -39,7 +40,9 @@
          * The remaining milliseconds.
          * @type {number}
          */
-        totalMilliseconds: 0
+        totalMilliseconds: 0,
+
+        lastUpdate: null,
       };
     },
     props: {
@@ -226,6 +229,7 @@
         }
 
         this.counting = true;
+        this.lastUpdate = this.now();
 
         if (this.emitEvents) {
           /**
@@ -270,7 +274,7 @@
               var range = now - init;
 
               if (range >= delay // Avoid losing time about one second per minute (now - prev ≈ 16ms) (#43)
-              || range + (now - prev) / 2 >= delay) {
+                || range + (now - prev) / 2 >= delay) {
                 _this.progress();
               } else {
                 _this.requestId = requestAnimationFrame(step);
@@ -312,7 +316,10 @@
           return;
         }
 
-        this.totalMilliseconds -= this.interval;
+        let interval = this.now() - this.lastUpdate;
+        this.lastUpdate = this.now();
+        // This assumes that this method is called exactly at that interval
+        this.totalMilliseconds -= interval;
 
         if (this.emitEvents && this.totalMilliseconds > 0) {
           /**

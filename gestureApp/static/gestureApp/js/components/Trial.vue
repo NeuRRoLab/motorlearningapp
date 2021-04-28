@@ -18,11 +18,15 @@
         <countdown
           ref="timerTrial"
           :time="max_time_per_trial * 1000"
-          :interval="1000"
+          :interval="100"
           :auto-start="true"
           @end="trialEnded"
         >
-          <span class="h2" slot-scope="props">{{ props.seconds }}</span>
+          <span class="h2" slot-scope="props"
+            >{{ props.seconds }}.{{
+              Math.floor(props.milliseconds / 100)
+            }}</span
+          >
         </countdown>
         seconds
       </p>
@@ -34,12 +38,16 @@
         <countdown
           ref="timerRest"
           :time="resting_time * 1000"
-          :interval="1000"
+          :interval="100"
           :auto-start="false"
           :emit-events="true"
           @end="restEnded"
         >
-          <span class="h2" slot-scope="props">{{ props.seconds }}</span>
+          <span class="h2" slot-scope="props"
+            >{{ props.seconds }}.{{
+              Math.floor(props.milliseconds / 100)
+            }}</span
+          >
         </countdown>
         seconds
       </p>
