@@ -503,9 +503,13 @@ module.exports = {
       this.$emit("send-data", this.experiment_blocks);
     },
     blockTimerProgress(data) {
-      this.current_block_time =
+      this.current_block_time = Math.floor(
         this.blocks[this.current_block].max_time -
-        (data.hours * 3600 + data.minutes * 60 + data.seconds);
+          (data.hours * 3600 +
+            data.minutes * 60 +
+            data.seconds +
+            0.001 * data.milliseconds)
+      );
     },
     leaveExperiment(evt) {
       evt.preventDefault();
