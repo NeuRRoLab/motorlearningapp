@@ -479,7 +479,10 @@ module.exports = {
     },
     blockEnded: function (from_timer = false) {
       // If the block ended from timer, force the trial ending too
-      if (from_timer) this.$refs["real-trial"].trialEnded();
+      if (from_timer) {
+        // TODO: consider that a trial that had input the right sequence until now, is correct.
+        this.$refs["real-trial"].trialEnded();
+      }
       this.experiment_blocks.push(this.block_trials);
       this.block_trials = new Array();
       this.current_trial = 0;
