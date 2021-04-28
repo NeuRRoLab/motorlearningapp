@@ -191,6 +191,7 @@
         <br />
 
         <trial
+          ref="real-trial"
           v-bind="getTrialObj"
           @trial-ended="trialEnded"
           @rest-ended="restEnded"
@@ -473,6 +474,8 @@ module.exports = {
       } else this.blockEnded(true);
     },
     blockEnded: function (from_timer = false) {
+      // If the block ended from timer, force the trial ending too
+      if (from_timer) this.$refs["real-trial"].trialEnded();
       this.experiment_blocks.push(this.block_trials);
       this.block_trials = new Array();
       this.current_trial = 0;
