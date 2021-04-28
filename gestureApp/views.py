@@ -457,11 +457,23 @@ def download_raw_data(request):
         # Order the list by block and then subject
         queryset_list.sort(
             key=lambda value_dict: (
-                value_dict["block_id"],
                 value_dict["subject_code"],
+                value_dict["block_id"],
                 value_dict["trial_id"],
+                value_dict["keypress_timestamp"],
             )
         )
+        keypresses = [
+            (v_dict["keypress_timestamp"], v_dict["subject_code"])
+            for v_dict in queryset_list
+        ]
+        diff_keypresses_ms = [None] + [
+            (y[0] - x[0]).total_seconds() * 1000 if x[1] == y[1] else None
+            for x, y in zip(keypresses, keypresses[1:])
+        ]
+        for values_dict, diff in zip(queryset_list, diff_keypresses_ms):
+            values_dict["diff_between_keypresses_ms"] = diff
+
         # Output csv
         response = HttpResponse(content_type="text/csv")
         response[
@@ -516,8 +528,8 @@ def download_processed_data(request):
         acc_correct_trials = defaultdict(lambda: 0)
         for values_dict in no_et:
             values_dict["experiment_code"] = values_dict.pop("code")
-            values_dict["block_id"] = values_dict.pop("blocks")
             values_dict["subject_code"] = values_dict.pop("blocks__trials__subject")
+            values_dict["block_id"] = values_dict.pop("blocks")
             values_dict["block_sequence"] = values_dict.pop("blocks__sequence")
             values_dict["trial_id"] = values_dict.pop("blocks__trials")
             values_dict["correct_trial"] = values_dict.pop("blocks__trials__correct")
@@ -630,8 +642,8 @@ def download_processed_data(request):
         # Order the list by block and then subject
         no_et.sort(
             key=lambda value_dict: (
-                value_dict["block_id"],
                 value_dict["subject_code"],
+                value_dict["block_id"],
                 value_dict["trial_id"],
             )
         )
