@@ -468,7 +468,9 @@ def download_raw_data(request):
             for v_dict in queryset_list
         ]
         diff_keypresses_ms = [None] + [
-            (y[0] - x[0]).total_seconds() * 1000 if x[1] == y[1] else None
+            (y[0] - x[0]).total_seconds() * 1000
+            if x[1] == y[1] and x[0] is not None and y[0] is not None
+            else None
             for x, y in zip(keypresses, keypresses[1:])
         ]
         for values_dict, diff in zip(queryset_list, diff_keypresses_ms):
