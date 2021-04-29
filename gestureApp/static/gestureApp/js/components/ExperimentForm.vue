@@ -161,13 +161,13 @@
         </div>
       </template>
       <h5>Blocks:</h5>
-      <button @click="removeAllBlocks" class="btn btn-link" :disabled="published">Remove all blocks</button>
+      <button @click="removeAllBlocks" class="btn btn-link text-danger" :disabled="published">Remove all blocks</button>
       <div
         class="block-form"
         v-for="(block, index) in experiment_blocks"
         :key="index"
       >
-        <p>Block {{index + 1}}</p>
+        <p class="font-weight-bold">Block {{index + 1}}</p>
         <div class="form-row">
           <b-form-group
             class="col"
