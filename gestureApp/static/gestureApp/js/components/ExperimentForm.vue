@@ -167,6 +167,7 @@
         v-for="(block, index) in experiment_blocks"
         :key="index"
       >
+        <p>Block {{index + 1}}</p>
         <div class="form-row">
           <b-form-group
             class="col"
