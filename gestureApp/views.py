@@ -306,7 +306,7 @@ def create_experiment(request):
 @login_required
 def edit_experiment(request, pk):
     if request.method == "GET":
-        experiment = get_object_or_404(Experiment, pk=pk)
+        experiment = get_object_or_404(Experiment, pk=pk, creator=request.user)
         return render(
             request,
             "gestureApp/experiment_form.html",
@@ -616,6 +616,7 @@ def download_processed_data(request):
             Subject.objects.get(pk=code)
             for code in unique([value["subject_code"] for value in no_et])
         ]
+        # Sort by time when the user started the first trial
         subjects.sort(key=lambda subj: subj.trials.first().started_at)
         possible_subjects = [subj.code for subj in subjects]
         new_subject_codes = {
@@ -663,6 +664,73 @@ def download_processed_data(request):
         writer.writeheader()
         writer.writerows(no_et)
         return response
+
+
+@login_required
+def download_survey(request, pk):
+    # Get all experiments subjects
+    experiment = get_object_or_404(Experiment, pk=pk, creator=request.user)
+    # If the experiment hasn't been published, get all responses
+    starting_date_useful_data = experiment.created_at
+    # If it has, then only get those after the publishing timestamp
+    if experiment.published:
+        starting_date_useful_data = experiment.published_timestamp
+    # For each subject, check if it has a survey
+    subjects_surveys = (
+        Experiment.objects.filter(
+            pk=pk,
+            creator=request.user,
+            blocks__trials__started_at__gt=starting_date_useful_data,
+        )
+        .values("code", "blocks__trials__subject", "blocks__trials__subject__survey")
+        .distinct()
+    )
+    subjects_surveys = list(subjects_surveys)
+    # Order subjects by time when they started the first trial
+    subjects = [
+        Subject.objects.get(pk=code)
+        for code in unique(
+            [value["blocks__trials__subject"] for value in subjects_surveys]
+        )
+    ]
+    # Sort by time when the user started the first trial
+    subjects.sort(key=lambda subj: subj.trials.first().started_at)
+    possible_subjects = [subj.code for subj in subjects]
+    new_subject_codes = {
+        subject: index + 1 for index, subject in enumerate(possible_subjects)
+    }
+    # If they do, complete the row. If not, keep it empty.
+    survey = {
+        "age": "Age",
+        "gender": "Gender",
+        "comp_type": "Computer Type",
+        "comments": "Comments",
+    }
+    for values_dict in subjects_surveys:
+        values_dict["experiment_code"] = values_dict.pop("code")
+        values_dict["subject_code"] = new_subject_codes[
+            values_dict.pop("blocks__trials__subject")
+        ]
+        for value in survey.values():
+            values_dict[value] = None
+        if values_dict["blocks__trials__subject__survey"] is not None:
+            # Add survey values
+            for key, value in survey.items():
+                survey_id = values_dict["blocks__trials__subject__survey"]
+                values_dict[value] = getattr(EndSurvey.objects.get(pk=survey_id), key)
+        values_dict.pop("blocks__trials__subject__survey")
+    # Order the list by block and then subject
+    subjects_surveys.sort(key=lambda value_dict: (value_dict["subject_code"]))
+    # Output csv
+    response = HttpResponse(content_type="text/csv")
+    response[
+        "Content-Disposition"
+    ] = 'attachment; filename="survey_experiment_{}.csv"'.format(pk)
+
+    writer = csv.DictWriter(response, subjects_surveys[0].keys())
+    writer.writeheader()
+    writer.writerows(subjects_surveys)
+    return response
 
 
 def unique(sequence):

@@ -80,5 +80,10 @@ urlpatterns = [
         views.end_survey,
         name="end_survey",
     ),
+    re_path(
+        r"^api/experiment/download_end_survey/(?P<pk>[A-Z0-9]{4})/$",
+        views.download_survey,
+        name="download_survey",
+    ),
 ]
 

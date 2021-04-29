@@ -27,12 +27,14 @@
             |
             <a :href="`/test_experiment/${experiment.code}`">Test Experiment</a>
             |
-            <a :href="'/raw_data/?code=' + experiment.code"
-              >Download raw data</a
-            >
+            <a :href="'/raw_data/?code=' + experiment.code">Raw data</a>
             |
             <a :href="'/processed_data/?code=' + experiment.code">
-              Download processed data</a
+              Processed data</a
+            >
+            |
+            <a :href="'/api/experiment/download_end_survey/' + experiment.code">
+              Survey data</a
             >
             <b-badge
               variant="primary"
