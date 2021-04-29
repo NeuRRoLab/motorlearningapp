@@ -474,9 +474,10 @@ def download_raw_data(request):
             for x, y in zip(keypresses, keypresses[1:])
         ]
         for values_dict, diff in zip(queryset_list, diff_keypresses_ms):
-            values_dict["keypress_timestamp"] = values_dict[
-                "keypress_timestamp"
-            ].strftime("%Y-%m-%d %H:%M:%S.%f")
+            if values_dict["keypress_timestamp"] is not None:
+                values_dict["keypress_timestamp"] = values_dict[
+                    "keypress_timestamp"
+                ].strftime("%Y-%m-%d %H:%M:%S.%f")
             values_dict["diff_between_keypresses_ms"] = diff
 
         # Output csv
