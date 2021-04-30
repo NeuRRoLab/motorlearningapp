@@ -426,7 +426,9 @@ def download_raw_data(request):
             Subject.objects.get(pk=code)
             for code in unique([value["subject_code"] for value in queryset_list])
         ]
-        subjects.sort(key=lambda subj: subj.trials.first().started_at)
+        subjects.sort(
+            key=lambda subj: subj.trials.order_by("started_at").first().started_at
+        )
         possible_subjects = [subj.code for subj in subjects]
         new_subject_codes = {
             subject: index + 1 for index, subject in enumerate(possible_subjects)
@@ -621,7 +623,9 @@ def download_processed_data(request):
             for code in unique([value["subject_code"] for value in no_et])
         ]
         # Sort by time when the user started the first trial
-        subjects.sort(key=lambda subj: subj.trials.first().started_at)
+        subjects.sort(
+            key=lambda subj: subj.trials.order_by("started_at").first().started_at
+        )
         possible_subjects = [subj.code for subj in subjects]
         new_subject_codes = {
             subject: index + 1 for index, subject in enumerate(possible_subjects)
@@ -698,8 +702,12 @@ def download_survey(request, pk):
         )
     ]
     # Sort by time when the user started the first trial
-    subjects.sort(key=lambda subj: subj.trials.first().started_at)
-    possible_subjects = [(subj.code, subj.trials.first()) for subj in subjects]
+    subjects.sort(
+        key=lambda subj: subj.trials.order_by("started_at").first().started_at
+    )
+    possible_subjects = [
+        (subj.code, subj.trials.order_by("started_at").first()) for subj in subjects
+    ]
     new_subject_codes = {
         subject: (index + 1, timestamp)
         for index, (subject, timestamp) in enumerate(possible_subjects)
