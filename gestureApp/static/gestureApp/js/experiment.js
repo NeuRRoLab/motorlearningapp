@@ -46,7 +46,8 @@ var app = new Vue({
       // console.log(this.)
       axios.post('/api/create_trials', {
         'experiment_trials': JSON.stringify(experiment_blocks),
-        'experiment': this.experiment.code
+        'experiment': this.experiment.code,
+        'timezone_offset_sec': new Date().getTimezoneOffset() * 60,
       }
       ).then(response => {
         console.log(response);

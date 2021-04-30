@@ -30,6 +30,8 @@ from django.utils.timezone import make_aware, now
 from django.views.generic.detail import DetailView
 from django.views.generic.edit import CreateView, FormView, UpdateView
 
+from dateutil.tz import tzoffset
+
 from google.cloud import storage
 import numpy as np
 
@@ -195,14 +197,16 @@ def create_trials(request):
     subject.save()
     # Save the trials to database.
     experiment_trials = json.loads(data.get("experiment_trials"))
+    tz_offset = data.get("timezone_offset_sec")
+    user_timezone = tzoffset(None, tz_offset)
     # print(experiment_trials)
     for i, block in enumerate(experiment_trials):
         for trial in block:
             t = Trial(
                 block=experiment.blocks.order_by("id")[i],
                 subject=subject,
-                started_at=make_aware(
-                    datetime.fromtimestamp(trial["started_at"] / 1000)
+                started_at=datetime.fromtimestamp(
+                    trial["started_at"] / 1000, user_timezone,
                 ),
                 correct=trial["correct"],
             )
@@ -213,7 +217,7 @@ def create_trials(request):
                 keypress = Keypress(
                     trial=t,
                     value=value,
-                    timestamp=make_aware(datetime.fromtimestamp(timestamp / 1000)),
+                    timestamp=datetime.fromtimestamp(timestamp / 1000, user_timezone),
                 )
                 keypress.save()
 
@@ -695,9 +699,10 @@ def download_survey(request, pk):
     ]
     # Sort by time when the user started the first trial
     subjects.sort(key=lambda subj: subj.trials.first().started_at)
-    possible_subjects = [subj.code for subj in subjects]
+    possible_subjects = [(subj.code, subj.trials.first()) for subj in subjects]
     new_subject_codes = {
-        subject: index + 1 for index, subject in enumerate(possible_subjects)
+        subject: (index + 1, timestamp)
+        for index, (subject, timestamp) in enumerate(possible_subjects)
     }
     # If they do, complete the row. If not, keep it empty.
     survey = {
@@ -708,16 +713,22 @@ def download_survey(request, pk):
     }
     for values_dict in subjects_surveys:
         values_dict["experiment_code"] = values_dict.pop("code")
+        started_experiment_at = values_dict[
+            "started_experiment_at"
+        ] = new_subject_codes[values_dict["blocks__trials__subject"]][1]
         values_dict["subject_code"] = new_subject_codes[
             values_dict.pop("blocks__trials__subject")
-        ]
+        ][0]
+        values_dict["started_experiment_at"] = started_experiment_at
+
         for value in survey.values():
             values_dict[value] = None
         if values_dict["blocks__trials__subject__survey"] is not None:
             # Add survey values
+            survey_id = values_dict["blocks__trials__subject__survey"]
+            survey_obj = EndSurvey.objects.get(pk=survey_id)
             for key, value in survey.items():
-                survey_id = values_dict["blocks__trials__subject__survey"]
-                values_dict[value] = getattr(EndSurvey.objects.get(pk=survey_id), key)
+                values_dict[value] = getattr(survey_obj, key)
         values_dict.pop("blocks__trials__subject__survey")
     # Order the list by block and then subject
     subjects_surveys.sort(key=lambda value_dict: (value_dict["subject_code"]))
