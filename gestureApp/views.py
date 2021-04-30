@@ -782,7 +782,7 @@ def user_experiments(request):
 def publish_experiment(request, pk):
     # Get experiment from code
     # Change the published status to true, and add the published timestamp
-    experiment = get_object_or_404(Experiment, pk=pk)
+    experiment = get_object_or_404(Experiment, pk=pk, creator=request.user)
     if experiment.published:
         return JsonResponse({})
     experiment.published = True
@@ -793,14 +793,14 @@ def publish_experiment(request, pk):
 
 @login_required
 def delete_experiment(request, pk):
-    experiment = get_object_or_404(Experiment, pk=pk)
+    experiment = get_object_or_404(Experiment, pk=pk, creator=request.user)
     experiment.delete()
     return JsonResponse({})
 
 
 @login_required
 def disable_experiment(request, pk):
-    experiment = get_object_or_404(Experiment, pk=pk)
+    experiment = get_object_or_404(Experiment, pk=pk, creator=request.user)
     experiment.enabled = False
     experiment.save()
     return JsonResponse({})
@@ -808,7 +808,7 @@ def disable_experiment(request, pk):
 
 @login_required
 def enable_experiment(request, pk):
-    experiment = get_object_or_404(Experiment, pk=pk)
+    experiment = get_object_or_404(Experiment, pk=pk, creator=request.user)
     experiment.enabled = True
     experiment.save()
     return JsonResponse({})
@@ -816,7 +816,7 @@ def enable_experiment(request, pk):
 
 @login_required
 def duplicate_experiment(request, pk):
-    experiment = get_object_or_404(Experiment, pk=pk)
+    experiment = get_object_or_404(Experiment, pk=pk, creator=request.user)
     experiment_clone = experiment.make_clone(
         attrs={"name": "Copy of " + experiment.name}
     )
