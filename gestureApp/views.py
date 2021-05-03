@@ -836,8 +836,35 @@ def enable_experiment(request, pk):
 @login_required
 def duplicate_experiment(request, pk):
     experiment = get_object_or_404(Experiment, pk=pk, creator=request.user)
-    experiment_clone = experiment.make_clone(
-        attrs={"name": "Copy of " + experiment.name}
+    original_pk_experiment = experiment.pk
+    blocks = list(experiment.blocks.order_by("id"))
+    # Clone
+    experiment.pk = None
+    experiment.name = "Copy of " + experiment.name
+    experiment.save()
+
+    # Clone blocks
+    for block in blocks:
+        block.pk = None
+        block.experiment = experiment
+        block.save()
+
+    # Copy the consent and video
+    cs_bucket = storage.Client().bucket(BUCKET_NAME)
+    source_consent = cs_bucket.blob(
+        f"experiment_files/{original_pk_experiment}/consent.pdf"
+    )
+    source_video = cs_bucket.blob(
+        f"experiment_files/{original_pk_experiment}/video.mp4"
+    )
+
+    # Consent
+    cs_bucket.copy_blob(
+        source_consent, cs_bucket, f"experiment_files/{experiment.pk}/consent.pdf"
+    )
+    # Video
+    cs_bucket.copy_blob(
+        source_video, cs_bucket, f"experiment_files/{experiment.pk}/video.mp4"
     )
     return JsonResponse({})
 

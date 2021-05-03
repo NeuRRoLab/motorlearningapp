@@ -23,6 +23,7 @@
           :state="Boolean(video_file)"
           placeholder="Choose a file or drop it here..."
           drop-placeholder="Drop file here..."
+          description="Only .mp4 files allowed"
           required
         ></b-form-file>
       </b-form-group>
