@@ -516,8 +516,11 @@ def download_raw_data(request):
             "Content-Disposition"
         ] = 'attachment; filename="raw_experiment_{}.csv"'.format(code)
 
-        writer = csv.DictWriter(response, queryset_list[0].keys())
-        writer.writeheader()
+        if len(queryset_list) > 0:
+            writer = csv.DictWriter(response, queryset_list[0].keys())
+            writer.writeheader()
+        else:
+            writer = csv.DictWriter(response, ["experiment"])
         writer.writerows(queryset_list)
         return response
 
@@ -691,9 +694,11 @@ def download_processed_data(request):
         response[
             "Content-Disposition"
         ] = 'attachment; filename="processed_experiment_{}.csv"'.format(code)
-
-        writer = csv.DictWriter(response, no_et[0].keys())
-        writer.writeheader()
+        if len(no_et) > 0:
+            writer = csv.DictWriter(response, no_et[0].keys())
+            writer.writeheader()
+        else:
+            writer = csv.DictWriter(response, ["experiment"])
         writer.writerows(no_et)
         return response
 
