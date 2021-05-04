@@ -129,9 +129,9 @@
           :time="
             blocks[current_block - 1]
               ? blocks[current_block - 1].sec_until_next * 1000
-              : 3000
+              : 3099
           "
-          :interval="50"
+          :interval="100"
           :auto-start="true"
           :emit-events="true"
           @progress="playCountdown"
@@ -315,6 +315,8 @@ module.exports = {
       },
       gender_opts: { male: "Male", female: "Female", other: "Other" },
       comp_type_opts: { laptop: "Laptop", desktop: "Desktop", other: "Other" },
+
+      countdown_audio: new Audio("/static/gestureApp/sound/countdown.wav"),
     };
   },
   props: {
@@ -527,9 +529,9 @@ module.exports = {
       // window.location.href = "/";
     },
     playCountdown(data) {
-      if (data.seconds == 2 && !this.played_countdown) {
-        var audio = new Audio("/static/gestureApp/sound/countdown.wav");
-        audio.play();
+      var remaining = data.seconds + data.milliseconds / 1000.0;
+      if (remaining <= 3.05 && !this.played_countdown) {
+        this.countdown_audio.play();
         this.played_countdown = true;
       }
     },
