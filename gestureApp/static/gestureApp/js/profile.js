@@ -52,14 +52,16 @@ var app = new Vue({
       })
     },
     publishExperiment(code) {
-      axios.post(`/api/experiment/publish/${code}/`).then(response => {
-        this.getUserExperiments();
-        this.$notify({
-          group: 'alerts',
-          title: `Experiment ${code} successfully published`,
-          type: 'success',
+      if (confirm("Publishing the experiment will forbid any future edits and will discard the testing data. Are you sure you want to proceed?")) {
+        axios.post(`/api/experiment/publish/${code}/`).then(response => {
+          this.getUserExperiments();
+          this.$notify({
+            group: 'alerts',
+            title: `Experiment ${code} successfully published`,
+            type: 'success',
+          });
         });
-      });
+      }
     },
     enableExperiment(code) {
       axios.post(`/api/experiment/enable/${code}/`).then(response => {
@@ -82,7 +84,7 @@ var app = new Vue({
       });
     },
     deleteExperiment(code) {
-      if (confirm(`Are you sure you want to delete Experiment ${code} and all its data?`)) {
+      if (prompt(`Are you sure you want to delete Experiment ${code} and all its data? Enter the experiment code to confirm the deletion`) === code) {
         axios.post(`/api/experiment/delete/${code}/`).then(response => {
           this.getUserExperiments();
           this.$notify({
