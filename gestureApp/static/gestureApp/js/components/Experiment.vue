@@ -223,7 +223,9 @@
     </template>
     <div v-if="experiment_finished">
       <h3 class="text-center">Tell us something about you</h3>
-      <template v-if="!correctly_sent_data">
+      <template
+        v-if="!correctly_sent_data && unsuccessful_data_sent_counter > 0"
+      >
         <div>
           <p class="text-danger">
             Data could not be sent to the server. Please connect to the internet
@@ -342,6 +344,7 @@ module.exports = {
     experiment: Object,
     blocks: Array,
     correctly_sent_data: Boolean,
+    unsuccessful_data_sent_counter: Number,
   },
   mounted: function () {
     // window.addEventListener('keydown', this.keydownHandler);
@@ -505,9 +508,7 @@ module.exports = {
         this.startTrial();
       }
       // Check if there are any blocks left
-      else if (this.current_block + 1 < this.blocks.length) {
-        this.blockEnded();
-      } else this.blockEnded(true);
+      else this.blockEnded();
     },
     blockEnded: function (from_timer = false) {
       // If the block ended from timer, force the trial ending too
@@ -523,11 +524,10 @@ module.exports = {
       this.block_started = false;
       this.capturing_keypresses = false;
 
-      if (from_timer) {
-        if (this.current_block + 1 >= this.blocks.length)
-          this.experimentEnded();
-        else this.current_block++;
-      } else this.current_block++;
+      // if (from_timer) {
+      if (this.current_block + 1 >= this.blocks.length) this.experimentEnded();
+      else this.current_block++;
+      // } else this.current_block++;
     },
     experimentEnded: function () {
       // this.experiment_blocks.push(this.block_trials)
