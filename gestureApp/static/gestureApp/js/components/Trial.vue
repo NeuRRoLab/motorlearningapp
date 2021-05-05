@@ -99,10 +99,16 @@ module.exports = {
     stopPractice() {
       this.trialEnded(false);
     },
-    trialEnded(do_rest = true) {
+    trialEnded(do_rest = true, from_timer = false) {
       let sequence = this.sequence;
       if (this.practice) sequence = this.practice_sequence;
       let correct = this.current_inputted_sequence.join("") === sequence;
+      let partial_correct = correct;
+      if (from_timer && this.current_inputted_sequence.length > 0) {
+        partial_correct =
+          this.current_inputted_sequence.join("") ===
+          sequence.slice(0, this.current_inputted_sequence.length);
+      }
 
       this.resting = true;
       if (do_rest) {
@@ -111,7 +117,8 @@ module.exports = {
           correct,
           this.keypresses_trial,
           this.current_inputted_sequence,
-          sequence
+          sequence,
+          partial_correct
         );
         this.$nextTick(() => {
           if (this.$refs.timerRest) this.$refs.timerRest.start();

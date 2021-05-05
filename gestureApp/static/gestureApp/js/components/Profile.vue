@@ -36,6 +36,10 @@
             <a :href="'/api/experiment/download_end_survey/' + experiment.code">
               Survey data</a
             >
+            |
+            <a :href="'/api/experiment/cohen_metrics/' + experiment.code">
+              Cohen metrics</a
+            >
             <b-badge
               variant="primary"
               pill

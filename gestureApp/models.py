@@ -158,8 +158,11 @@ class Trial(models.Model):
         Subject, on_delete=models.PROTECT, related_name="trials"
     )
     started_at = models.DateTimeField()
+    finished_at = models.DateTimeField()
     time = models.FloatField(null=True)
     correct = models.BooleanField()
+    # If the block ended before the user could input more keypresses, but the keypresses were correct until that point
+    partial_correct = models.BooleanField()
 
     def __str__(self):
         return str(timezone.localtime(self.started_at))

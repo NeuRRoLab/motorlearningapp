@@ -403,7 +403,13 @@ module.exports = {
       //   setTimeout(() => this.$refs.timerTrial.start(), 5);
       this.started_trial_at = new Date().getTime();
     },
-    practiceTrialEnded(correct, keypresses_trial, inputted_sequence, sequence) {
+    practiceTrialEnded(
+      correct,
+      keypresses_trial,
+      inputted_sequence,
+      sequence,
+      partial_correct
+    ) {
       if (this.experiment.with_feedback) {
         if (correct) {
           this.$notify({
@@ -431,7 +437,8 @@ module.exports = {
       correct,
       keypresses_trial,
       inputted_sequence,
-      sequence
+      sequence,
+      partial_correct
     ) {
       if (correct) {
         if (this.experiment.with_feedback) {
@@ -457,10 +464,13 @@ module.exports = {
         }
         this.num_incorrect_seq++;
       }
+      let finished_at = new Date().getTime();
       this.block_trials.push({
         started_at: this.started_trial_at,
         keypresses: keypresses_trial,
         correct: correct,
+        partial_correct: partial_correct,
+        finished_at: finished_at,
       });
       this.started_trial_at = null;
     },
@@ -483,7 +493,7 @@ module.exports = {
       // If the block ended from timer, force the trial ending too
       if (from_timer) {
         // TODO: consider that a trial that had input the right sequence until now, is correct.
-        this.$refs["real-trial"].trialEnded();
+        this.$refs["real-trial"].trialEnded(true, true);
       }
       this.experiment_blocks.push(this.block_trials);
       this.block_trials = new Array();
