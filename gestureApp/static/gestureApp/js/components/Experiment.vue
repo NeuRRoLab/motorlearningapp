@@ -223,6 +223,21 @@
     </template>
     <div v-if="experiment_finished">
       <h3 class="text-center">Tell us something about you</h3>
+      <template v-if="!correctly_sent_data">
+        <div>
+          <p class="text-danger">
+            Data could not be sent to the server. Please connect to the internet
+            and then click on the button below
+          </p>
+          <b-button
+            class="btn"
+            variant="primary"
+            @click="$emit('send-data', experiment_blocks)"
+            >Send Data</b-button
+          >
+        </div>
+      </template>
+      <br />
       <!-- Redirect home -->
       <b-form @submit="leaveExperiment">
         <div class="form-row">
@@ -272,7 +287,11 @@
             ></b-form-textarea>
           </b-form-group>
         </div>
-        <b-button type="submit" class="btn btn-block" variant="primary"
+        <b-button
+          type="submit"
+          class="btn btn-block"
+          :disabled="!correctly_sent_data"
+          variant="primary"
           >Submit and exit</b-button
         >
       </b-form>
@@ -322,6 +341,7 @@ module.exports = {
   props: {
     experiment: Object,
     blocks: Array,
+    correctly_sent_data: Boolean,
   },
   mounted: function () {
     // window.addEventListener('keydown', this.keydownHandler);

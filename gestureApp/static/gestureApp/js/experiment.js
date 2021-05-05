@@ -15,6 +15,7 @@ var app = new Vue({
       practice_is_random_seq: false,
       practice_seq: null,
       subject_code: null,
+      correctly_sent_data: false,
     }
   },
   template: `
@@ -32,10 +33,7 @@ var app = new Vue({
       return {
         experiment: this.experiment,
         blocks: this.blocks,
-        with_practice_trials: this.with_practice_trials,
-        num_practice_trials: this.num_practice_trials,
-        practice_is_random_seq: this.practice_is_random_seq,
-        practice_seq: this.practice_seq
+        correctly_sent_data: this.correctly_sent_data,
       }
     },
   },
@@ -56,6 +54,7 @@ var app = new Vue({
           title: 'Success sending data',
           type: 'success',
         });
+        this.correctly_sent_data = true;
         // this.$refs.experiment.experiment_finished = false;
         this.$refs.experiment.experiment_started = false;
         this.subject_code = response.data.subject_code;
