@@ -11,6 +11,7 @@ from collections import defaultdict
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login
 from django.core.exceptions import PermissionDenied
+from django.core.mail import send_mail
 from django.db.models import Count, F, Max, Min, Q
 from django.db import transaction
 from django.forms import inlineformset_factory
@@ -1134,3 +1135,27 @@ def end_survey(request, pk):
         comp_type=info["questionnaire"]["comp_type"],
     )
     return JsonResponse({})
+
+
+def create_subject(request):
+    subject = Subject.objects.create()
+    print(subject)
+    return JsonResponse({"subject_code": subject.code})
+
+
+def send_subject_code(request):
+    if request.method == "POST":
+        # Get subject code from post data
+        data = json.loads(request.body)
+        subject_code = data["subject_code"]
+        email = data["email"]
+        print("sending subject code", subject_code, email)
+        send_mail(
+            "Motor Learning App - Subject Code",
+            f"Your generated subject code for motor learning experiments is {subject_code}. Save it, because it will be asked for future experiments.\n\nBest,\n\nMotor Learning App Team",
+            "lhcubillos93@gmail.com",
+            [email],
+        )
+
+    return JsonResponse({})
+

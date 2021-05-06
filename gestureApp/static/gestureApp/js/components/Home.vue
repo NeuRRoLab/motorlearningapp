@@ -2,22 +2,78 @@
   <div class="container justify-content-center">
     <div class="experiment-form">
       <b-form action="/prep_screen">
-        <b-form-group
-          id="input-group"
-          label="Experiment Code:"
-          label-for="input"
+        <div class="form-row">
+          <b-form-group
+            class="col"
+            id="input-group"
+            label="Experiment Code:"
+            label-for="input"
+          >
+            <b-form-input
+              name="code"
+              id="input"
+              v-model="experiment_code"
+              type="text"
+              :maxlength="4"
+              required
+              placeholder="Code"
+              @input="onInput"
+            ></b-form-input>
+          </b-form-group>
+        </div>
+        <div class="form-row">
+          <b-form-group
+            class="col"
+            id="input-group"
+            label="Subject Code (optional):"
+            label-for="subj-code"
+          >
+            <b-form-input
+              name="subj-code"
+              id="subj-code"
+              v-model="subject_code_input"
+              type="text"
+              :maxlength="4"
+              placeholder="Subject Code"
+            ></b-form-input>
+          </b-form-group>
+        </div>
+        <button
+          v-if="!subject_code"
+          @click="$emit('generate-code')"
+          class="btn btn-link text-primary row"
         >
-          <b-form-input
-            name="code"
-            id="input"
-            v-model="experiment_code"
-            type="text"
-            :maxlength="4"
-            required
-            placeholder="Code"
-            @input="onInput"
-          ></b-form-input>
-        </b-form-group>
+          Generate subject code
+        </button>
+        <b-card v-else>
+          <b-card-text>
+            <span class="font-weight-bold">Your Subject Code:</span>
+            {{ this.subject_code }}
+          </b-card-text>
+          <b-card-text>Save this code for future experiments.</b-card-text>
+          <b-form inline>
+            <label class="sr-only" for="inline-form-input-name">Email</label>
+            <b-form-input
+              id="inline-form-input-name"
+              class="mb-2 mr-sm-2 mb-sm-0"
+              placeholder="name@example.com"
+              v-model="email"
+            ></b-form-input>
+            <b-button
+              variant="primary"
+              @click="
+                $emit('send-subject-code', email);
+                email = '';
+              "
+              >Send code to email</b-button
+            >
+          </b-form>
+          <b-card-text v-if="email_response !== ''">{{
+            email_response
+          }}</b-card-text>
+        </b-card>
+        <br />
+
         <b-button type="submit" class="btn btn-block" variant="primary"
           >Submit</b-button
         >
@@ -31,19 +87,29 @@ module.exports = {
   data: function () {
     return {
       experiment_code: "",
+      subject_code_input: "",
+      email: "",
     };
   },
-  props: {},
+  props: {
+    subject_code: String,
+    email_response: String,
+  },
   mounted: function () {},
   components: {
     "nav-bar": httpVueLoader("/static/gestureApp/js/components/NavBar.vue"),
   },
   computed: {},
-  watch: {},
+  watch: {
+    subject_code: function (newVal, oldVal) {
+      this.subject_code_input = newVal;
+    },
+  },
   methods: {
     onInput: function (input) {
       this.experiment_code = input.toUpperCase();
     },
+    generateSubjectCode() {},
   },
 };
 </script>
@@ -51,7 +117,7 @@ module.exports = {
 <style scoped>
 .experiment-form {
   border: 1px solid lightgray;
-  width: 250px;
+  width: 530px;
   padding: 40px;
   float: none;
   margin: 0 auto;

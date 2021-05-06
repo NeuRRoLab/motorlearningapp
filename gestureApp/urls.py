@@ -48,6 +48,8 @@ urlpatterns = [
     # ),
     # API
     path("api/create_trials", views.create_trials, name="create_trials"),
+    path("api/create_subject", views.create_subject, name="create_subject"),
+    path("api/send_subject_code", views.send_subject_code, name="send_subject_code"),
     path("api/current_user", views.current_user, name="current_user"),
     path("api/user_experiments", views.user_experiments, name="user_experiments"),
     re_path(
