@@ -598,14 +598,10 @@ def download_processed_data(request):
         for idx, values_dict in enumerate(no_et):
             # TODO: if the difference between the starting timestamp of trial and last keypress is desired, change
             qs = (
-                Trial.objects.filter(
-                    Q(correct=True) | Q(partial_correct=True),
-                    pk=values_dict["trial_id"],
-                )
+                Trial.objects.filter(correct=True, pk=values_dict["trial_id"])
                 .annotate(first_keypress=Min("keypresses__timestamp"))
                 .annotate(last_keypress=Max("keypresses__timestamp"))
             )
-            print(qs)
             # Next trial: closest starting timestamp in the same block and subject
             if len(qs) > 0:
                 # Tapping speed
