@@ -1,7 +1,7 @@
 <template>
   <div class="container justify-content-center">
     <div class="experiment-form">
-      <b-form>
+      <b-form @submit="goToExperiment">
         <div class="form-row">
           <b-form-group
             class="col"
@@ -74,11 +74,7 @@
         </b-card>
         <br />
 
-        <b-button
-          type="submit"
-          @click="goToExperiment"
-          class="btn btn-block"
-          variant="primary"
+        <b-button type="submit" class="btn btn-block" variant="primary"
           >Submit</b-button
         >
       </b-form>
