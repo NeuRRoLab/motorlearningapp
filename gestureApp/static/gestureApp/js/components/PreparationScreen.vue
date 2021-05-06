@@ -1,6 +1,5 @@
 <template>
   <div class="container">
-    <h1 class="text-center">Experiment {{ exp_code }}</h1>
     <h2>Video instructions</h2>
     <div class="d-flex justify-content-center">
       <video-player
@@ -8,32 +7,22 @@
         ref="videoPlayer"
         :options="playerOptions"
         :playsinline="true"
-        @play="onPlayerPlay($event)"
-        @pause="onPlayerPause($event)"
-        @ended="onPlayerEnded($event)"
-        @loadeddata="onPlayerLoadeddata($event)"
-        @waiting="onPlayerWaiting($event)"
-        @playing="onPlayerPlaying($event)"
-        @timeupdate="onPlayerTimeupdate($event)"
-        @canplay="onPlayerCanplay($event)"
-        @canplaythrough="onPlayerCanplaythrough($event)"
         @ready="playerReadied"
-        @statechanged="playerStateChanged($event)"
       >
       </video-player>
     </div>
     <br />
     <h2>Consent</h2>
     <div class="d-flex justify-content-center">
-      <embed :src="pdf_url" width="640" height="480" />
+      <embed :src="pdf_url" width="100%" height="480" />
     </div>
     <br />
-    <a
-      role="button"
+    <button
       class="btn btn-primary btn-lg btn-block active text-center"
-      :href="'/experiment/?code=' + exp_code"
-      >Agree and continue to experiment</a
+      @click="$emit('prep-screen-ready')"
     >
+      Agree and continue to experiment
+    </button>
     <br />
   </div>
 </template>
@@ -44,8 +33,8 @@ module.exports = {
     return {
       // videojs options
       playerOptions: {
-        height: "640",
-        autoplay: true,
+        height: "480",
+        autoplay: false,
         muted: true,
         language: "en",
         playbackRates: [1.0],
@@ -83,43 +72,11 @@ module.exports = {
     isObjectEmpty: function (obj) {
       return Object.keys(obj).length === 0 && obj.constructor === Object;
     },
-    // listen event
-    onPlayerPlay(player) {
-      // console.log('player play!', player)
-    },
-    onPlayerPause(player) {
-      // console.log('player pause!', player)
-    },
-    onPlayerEnded(player) {
-      // console.log('player ended!', player)
-    },
-    onPlayerLoadeddata(player) {
-      // console.log('player Loadeddata!', player)
-    },
-    onPlayerWaiting(player) {
-      // console.log('player Waiting!', player)
-    },
-    onPlayerPlaying(player) {
-      // console.log('player Playing!', player)
-    },
-    onPlayerTimeupdate(player) {
-      // console.log('player Timeupdate!', player.currentTime())
-    },
-    onPlayerCanplay(player) {
-      // console.log('player Canplay!', player)
-    },
-    onPlayerCanplaythrough(player) {
-      // console.log('player Canplaythrough!', player)
-    },
-    // or listen state event
-    playerStateChanged(playerCurrentState) {
-      // console.log('player current update state', playerCurrentState)
-    },
     // player is ready
     playerReadied(player) {
       // seek to 10s
       console.log("example player 1 readied", player);
-      player.currentTime(0);
+      // player.currentTime(0);
       // console.log('example 01: the player is readied', player)
     },
   },
