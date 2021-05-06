@@ -31,13 +31,8 @@ urlpatterns = [
         views.edit_experiment,
         name="edit_experiment",
     ),
-    path("experiment/", views.experiment, name="experiment"),
-    re_path(
-        r"^test_experiment/(?P<pk>[A-Z0-9]{4})/$",
-        views.test_experiment,
-        name="test_experiment",
-    ),
-    path("prep_screen/", views.preparation_screen, name="prep_screen"),
+    re_path(r"^experiment/(?P<pk>[A-Z0-9]{4})/$", views.experiment, name="experiment",),
+    # path("prep_screen/", views.preparation_screen, name="prep_screen"),
     path("raw_data/", views.download_raw_data, name="download_raw_data"),
     path(
         "processed_data/", views.download_processed_data, name="download_processed_data"
