@@ -25,7 +25,7 @@
               Publish
             </a>
             |
-            <a :href="`/test_experiment/${experiment.code}`">Test Experiment</a>
+            <a :href="`/experiment/${experiment.code}`">Test Experiment</a>
             |
             <a :href="'/raw_data/?code=' + experiment.code">Raw data</a>
             |
@@ -84,7 +84,7 @@
               Delete
             </a>
             |
-            <a :href="'/prep_screen/?code=' + experiment.code">Do Experiment</a>
+            <a :href="`/experiment/${experiment.code}`">Do Experiment</a>
             |
             <a :href="'/raw_data/?code=' + experiment.code"
               >Download raw data</a
