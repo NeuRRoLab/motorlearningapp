@@ -126,61 +126,46 @@ class ExperimentUpdate(UpdateView):
         )
 
 
-def preparation_screen(request):
-    form = ExperimentCode(request.GET)
-    if form.is_valid():
-        code = form.cleaned_data["code"]
-        experiment = get_object_or_404(Experiment, pk=code)
-        if not experiment.published or not experiment.enabled:
-            raise Http404
-        return render(request, "gestureApp/prep_screen.html", {"exp_code": code},)
-    else:
-        form = ExperimentCode()
-        return render(
-            request,
-            "gestureApp/home.html",
-            {"form": form, "error_message": "Form invalid"},
-        )
+# def preparation_screen(request):
+#     form = ExperimentCode(request.GET)
+#     if form.is_valid():
+#         code = form.cleaned_data["code"]
+#         experiment = get_object_or_404(Experiment, pk=code)
+#         if not experiment.published or not experiment.enabled:
+#             raise Http404
+#         return render(request, "gestureApp/prep_screen.html", {"exp_code": code},)
+#     else:
+#         form = ExperimentCode()
+#         return render(
+#             request,
+#             "gestureApp/home.html",
+#             {"form": form, "error_message": "Form invalid"},
+#         )
 
 
-@login_required
-def test_experiment(request, pk):
+# Create your views here.
+def experiment(request, pk):
     experiment = get_object_or_404(Experiment, pk=pk)
+    subject_code = request.GET.get("subj-code", None)
+    if subject_code is not None and subject_code != "":
+        subject = get_object_or_404(Subject, pk=subject_code)
+        # Check if that subject already participated in this experiment
+        if experiment.blocks.filter(trials__subject=subject).exists():
+            raise Exception("Subject already participated in experiment")
+    if not experiment.published or not experiment.enabled:
+        # If not testing experiment, raise 404
+        print(request.user)
+        if experiment.creator != request.user:
+            raise Http404
     return render(
         request,
         "gestureApp/experiment.html",
         {
             "experiment": experiment.to_dict(),
             "blocks": list(experiment.blocks.order_by("id").values()),
-            "test_run": True,
+            "subject_code": subject_code,
         },
     )
-
-
-# Create your views here.
-def experiment(request):
-    form = ExperimentCode(request.GET)
-    if form.is_valid():
-        code = form.cleaned_data["code"]
-        experiment = get_object_or_404(Experiment, pk=code)
-        if not experiment.published or not experiment.enabled:
-            raise Http404
-        return render(
-            request,
-            "gestureApp/experiment.html",
-            {
-                "experiment": experiment.to_dict(),
-                "blocks": list(experiment.blocks.order_by("id").values()),
-                "test_run": False,
-            },
-        )
-    else:
-        form = ExperimentCode()
-        return render(
-            request,
-            "gestureApp/home.html",
-            {"form": form, "error_message": "Form invalid"},
-        )
 
 
 def home(request):
@@ -192,10 +177,14 @@ def create_trials(request):
     data = json.loads(request.body)
     exp_code = data.get("experiment")
     experiment = get_object_or_404(Experiment, pk=exp_code)
+    subj_code = data.get("subject_code")
 
     # Create a new subject
-    subject = Subject()
-    subject.save()
+    subject = None
+    if subj_code is not None and subj_code != "":
+        subject = get_object_or_404(Subject, pk=subj_code)
+    else:
+        subject = Subject.objects.create()
     # Save the trials to database.
     experiment_trials = json.loads(data.get("experiment_trials"))
     tz_offset = data.get("timezone_offset_sec")
@@ -439,6 +428,10 @@ def download_raw_data(request):
         subjects.sort(
             key=lambda subj: subj.trials.order_by("started_at").first().started_at
         )
+        subjects_starting_timestamp = {
+            subject.code: subject.trials.order_by("started_at").first().started_at
+            for subject in subjects
+        }
         possible_subjects = [subj.code for subj in subjects]
         new_subject_codes = {
             subject: index + 1 for index, subject in enumerate(possible_subjects)
@@ -467,13 +460,13 @@ def download_raw_data(request):
             values_dict["trial_id"] = aux_values[
                 (values_dict["block_id"], values_dict["subject_code"])
             ][values_dict["trial_id"]]
-            values_dict["subject_code"] = new_subject_codes[values_dict["subject_code"]]
+            # values_dict["subject_code"] = new_subject_codes[values_dict["subject_code"]]
             values_dict["block_id"] = new_block_codes[values_dict["block_id"]]
             # values_dict["trial_id"] = new_trial_codes[values_dict["trial_id"]]
         # Order the list by block and then subject
         queryset_list.sort(
             key=lambda value_dict: (
-                value_dict["subject_code"],
+                subjects_starting_timestamp[value_dict["subject_code"]],
                 value_dict["block_id"],
                 value_dict["trial_id"],
                 value_dict["keypress_timestamp"],
@@ -676,6 +669,10 @@ def download_processed_data(request):
         subjects.sort(
             key=lambda subj: subj.trials.order_by("started_at").first().started_at
         )
+        subjects_starting_timestamp = {
+            subject.code: subject.trials.order_by("started_at").first().started_at
+            for subject in subjects
+        }
         possible_subjects = [subj.code for subj in subjects]
         new_subject_codes = {
             subject: index + 1 for index, subject in enumerate(possible_subjects)
@@ -701,13 +698,13 @@ def download_processed_data(request):
             values_dict["trial_id"] = aux_values[
                 (values_dict["block_id"], values_dict["subject_code"])
             ][values_dict["trial_id"]]
-            values_dict["subject_code"] = new_subject_codes[values_dict["subject_code"]]
+            # values_dict["subject_code"] = new_subject_codes[values_dict["subject_code"]]
             values_dict["block_id"] = new_block_codes[values_dict["block_id"]]
             # values_dict["trial_id"] = new_trial_codes[values_dict["trial_id"]]
         # Order the list by block and then subject
         no_et.sort(
             key=lambda value_dict: (
-                value_dict["subject_code"],
+                subjects_starting_timestamp[value_dict["subject_code"]],
                 value_dict["block_id"],
                 value_dict["trial_id"],
             )

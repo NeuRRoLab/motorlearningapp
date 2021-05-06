@@ -1,7 +1,7 @@
 <template>
   <div class="container justify-content-center">
     <div class="experiment-form">
-      <b-form action="/prep_screen">
+      <b-form>
         <div class="form-row">
           <b-form-group
             class="col"
@@ -33,14 +33,14 @@
               id="subj-code"
               v-model="subject_code_input"
               type="text"
-              :maxlength="4"
+              :maxlength="16"
               placeholder="Subject Code"
             ></b-form-input>
           </b-form-group>
         </div>
         <button
           v-if="!subject_code"
-          @click="$emit('generate-code')"
+          @click="generateCode"
           class="btn btn-link text-primary row"
         >
           Generate subject code
@@ -74,7 +74,11 @@
         </b-card>
         <br />
 
-        <b-button type="submit" class="btn btn-block" variant="primary"
+        <b-button
+          type="submit"
+          @click="goToExperiment"
+          class="btn btn-block"
+          variant="primary"
           >Submit</b-button
         >
       </b-form>
@@ -109,7 +113,14 @@ module.exports = {
     onInput: function (input) {
       this.experiment_code = input.toUpperCase();
     },
-    generateSubjectCode() {},
+    goToExperiment(evt) {
+      evt.preventDefault();
+      window.location.href = `/experiment/${this.experiment_code}/?subj-code=${this.subject_code_input}`;
+    },
+    generateCode(evt) {
+      evt.preventDefault();
+      this.$emit("generate-code");
+    },
   },
 };
 </script>

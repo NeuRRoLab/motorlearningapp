@@ -13,291 +13,299 @@
         practicing ? ": Practicing" : ""
       }}</span>
     </h1>
-    <div
-      v-if="!experiment_started && !practicing && !experiment_finished"
-      class="row"
-    >
-      <div class="col text-center">
-        <template
-          v-if="
-            experiment.with_practice_trials && remaining_practice_trials > 0
-          "
-        >
-          <p class="h4">
-            Enter the sequence of characters in order when it appears on the
-            screen
-          </p>
-          <p class="h4">Try to do it as fast as you can</p>
-          <p class="h4">
-            You will complete {{ remaining_practice_trials }} practice trial(s)
-          </p>
-          <p class="h4">
-            Click on "Start Practice" when you're ready to begin practicing
-          </p>
-          <button class="btn btn-primary" @click="startPractice">
-            Start Practice
-          </button>
-        </template>
-        <template v-else>
-          <p class="h4">
-            Enter the sequence of characters in order when it appears on the
-            screen
-          </p>
-          <p class="h4">Try to do it as fast and correctly as you can</p>
-          <p class="h4 text-danger">
-            Do not change window or tab, or the experiment will restart
-          </p>
-          <p class="h4">
-            You will complete {{ blocks.length }} block(s) of trials
-          </p>
-          <p class="h4" v-if="isTypeNumTrials">
-            On each block, you will have to do
-            {{ blocks[current_block].num_trials }} trials
-          </p>
-          <p class="h4" v-else>
-            On each block, you will have
-            {{ blocks[current_block].max_time }} seconds to do as many trials as
-            you can
-          </p>
-          <p class="h4">
-            After clicking on "Start Experiment", and before each block, you MAY
-            hear an auditory cue
-          </p>
-          <p class="h4">
-            Click on "Start Experiment" when you're ready to begin
-          </p>
-          <br />
-          <br />
-          <button class="btn btn-primary btn-lg" @click="startExperiment">
-            Start Experiment
-          </button>
-        </template>
+    <prepscreen
+      v-if="!preparation_screen_ready"
+      v-bind="getPrepScreenObj"
+      @prep-screen-ready="preparation_screen_ready = true"
+    ></prepscreen>
+    <template v-else>
+      <div
+        v-if="!experiment_started && !practicing && !experiment_finished"
+        class="row"
+      >
+        <div class="col text-center">
+          <template
+            v-if="
+              experiment.with_practice_trials && remaining_practice_trials > 0
+            "
+          >
+            <p class="h4">
+              Enter the sequence of characters in order when it appears on the
+              screen
+            </p>
+            <p class="h4">Try to do it as fast as you can</p>
+            <p class="h4">
+              You will complete {{ remaining_practice_trials }} practice
+              trial(s)
+            </p>
+            <p class="h4">
+              Click on "Start Practice" when you're ready to begin practicing
+            </p>
+            <button class="btn btn-primary" @click="startPractice">
+              Start Practice
+            </button>
+          </template>
+          <template v-else>
+            <p class="h4">
+              Enter the sequence of characters in order when it appears on the
+              screen
+            </p>
+            <p class="h4">Try to do it as fast and correctly as you can</p>
+            <p class="h4 text-danger">
+              Do not change window or tab, or the experiment will restart
+            </p>
+            <p class="h4">
+              You will complete {{ blocks.length }} block(s) of trials
+            </p>
+            <p class="h4" v-if="isTypeNumTrials">
+              On each block, you will have to do
+              {{ blocks[current_block].num_trials }} trials
+            </p>
+            <p class="h4" v-else>
+              On each block, you will have
+              {{ blocks[current_block].max_time }} seconds to do as many trials
+              as you can
+            </p>
+            <p class="h4">
+              After clicking on "Start Experiment", and before each block, you
+              MAY hear an auditory cue
+            </p>
+            <p class="h4">
+              Click on "Start Experiment" when you're ready to begin
+            </p>
+            <br />
+            <br />
+            <button class="btn btn-primary btn-lg" @click="startExperiment">
+              Start Experiment
+            </button>
+          </template>
+        </div>
       </div>
-    </div>
-    <template v-else-if="practicing">
-      <p class="text-success text-center">
-        {{ remaining_practice_trials }} practice trials remaining
-      </p>
-      <div class="col-md-12 text-center">
-        <button class="btn btn-primary text-center" @click="stopPractice">
-          Stop Practice
-        </button>
-      </div>
-      <p class="text-center">Enter the keys in order when they appear.</p>
-      <trial
-        ref="practice-trial"
-        :practice="true"
-        :random_seq="false"
-        :sequence="experiment.practice_seq"
-        :max_time_per_trial="experiment.practice_trial_time"
-        :resting_time="experiment.practice_rest_time"
-        :capturing_keypresses="true"
-        @trial-ended="practiceTrialEnded"
-      ></trial>
-    </template>
-    <template v-else-if="experiment_started && !experiment_finished">
-      <h4>Experiment Progress</h4>
-      <b-progress height="2rem" :max="blocks.length" show-progress>
-        <b-progress-bar
-          :value="current_block + 1"
-          :label="
-            'Block ' +
-            (current_block + 1).toString() +
-            ' of ' +
-            blocks.length.toString()
-          "
-        ></b-progress-bar>
-      </b-progress>
-      <br />
-      <!-- Show block type -->
-      <p class="text-center h3">
-        Instructions:
-        {{
-          isTypeNumTrials
-            ? "You will need to complete " +
-              blocks[current_block].num_trials +
-              " trials in this block."
-            : "You will have " +
-              blocks[current_block].max_time +
-              " seconds on this block, and should try to do as many trials as possible."
-        }}
-      </p>
-      <div v-if="!block_started" class="text-center h2">
-        Block starting in:
-        <countdown
-          ref="timerBlock"
-          :time="
-            blocks[current_block - 1]
-              ? blocks[current_block - 1].sec_until_next * 1000
-              : 3099
-          "
-          :interval="100"
-          :auto-start="true"
-          :emit-events="true"
-          @progress="playCountdown"
-          @end="startBlock"
-        >
-          <span slot-scope="props" class="h1">{{ props.seconds + 1 }}</span>
-        </countdown>
-        <p class="text-center h4">
-          Sequence:
-          <span class="text-center h1">{{
-            blocks[current_block].sequence
-          }}</span>
+      <template v-else-if="practicing">
+        <p class="text-success text-center">
+          {{ remaining_practice_trials }} practice trials remaining
         </p>
-      </div>
-
-      <template v-else>
-        <h4>Block Progress</h4>
-        <b-progress
-          v-if="isTypeNumTrials"
-          height="2rem"
-          :max="blocks[current_block].num_trials"
-          show-progress
-        >
+        <div class="col-md-12 text-center">
+          <button class="btn btn-primary text-center" @click="stopPractice">
+            Stop Practice
+          </button>
+        </div>
+        <p class="text-center">Enter the keys in order when they appear.</p>
+        <trial
+          ref="practice-trial"
+          :practice="true"
+          :random_seq="false"
+          :sequence="experiment.practice_seq"
+          :max_time_per_trial="experiment.practice_trial_time"
+          :resting_time="experiment.practice_rest_time"
+          :capturing_keypresses="true"
+          @trial-ended="practiceTrialEnded"
+        ></trial>
+      </template>
+      <template v-else-if="experiment_started && !experiment_finished">
+        <h4>Experiment Progress</h4>
+        <b-progress height="2rem" :max="blocks.length" show-progress>
           <b-progress-bar
-            :value="current_trial + 1"
+            :value="current_block + 1"
             :label="
-              'Trial ' +
-              (current_trial + 1).toString() +
+              'Block ' +
+              (current_block + 1).toString() +
               ' of ' +
-              blocks[current_block].num_trials.toString()
+              blocks.length.toString()
             "
           ></b-progress-bar>
         </b-progress>
-        <div v-else>
+        <br />
+        <!-- Show block type -->
+        <p class="text-center h3">
+          Instructions:
+          {{
+            isTypeNumTrials
+              ? "You will need to complete " +
+                blocks[current_block].num_trials +
+                " trials in this block."
+              : "You will have " +
+                blocks[current_block].max_time +
+                " seconds on this block, and should try to do as many trials as possible."
+          }}
+        </p>
+        <div v-if="!block_started" class="text-center h2">
+          Block starting in:
           <countdown
             ref="timerBlock"
-            :time="blocks[current_block].max_time * 1000"
-            :interval="1000"
+            :time="
+              blocks[current_block - 1]
+                ? blocks[current_block - 1].sec_until_next * 1000
+                : 3099
+            "
+            :interval="100"
             :auto-start="true"
-            @progress="blockTimerProgress"
-            @end="blockEnded(true)"
+            :emit-events="true"
+            @progress="playCountdown"
+            @end="startBlock"
           >
+            <span slot-scope="props" class="h1">{{ props.seconds + 1 }}</span>
           </countdown>
+          <p class="text-center h4">
+            Sequence:
+            <span class="text-center h1">{{
+              blocks[current_block].sequence
+            }}</span>
+          </p>
+        </div>
+
+        <template v-else>
+          <h4>Block Progress</h4>
           <b-progress
+            v-if="isTypeNumTrials"
             height="2rem"
-            :max="blocks[current_block].max_time"
+            :max="blocks[current_block].num_trials"
             show-progress
           >
             <b-progress-bar
-              :value="current_block_time"
+              :value="current_trial + 1"
               :label="
-                current_block_time.toString() +
-                ' seconds of ' +
-                blocks[current_block].max_time.toString()
+                'Trial ' +
+                (current_trial + 1).toString() +
+                ' of ' +
+                blocks[current_block].num_trials.toString()
               "
             ></b-progress-bar>
           </b-progress>
-        </div>
-        <br />
+          <div v-else>
+            <countdown
+              ref="timerBlock"
+              :time="blocks[current_block].max_time * 1000"
+              :interval="1000"
+              :auto-start="true"
+              @progress="blockTimerProgress"
+              @end="blockEnded(true)"
+            >
+            </countdown>
+            <b-progress
+              height="2rem"
+              :max="blocks[current_block].max_time"
+              show-progress
+            >
+              <b-progress-bar
+                :value="current_block_time"
+                :label="
+                  current_block_time.toString() +
+                  ' seconds of ' +
+                  blocks[current_block].max_time.toString()
+                "
+              ></b-progress-bar>
+            </b-progress>
+          </div>
+          <br />
 
-        <trial
-          ref="real-trial"
-          v-bind="getTrialObj"
-          @trial-ended="trialEnded"
-          @rest-ended="restEnded"
-        >
-        </trial>
-
-        <template v-if="experiment.with_feedback_blocks">
-          <h4>Block performance</h4>
-          <b-progress
-            height="2rem"
-            :max="num_correct_seq + num_incorrect_seq"
-            show-progress
+          <trial
+            ref="real-trial"
+            v-bind="getTrialObj"
+            @trial-ended="trialEnded"
+            @rest-ended="restEnded"
           >
-            <b-progress-bar
-              :value="num_correct_seq"
-              :label="num_correct_seq.toString() + ' correct'"
-              variant="success"
-            ></b-progress-bar>
-            <b-progress-bar
-              :value="num_incorrect_seq"
-              :label="num_incorrect_seq.toString() + ' incorrect'"
-              variant="danger"
-            ></b-progress-bar>
-          </b-progress>
+          </trial>
+
+          <template v-if="experiment.with_feedback_blocks">
+            <h4>Block performance</h4>
+            <b-progress
+              height="2rem"
+              :max="num_correct_seq + num_incorrect_seq"
+              show-progress
+            >
+              <b-progress-bar
+                :value="num_correct_seq"
+                :label="num_correct_seq.toString() + ' correct'"
+                variant="success"
+              ></b-progress-bar>
+              <b-progress-bar
+                :value="num_incorrect_seq"
+                :label="num_incorrect_seq.toString() + ' incorrect'"
+                variant="danger"
+              ></b-progress-bar>
+            </b-progress>
+          </template>
         </template>
       </template>
-    </template>
-    <div v-if="experiment_finished">
-      <h3 class="text-center">Tell us something about you</h3>
-      <template
-        v-if="!correctly_sent_data && unsuccessful_data_sent_counter > 0"
-      >
-        <div>
-          <p class="text-danger">
-            Data could not be sent to the server. Please connect to the internet
-            and then click on the button below
-          </p>
-          <b-button
-            class="btn"
-            variant="primary"
-            @click="$emit('send-data', experiment_blocks)"
-            >Send Data</b-button
-          >
-        </div>
-      </template>
-      <br />
-      <!-- Redirect home -->
-      <b-form @submit="leaveExperiment">
-        <div class="form-row">
-          <b-form-group class="col-4" label="Age:" label-for="age">
-            <b-form-input
-              name="age"
-              id="age"
-              v-model="questionnaire.age"
-              type="number"
-              required
-              placeholder="Age"
-            ></b-form-input>
-          </b-form-group>
-          <b-form-group class="col-4" label="Gender:" label-for="gender">
-            <b-form-select
-              id="gender"
-              v-model="questionnaire.gender"
-              :options="gender_opts"
-              required
-            ></b-form-select>
-          </b-form-group>
-          <b-form-group
-            class="col-4"
-            label="Computer type:"
-            label-for="comp-type"
-          >
-            <b-form-select
-              id="comp-type"
-              v-model="questionnaire.comp_type"
-              :options="comp_type_opts"
-              required
-            ></b-form-select>
-          </b-form-group>
-        </div>
-        <div class="form-row">
-          <b-form-group
-            label="Do you have any comments on your experience and what could be improved?"
-            label-for="comments"
-            class="col-6"
-          >
-            <b-form-textarea
-              id="comments"
-              v-model="questionnaire.comment"
-              placeholder="Enter your comments"
-              rows="3"
-              max-rows="6"
-            ></b-form-textarea>
-          </b-form-group>
-        </div>
-        <b-button
-          type="submit"
-          class="btn btn-block"
-          :disabled="!correctly_sent_data"
-          variant="primary"
-          >Submit and exit</b-button
+      <div v-if="experiment_finished">
+        <h3 class="text-center">Tell us something about you</h3>
+        <template
+          v-if="!correctly_sent_data && unsuccessful_data_sent_counter > 0"
         >
-      </b-form>
-    </div>
+          <div>
+            <p class="text-danger">
+              Data could not be sent to the server. Please connect to the
+              internet and then click on the button below
+            </p>
+            <b-button
+              class="btn"
+              variant="primary"
+              @click="$emit('send-data', experiment_blocks)"
+              >Send Data</b-button
+            >
+          </div>
+        </template>
+        <br />
+        <!-- Redirect home -->
+        <b-form @submit="leaveExperiment">
+          <div class="form-row">
+            <b-form-group class="col-4" label="Age:" label-for="age">
+              <b-form-input
+                name="age"
+                id="age"
+                v-model="questionnaire.age"
+                type="number"
+                required
+                placeholder="Age"
+              ></b-form-input>
+            </b-form-group>
+            <b-form-group class="col-4" label="Gender:" label-for="gender">
+              <b-form-select
+                id="gender"
+                v-model="questionnaire.gender"
+                :options="gender_opts"
+                required
+              ></b-form-select>
+            </b-form-group>
+            <b-form-group
+              class="col-4"
+              label="Computer type:"
+              label-for="comp-type"
+            >
+              <b-form-select
+                id="comp-type"
+                v-model="questionnaire.comp_type"
+                :options="comp_type_opts"
+                required
+              ></b-form-select>
+            </b-form-group>
+          </div>
+          <div class="form-row">
+            <b-form-group
+              label="Do you have any comments on your experience and what could be improved?"
+              label-for="comments"
+              class="col-6"
+            >
+              <b-form-textarea
+                id="comments"
+                v-model="questionnaire.comment"
+                placeholder="Enter your comments"
+                rows="3"
+                max-rows="6"
+              ></b-form-textarea>
+            </b-form-group>
+          </div>
+          <b-button
+            type="submit"
+            class="btn btn-block"
+            :disabled="!correctly_sent_data"
+            variant="primary"
+            >Submit and exit</b-button
+          >
+        </b-form>
+      </div>
+    </template>
   </div>
 </template>
 
@@ -305,6 +313,7 @@
 module.exports = {
   data: function () {
     return {
+      preparation_screen_ready: false,
       practicing: false,
       practice_finished: false,
       remaining_practice_trials: 0,
@@ -338,6 +347,9 @@ module.exports = {
       comp_type_opts: { laptop: "Laptop", desktop: "Desktop", other: "Other" },
 
       countdown_audio: new Audio("/static/gestureApp/sound/countdown.wav"),
+
+      video_url: `https://storage.googleapis.com/motor-learning/experiment_files/${this.experiment.code}/video.mp4`,
+      pdf_url: `https://storage.googleapis.com/motor-learning/experiment_files/${this.experiment.code}/consent.pdf`,
     };
   },
   props: {
@@ -345,6 +357,7 @@ module.exports = {
     blocks: Array,
     correctly_sent_data: Boolean,
     unsuccessful_data_sent_counter: Number,
+    subject_code: String,
   },
   mounted: function () {
     // window.addEventListener('keydown', this.keydownHandler);
@@ -365,6 +378,9 @@ module.exports = {
   },
   components: {
     trial: httpVueLoader("/static/gestureApp/js/components/Trial.vue"),
+    prepscreen: httpVueLoader(
+      "/static/gestureApp/js/components/PreparationScreen.vue"
+    ),
   },
   computed: {
     getTrialObj() {
@@ -380,6 +396,13 @@ module.exports = {
     isTypeNumTrials() {
       if (this.blocks[this.current_block].type === "num_trials") return true;
       return false;
+    },
+    getPrepScreenObj() {
+      return {
+        exp_code: this.experiment.code,
+        video_url: this.video_url,
+        pdf_url: this.pdf_url,
+      };
     },
   },
   watch: {},

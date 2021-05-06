@@ -10,6 +10,7 @@ var app = new Vue({
     return {
       experiment: '',
       blocks: [],
+      subject_code: null,
       with_practice_trials: false,
       num_practice_trials: 0,
       practice_is_random_seq: false,
@@ -36,6 +37,7 @@ var app = new Vue({
         blocks: this.blocks,
         correctly_sent_data: this.correctly_sent_data,
         unsuccessful_data_sent_counter: this.unsuccessful_data_sent_counter,
+        subject_code: this.subject_code,
       }
     },
   },
@@ -49,6 +51,7 @@ var app = new Vue({
           'experiment_trials': JSON.stringify(experiment_blocks),
           'experiment': this.experiment.code,
           'timezone_offset_sec': new Date().getTimezoneOffset() * 60,
+          'subject_code': this.subject_code,
         }
         ).then(response => {
           console.log(response);
@@ -80,6 +83,7 @@ var app = new Vue({
   created: function () {
     this.experiment = JSON.parse(document.getElementById('experiment').textContent);
     this.blocks = JSON.parse(document.getElementById('blocks').textContent);
+    this.subject_code = JSON.parse(document.getElementById('subject_code').textContent);
   },
 });
 
