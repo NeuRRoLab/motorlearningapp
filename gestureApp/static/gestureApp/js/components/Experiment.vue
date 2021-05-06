@@ -43,7 +43,7 @@
             Enter the sequence of characters in order when it appears on the
             screen
           </p>
-          <p class="h4">Try to do it as fast as you can</p>
+          <p class="h4">Try to do it as fast and correctly as you can</p>
           <p class="h4 text-danger">
             Do not change window or tab, or the experiment will restart
           </p>
