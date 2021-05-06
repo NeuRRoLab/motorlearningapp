@@ -818,7 +818,7 @@ def download_cohen_processed(request, pk):
                     Trial.objects.filter(
                         subject=trial.subject,
                         block=trial.block,
-                        started_at__gt=trial.finished_at,
+                        started_at__gte=trial.finished_at,
                     )
                     .order_by("started_at")
                     .annotate(first_keypress=Min("keypresses__timestamp"))[0]
