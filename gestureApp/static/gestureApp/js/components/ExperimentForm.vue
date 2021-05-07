@@ -160,6 +160,24 @@
               :disabled="published"
             ></b-form-input>
         </div>
+        <div class="form-row">
+          <b-form-group
+            class="col"
+            label="Resting time between practice trials and the beginning of experiment(s):"
+            :label-for="'rest-pract-exp'"
+          >
+            <b-form-input
+              name="name"
+              :id="'rest-pract-exp'"
+              v-model.number="rest_after_practice"
+              type="number"
+              step="0.1"
+              required
+              placeholder="Resting time between practice and experiment"
+              :disabled="published"
+            ></b-form-input>
+          </b-form-group>
+        </div>
       </template>
       <h5>Blocks:</h5>
       <button @click="removeAllBlocks" class="btn btn-link text-danger" :disabled="published">Remove all blocks</button>
@@ -364,6 +382,7 @@ module.exports = {
       consent_file: null,
       with_feedback: this.prop_with_feedback,
       with_feedback_blocks: this.prop_with_feedback_blocks,
+      rest_after_practice: this.prop_rest_after_practice,
     };
   },
   props: {
@@ -378,6 +397,7 @@ module.exports = {
     prop_practice_sequence: String,
     prop_practice_trial_time: Number,
     prop_practice_rest_time: Number,
+    prop_rest_after_practice: Number,
     prop_experiment_blocks: Array,
     prop_block_types: Array,
     prop_with_feedback: Boolean,
@@ -430,6 +450,7 @@ module.exports = {
         this.consent_file,
         this.with_feedback,
         this.with_feedback_blocks,
+        this.rest_after_practice
       );
     },
     resetExperiment(evt) {

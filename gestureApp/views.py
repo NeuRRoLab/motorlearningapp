@@ -275,6 +275,7 @@ def create_experiment(request):
             practice_rest_time=exp_info["practice_rest_time"],
             with_feedback=exp_info["with_feedback"],
             with_feedback_blocks=exp_info["with_feedback_blocks"],
+            rest_after_practice=exp_info["rest_after_practice"],
         )
         for block in exp_info["blocks"]:
             sequence = block["sequence"]

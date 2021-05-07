@@ -64,6 +64,7 @@ class Experiment(CloneMixin, models.Model):
     practice_seq_length = models.IntegerField(default=5, null=True, blank=True)
     practice_trial_time = models.FloatField(default=5, null=True, blank=True)
     practice_rest_time = models.FloatField(default=5, null=True, blank=True)
+    rest_after_practice = models.FloatField(default=0, null=True, blank=True)
 
     # For the trials
     with_feedback = models.BooleanField(default=True)
@@ -116,6 +117,7 @@ class Experiment(CloneMixin, models.Model):
             "published": self.published,
             "with_feedback": self.with_feedback,
             "with_feedback_blocks": self.with_feedback_blocks,
+            "rest_after_practice": self.rest_after_practice,
         }
 
 

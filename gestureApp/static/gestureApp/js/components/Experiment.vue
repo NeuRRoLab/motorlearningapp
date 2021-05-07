@@ -86,26 +86,44 @@
       </div>
       <!-- Practice stuff -->
       <template v-else-if="practicing">
-        <p class="text-success text-center">
-          {{ remaining_practice_trials }} practice trials remaining
-        </p>
-        <div class="col-md-12 text-center">
-          <button class="btn btn-primary text-center" @click="stopPractice">
-            Stop Practice
-          </button>
+        <template v-if="rested_after_practice">
+          <p class="text-success text-center">
+            {{ remaining_practice_trials }} practice trials remaining
+          </p>
+          <div class="col-md-12 text-center">
+            <button class="btn btn-primary text-center" @click="stopPractice">
+              Stop Practice
+            </button>
+          </div>
+          <p class="text-center">Enter the keys in order when they appear.</p>
+          <trial
+            ref="practice-trial"
+            :practice="true"
+            :random_seq="false"
+            :sequence="experiment.practice_seq"
+            :max_time_per_trial="experiment.practice_trial_time"
+            :resting_time="experiment.practice_rest_time"
+            :capturing_keypresses="true"
+            :with_feedback="experiment.with_feedback"
+            @trial-ended="practiceTrialEnded"
+          ></trial>
+        </template>
+        <div v-else class="text-center h5">
+          Experiment appearing in:
+          <countdown
+            ref="timerAfterPractice"
+            :time="experiment.rest_after_practice * 1000"
+            :interval="100"
+            :auto-start="true"
+            :emit-events="true"
+            @end="
+              rested_after_practice = true;
+              practicing = false;
+            "
+          >
+            <span slot-scope="props">{{ props.seconds + 1 }}</span>
+          </countdown>
         </div>
-        <p class="text-center">Enter the keys in order when they appear.</p>
-        <trial
-          ref="practice-trial"
-          :practice="true"
-          :random_seq="false"
-          :sequence="experiment.practice_seq"
-          :max_time_per_trial="experiment.practice_trial_time"
-          :resting_time="experiment.practice_rest_time"
-          :capturing_keypresses="true"
-          :with_feedback="experiment.with_feedback"
-          @trial-ended="practiceTrialEnded"
-        ></trial>
       </template>
       <!-- Experiment -->
       <template v-else-if="experiment_started && !experiment_finished">
@@ -413,6 +431,7 @@ module.exports = {
       practicing: false,
       practice_finished: false,
       remaining_practice_trials: 0,
+      rested_after_practice: true,
 
       experiment_started: false,
       experiment_finished: false,
@@ -539,7 +558,8 @@ module.exports = {
     },
     stopPractice() {
       this.$refs["practice-trial"].stopPractice();
-      this.practicing = false;
+      // this.practicing = false;
+      this.rested_after_practice = false;
     },
     startBlock: function () {
       this.played_countdown = false;
