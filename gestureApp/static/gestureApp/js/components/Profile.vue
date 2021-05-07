@@ -1,6 +1,13 @@
 <template>
   <div v-if="!isUserEmpty" class="container-fluid">
     <h1 class="text-center">Profile</h1>
+    <a
+      href="/profile/create_experiment"
+      class="btn btn-lg text-center btn-primary"
+      >Create Experiment</a
+    >
+    <br />
+    <br />
     <template v-if="unpublished_experiments.length > 0">
       <h4>Unpublished experiments:</h4>
       <b-list-group class="col">
@@ -106,9 +113,7 @@
       </b-list-group>
     </template>
     <br />
-    <a href="/profile/create_experiment" class="btn btn-primary"
-      >Create Experiment</a
-    >
+
     <br />
   </div>
 </template>
