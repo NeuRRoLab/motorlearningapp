@@ -953,6 +953,10 @@ def download_survey(request, pk):
     subjects.sort(
         key=lambda subj: subj.trials.order_by("started_at").first().started_at
     )
+    subjects_starting_timestamp = {
+        subject.code: subject.trials.order_by("started_at").first().started_at
+        for subject in subjects
+    }
     possible_subjects = [
         (subj.code, subj.trials.order_by("started_at").first()) for subj in subjects
     ]
@@ -994,7 +998,9 @@ def download_survey(request, pk):
                 values_dict[value] = getattr(survey_obj, key)
         values_dict.pop("blocks__trials__subject__survey")
     # Order the list by block and then subject
-    subjects_surveys.sort(key=lambda value_dict: (value_dict["subject_code"]))
+    subjects_surveys.sort(
+        key=lambda value_dict: (subjects_starting_timestamp[value_dict["subject_code"]])
+    )
     # Output csv
     response = HttpResponse(content_type="text/csv")
     response[
