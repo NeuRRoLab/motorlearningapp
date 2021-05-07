@@ -21,60 +21,82 @@
             ></b-form-input>
           </b-form-group>
         </div>
-        <div class="form-row">
-          <b-form-group
-            class="col"
-            id="input-group"
-            label="Subject Code (optional):"
-            label-for="subj-code"
-          >
-            <b-form-input
-              name="subj-code"
-              id="subj-code"
-              v-model="subject_code_input"
-              type="text"
-              :maxlength="16"
-              placeholder="Subject Code"
-            ></b-form-input>
-          </b-form-group>
-        </div>
-        <button
-          v-if="!subject_code"
-          @click="generateCode"
-          class="btn btn-link text-primary row"
+        <b-form-group
+          label="Have you done an experiment here before?"
+          v-slot="{ ariaDescribedby }"
         >
-          Generate subject code
-        </button>
-        <b-card v-else>
-          <b-card-text>
-            <span class="font-weight-bold">Your Subject Code:</span>
-            {{ this.subject_code }}
-          </b-card-text>
-          <b-card-text>Save this code for future experiments.</b-card-text>
-          <b-form inline>
-            <label class="sr-only" for="inline-form-input-name">Email</label>
-            <b-form-input
-              id="inline-form-input-name"
-              class="mb-2 mr-sm-2 mb-sm-0"
-              placeholder="name@example.com"
-              v-model="email"
-            ></b-form-input>
-            <b-button
-              variant="primary"
-              @click="
-                $emit('send-subject-code', email);
-                email = '';
-              "
-              >Send code to email</b-button
+          <b-form-radio-group
+            id="radio-group-2"
+            v-model="answer"
+            :aria-describedby="ariaDescribedby"
+            name="radio-sub-component"
+            required
+          >
+            <b-form-radio :value="true">Yes</b-form-radio>
+            <b-form-radio :value="false">No</b-form-radio>
+          </b-form-radio-group>
+        </b-form-group>
+        <template v-if="answer !== null">
+          <template v-if="!answer">
+            <button @click="generateCode" class="btn btn-link text-primary row">
+              Generate subject code
+            </button>
+            <b-card v-if="subject_code">
+              <b-card-text>
+                <span class="font-weight-bold">Your Subject Code:</span>
+                {{ this.subject_code }}
+              </b-card-text>
+              <b-card-text>Save this code for future experiments.</b-card-text>
+              <b-form inline>
+                <label class="sr-only" for="inline-form-input-name"
+                  >Email</label
+                >
+                <b-form-input
+                  id="inline-form-input-name"
+                  class="mb-2 mr-sm-2 mb-sm-0"
+                  placeholder="name@example.com"
+                  v-model="email"
+                ></b-form-input>
+                <b-button
+                  variant="primary"
+                  @click="
+                    $emit('send-subject-code', email);
+                    email = '';
+                  "
+                  >Send code to email</b-button
+                >
+              </b-form>
+              <b-card-text v-if="email_response !== ''">{{
+                email_response
+              }}</b-card-text>
+            </b-card>
+            <br />
+          </template>
+          <div v-if="answer || subject_code.length > 0" class="form-row">
+            <b-form-group
+              class="col"
+              id="input-group"
+              label="Subject Code:"
+              label-for="subj-code"
             >
-          </b-form>
-          <b-card-text v-if="email_response !== ''">{{
-            email_response
-          }}</b-card-text>
-        </b-card>
-        <br />
+              <b-form-input
+                name="subj-code"
+                id="subj-code"
+                v-model="subject_code_input"
+                type="text"
+                :maxlength="subject_code_seq_length"
+                placeholder="Subject Code"
+                required
+              ></b-form-input>
+            </b-form-group>
+          </div>
+        </template>
 
-        <b-button type="submit" class="btn btn-block" variant="primary"
+        <b-button
+          type="submit"
+          class="btn btn-block"
+          variant="primary"
+          :disabled="subject_code_input.length !== subject_code_seq_length"
           >Submit</b-button
         >
       </b-form>
@@ -89,6 +111,8 @@ module.exports = {
       experiment_code: "",
       subject_code_input: "",
       email: "",
+      answer: null,
+      subject_code_seq_length: 16,
     };
   },
   props: {
@@ -124,7 +148,7 @@ module.exports = {
 <style scoped>
 .experiment-form {
   border: 1px solid lightgray;
-  width: 530px;
+  width: 730px;
   padding: 40px;
   float: none;
   margin: 0 auto;
