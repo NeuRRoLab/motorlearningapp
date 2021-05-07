@@ -1058,8 +1058,13 @@ def publish_experiment(request, pk):
 
 @login_required
 def delete_experiment(request, pk):
-    # TODO: remove material from Cloud Storage
     experiment = get_object_or_404(Experiment, pk=pk, creator=request.user)
+    # Remove stuff from Cloud Storage
+    cs_bucket = storage.Client().bucket(BUCKET_NAME)
+    blobs = cs_bucket.list_blobs(prefix=f"experiment_files/{pk}")
+    for blob in blobs:
+        blob.delete()
+
     experiment.delete()
     return JsonResponse({})
 
