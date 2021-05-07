@@ -965,6 +965,12 @@ def download_survey(request, pk):
         "age": "Age",
         "gender": "Gender",
         "comp_type": "Computer Type",
+        "medical_condition": "Medical condition",
+        "hours_of_sleep": "Hours of Sleep night before",
+        "excercise_regularly": "Excercise Regularly",
+        "keypress_experiment_before": "Done keypress experiment before",
+        "followed_instructions": "Followed instructions",
+        "hand_used": "Hand used for experiment",
         "comments": "Comments",
     }
     for values_dict in subjects_surveys:
@@ -995,8 +1001,11 @@ def download_survey(request, pk):
         "Content-Disposition"
     ] = 'attachment; filename="survey_experiment_{}.csv"'.format(pk)
 
-    writer = csv.DictWriter(response, subjects_surveys[0].keys())
-    writer.writeheader()
+    if len(subjects_surveys) > 0:
+        writer = csv.DictWriter(response, subjects_surveys[0].keys())
+        writer.writeheader()
+    else:
+        writer = csv.DictWriter(response, ["experiment"])
     writer.writerows(subjects_surveys)
     return response
 
