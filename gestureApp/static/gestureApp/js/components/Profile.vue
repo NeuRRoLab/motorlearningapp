@@ -1,5 +1,5 @@
 <template>
-  <div v-if="!isUserEmpty" class="container">
+  <div v-if="!isUserEmpty" class="container-fluid">
     <h1 class="text-center">Profile</h1>
     <template v-if="unpublished_experiments.length > 0">
       <h4>Unpublished experiments:</h4>
