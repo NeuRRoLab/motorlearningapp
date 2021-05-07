@@ -1138,6 +1138,12 @@ def end_survey(request, pk):
         gender=info["questionnaire"]["gender"],
         comments=info["questionnaire"]["comment"],
         comp_type=info["questionnaire"]["comp_type"],
+        medical_condition=info["questionnaire"]["medical_condition"],
+        hours_of_sleep=info["questionnaire"]["hours_of_sleep"],
+        excercise_regularly=info["questionnaire"]["excercise_regularly"],
+        keypress_experiment_before=info["questionnaire"]["keypress_experiment_before"],
+        followed_instructions=info["questionnaire"]["followed_instructions"],
+        hand_used=info["questionnaire"]["hand_used"],
     )
     return JsonResponse({})
 

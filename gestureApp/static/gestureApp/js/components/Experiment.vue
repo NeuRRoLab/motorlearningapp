@@ -235,8 +235,10 @@
           </template>
         </template>
       </template>
+      <!-- End Survey -->
       <div v-if="experiment_finished">
         <h3 class="text-center">Tell us something about you</h3>
+        <!-- Manual sending of data if automatic failed -->
         <template
           v-if="!correctly_sent_data && unsuccessful_data_sent_counter > 0"
         >
@@ -284,6 +286,93 @@
                 id="comp-type"
                 v-model="questionnaire.comp_type"
                 :options="comp_type_opts"
+                required
+              ></b-form-select>
+            </b-form-group>
+          </div>
+          <div class="form-row">
+            <b-form-group
+              class="col"
+              label="Do you have any medical conditions (e.g., recent surgery, fracture, vision problem, stroke) that could have potentially affected your performance on the task?"
+            >
+              <b-form-radio-group
+                id="medcondition-radio"
+                v-model="questionnaire.medical_condition"
+                name="medcondition-radio"
+                required
+              >
+                <b-form-radio :value="true">Yes</b-form-radio>
+                <b-form-radio :value="false">No</b-form-radio>
+              </b-form-radio-group>
+            </b-form-group>
+          </div>
+          <div class="form-row">
+            <b-form-group class="col" label="Do you excercise regularly?">
+              <b-form-radio-group
+                id="exercise-radio"
+                v-model="questionnaire.excercise_regularly"
+                name="exercise-radio"
+                required
+              >
+                <b-form-radio :value="true">Yes</b-form-radio>
+                <b-form-radio :value="false">No</b-form-radio>
+              </b-form-radio-group>
+            </b-form-group>
+          </div>
+          <div class="form-row">
+            <b-form-group
+              class="col-4"
+              label="How many hours did you sleep yesterday?"
+              label-for="age"
+            >
+              <b-form-input
+                name="sleep"
+                id="sleep"
+                v-model="questionnaire.hours_of_sleep"
+                type="number"
+                required
+                placeholder="Hours of sleep"
+              ></b-form-input>
+            </b-form-group>
+            <b-form-group
+              class="col-4"
+              label="Have you done a similar keypressing experiment before?"
+            >
+              <b-form-radio-group
+                id="similar-exp-radio"
+                v-model="questionnaire.keypress_experiment_before"
+                name="similar-exp-radio"
+                required
+              >
+                <b-form-radio :value="true">Yes</b-form-radio>
+                <b-form-radio :value="false">No</b-form-radio>
+              </b-form-radio-group>
+            </b-form-group>
+            <b-form-group
+              class="col-4"
+              label="Did you follow the experiment instructions?"
+            >
+              <b-form-radio-group
+                id="followed-instructions"
+                v-model="questionnaire.followed_instructions"
+                name="followed-instructions"
+                required
+              >
+                <b-form-radio :value="true">Yes</b-form-radio>
+                <b-form-radio :value="false">No</b-form-radio>
+              </b-form-radio-group>
+            </b-form-group>
+          </div>
+          <div class="form-row">
+            <b-form-group
+              class="col-4"
+              label="Hand used for experiments:"
+              label-for="hand-used"
+            >
+              <b-form-select
+                id="hand-used"
+                v-model="questionnaire.hand_used"
+                :options="hand_used_opts"
                 required
               ></b-form-select>
             </b-form-group>
@@ -349,9 +438,16 @@ module.exports = {
         gender: null,
         comp_type: null,
         comment: null,
+        medical_condition: null,
+        hours_of_sleep: null,
+        excercise_regularly: null,
+        keypress_experiment_before: null,
+        followed_instructions: null,
+        hand_used: null,
       },
       gender_opts: { male: "Male", female: "Female", other: "Other" },
       comp_type_opts: { laptop: "Laptop", desktop: "Desktop", other: "Other" },
+      hand_used_opts: { left: "Left", right: "Right", both: "Both" },
 
       countdown_audio: new Audio("/static/gestureApp/sound/countdown.wav"),
 
