@@ -969,9 +969,10 @@ def download_survey(request, pk):
         started_experiment_at = new_subject_codes[
             values_dict["blocks__trials__subject"]
         ][1]
-        values_dict["subject_code"] = new_subject_codes[
-            values_dict.pop("blocks__trials__subject")
-        ][0]
+        values_dict["subject_code"] = values_dict.pop("blocks__trials__subject")
+        # values_dict["subject_code"] = new_subject_codes[
+        #     values_dict.pop("blocks__trials__subject")
+        # ][0]
         values_dict["started_experiment_at"] = started_experiment_at
 
         for value in survey.values():
