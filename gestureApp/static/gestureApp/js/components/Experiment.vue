@@ -13,17 +13,20 @@
         practicing ? ": Practicing" : ""
       }}</span>
     </h1>
+    <!-- Preparation Screen: video and consent form -->
     <prepscreen
       v-if="!preparation_screen_ready"
       v-bind="getPrepScreenObj"
       @prep-screen-ready="preparation_screen_ready = true"
     ></prepscreen>
+    <!-- Preparation screen ready -->
     <template v-else>
       <div
         v-if="!experiment_started && !practicing && !experiment_finished"
         class="row"
       >
         <div class="col text-center">
+          <!-- Instructions -->
           <template
             v-if="
               experiment.with_practice_trials && remaining_practice_trials > 0
@@ -33,7 +36,7 @@
               Enter the sequence of characters in order when it appears on the
               screen
             </p>
-            <p class="h4">Try to do it as fast as you can</p>
+            <p class="h4">Try to do it as fast and correctly as you can</p>
             <p class="h4">
               You will complete {{ remaining_practice_trials }} practice
               trial(s)
@@ -81,6 +84,7 @@
           </template>
         </div>
       </div>
+      <!-- Practice stuff -->
       <template v-else-if="practicing">
         <p class="text-success text-center">
           {{ remaining_practice_trials }} practice trials remaining
@@ -99,9 +103,11 @@
           :max_time_per_trial="experiment.practice_trial_time"
           :resting_time="experiment.practice_rest_time"
           :capturing_keypresses="true"
+          :with_feedback="experiment.with_feedback"
           @trial-ended="practiceTrialEnded"
         ></trial>
       </template>
+      <!-- Experiment -->
       <template v-else-if="experiment_started && !experiment_finished">
         <h4>Experiment Progress</h4>
         <b-progress height="2rem" :max="blocks.length" show-progress>
@@ -129,6 +135,7 @@
                 " seconds on this block, and should try to do as many trials as possible."
           }}
         </p>
+        <!-- Block countdown -->
         <div v-if="!block_started" class="text-center h2">
           Block starting in:
           <countdown
@@ -153,7 +160,7 @@
             }}</span>
           </p>
         </div>
-
+        <!-- Block -->
         <template v-else>
           <h4>Block Progress</h4>
           <b-progress
@@ -198,7 +205,7 @@
             </b-progress>
           </div>
           <br />
-
+          <!-- Trial -->
           <trial
             ref="real-trial"
             v-bind="getTrialObj"

@@ -146,7 +146,7 @@
             </b-form-checkbox>
           </b-form-group>
           <b-form-group
-            class="col-2"
+            class="col-4"
             v-if="practice_is_random_sequence"
             label="Sequence length:"
             label-for="seq-length"
