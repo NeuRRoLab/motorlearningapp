@@ -600,6 +600,7 @@ def download_processed_data(request):
                 .annotate(last_keypress=Max("keypresses__timestamp"))
             )
             # Next trial: closest starting timestamp in the same block and subject
+            skip_trial = False
             if len(qs) > 0:
                 # Tapping speed
                 tap_speed = []
@@ -610,6 +611,11 @@ def download_processed_data(request):
                     elapsed = (
                         keypress.timestamp - keypresses[index - 1].timestamp
                     ).total_seconds()
+                    if elapsed == 0:
+                        # Something failed while capturing the keypresses timestamp. we should skip this trial.
+                        # We could say that the elapsed value is the minimum possible keypress difference (1ms)
+                        # This keypress would get discarded anyway.
+                        elapsed = 0.001
                     tap_speed.append(1.0 / elapsed)
                 # Mean and std deviation of tapping speed
                 mean_tap_speed = np.mean(tap_speed)
