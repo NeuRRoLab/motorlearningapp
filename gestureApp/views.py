@@ -1192,3 +1192,11 @@ def send_subject_code(request):
 
     return JsonResponse({})
 
+def loaderio(request):
+    # Output csv
+    response = HttpResponse(content_type="text/plain")
+    response[
+        "Content-Disposition"
+    ] = 'attachment; filename="loaderio-0e64c936e385b2eed7c32769fccfbffd.txt"'
+    response.write("loaderio-0e64c936e385b2eed7c32769fccfbffd")
+    return response
