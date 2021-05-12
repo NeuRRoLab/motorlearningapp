@@ -26,7 +26,7 @@ SECRET_KEY = "y!7l+(vux@ny4ak((kk=a1^a3)f@&*hn6zssc5a2f=ov^&)ra="
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["neurroexperiment.herokuapp.com", "127.0.0.1"]
+ALLOWED_HOSTS = ["neurroexperiment.herokuapp.com", "127.0.0.1", "motorlearning.uc.r.appspot.com"]
 
 
 # Application definition
@@ -77,13 +77,29 @@ WSGI_APPLICATION = "gestureSite.wsgi.application"
 
 # Database
 # https://docs.djangoproject.com/en/3.1/ref/settings/#databases
-
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+if os.getenv("GAE_APPLICATION", None):
+    # DEBUG = False
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.postgresql_psycopg2",
+            "HOST": os.getenv('APP_DB_HOST'),
+            "USER": os.getenv("APP_DB_USER"),
+            "PASSWORD": os.getenv("APP_DB_PASSWORD"),
+            "NAME": os.getenv("APP_DB_NAME"),
+        }
     }
-}
+else:
+    # DEBUG = True
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.postgresql_psycopg2",
+            "HOST": "127.0.0.1",
+            "PORT": "5432",
+            "NAME": os.getenv("APP_DB_NAME"),
+            "USER": os.getenv("APP_DB_USER"),
+            "PASSWORD": os.getenv("APP_DB_PASSWORD"),
+        }
+    }
 
 
 # Password validation
