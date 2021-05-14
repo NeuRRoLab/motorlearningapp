@@ -32,4 +32,6 @@ env_variables:
   APP_DB_USER: "postgres"
   APP_DB_PASSWORD: "postgres"
   APP_DB_NAME: "motor-learning-app"
+  APP_EMAIL_USERNAME: "motorlearningapp@gmail.com"
+  APP_EMAIL_PASSWORD: "NeuRRo_Lab"
 # [END django_app]
