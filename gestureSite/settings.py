@@ -78,7 +78,7 @@ WSGI_APPLICATION = "gestureSite.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/3.1/ref/settings/#databases
 if os.getenv("GAE_APPLICATION", None):
-    # DEBUG = False
+    DEBUG = False
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.postgresql_psycopg2",

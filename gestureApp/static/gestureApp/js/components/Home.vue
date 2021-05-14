@@ -57,6 +57,7 @@
                   placeholder="name@example.com"
                   v-model="email"
                 ></b-form-input>
+                <input type="text" style="display: none" />
                 <b-button
                   variant="primary"
                   @click="
