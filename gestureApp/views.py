@@ -1200,3 +1200,8 @@ def loaderio(request):
     ] = 'attachment; filename="loaderio-0e64c936e385b2eed7c32769fccfbffd.txt"'
     response.write("loaderio-0e64c936e385b2eed7c32769fccfbffd")
     return response
+
+def handler404(request, exception, template_name="gestureApp/404.html"):
+    response = render(request, "gestureApp/404.html",{})
+    response.status_code = 404
+    return response
