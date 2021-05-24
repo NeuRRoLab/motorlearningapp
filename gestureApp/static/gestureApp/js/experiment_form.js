@@ -72,7 +72,7 @@ var app = new Vue({
         prop_block_types: this.block_types,
         prop_with_feedback: this.with_feedback,
         prop_with_feedback_blocks: this.with_feedback_blocks,
-        rest_after_practice: this.rest_after_practice,
+        prop_rest_after_practice: this.rest_after_practice,
       }
     }
   },
