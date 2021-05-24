@@ -199,3 +199,5 @@ class EndSurvey(models.Model):
     keypress_experiment_before = models.BooleanField()
     followed_instructions = models.BooleanField()
     hand_used = models.CharField(max_length=15)
+    dominant_hand = models.CharField(max_length=10)
+    level_education = models.CharField(max_length=50)

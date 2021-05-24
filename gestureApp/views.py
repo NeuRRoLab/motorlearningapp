@@ -978,9 +978,11 @@ def download_survey(request, pk):
         "medical_condition": "Medical condition",
         "hours_of_sleep": "Hours of Sleep night before",
         "excercise_regularly": "Excercise Regularly",
+        "level_education": "Level of Education",
         "keypress_experiment_before": "Done keypress experiment before",
         "followed_instructions": "Followed instructions",
         "hand_used": "Hand used for experiment",
+        "dominant_hand": "Dominant Hand",
         "comments": "Comments",
     }
     for values_dict in subjects_surveys:
@@ -1166,6 +1168,8 @@ def end_survey(request, pk):
         keypress_experiment_before=info["questionnaire"]["keypress_experiment_before"],
         followed_instructions=info["questionnaire"]["followed_instructions"],
         hand_used=info["questionnaire"]["hand_used"],
+        dominant_hand=info["questionnaire"]["dominant_hand"],
+        level_education=info["questionnaire"]["level_education"],
     )
     return JsonResponse({})
 
@@ -1192,6 +1196,7 @@ def send_subject_code(request):
 
     return JsonResponse({})
 
+
 def loaderio(request):
     # Output csv
     response = HttpResponse(content_type="text/plain")
@@ -1201,7 +1206,8 @@ def loaderio(request):
     response.write("loaderio-0e64c936e385b2eed7c32769fccfbffd")
     return response
 
+
 def handler404(request, exception, template_name="gestureApp/404.html"):
-    response = render(request, "gestureApp/404.html",{})
+    response = render(request, "gestureApp/404.html", {})
     response.status_code = 404
     return response

@@ -325,7 +325,7 @@
             </b-form-group>
           </div>
           <div class="form-row">
-            <b-form-group class="col" label="Do you excercise regularly?">
+            <b-form-group class="col-4" label="Do you excercise regularly?">
               <b-form-radio-group
                 id="exercise-radio"
                 v-model="questionnaire.excercise_regularly"
@@ -335,6 +335,18 @@
                 <b-form-radio :value="true">Yes</b-form-radio>
                 <b-form-radio :value="false">No</b-form-radio>
               </b-form-radio-group>
+            </b-form-group>
+            <b-form-group
+              class="col-4"
+              label="Maximum level of education:"
+              label-for="level-education"
+            >
+              <b-form-select
+                id="level-education"
+                v-model="questionnaire.level_education"
+                :options="level_education_opts"
+                required
+              ></b-form-select>
             </b-form-group>
           </div>
           <div class="form-row">
@@ -382,6 +394,18 @@
             </b-form-group>
           </div>
           <div class="form-row">
+            <b-form-group
+              class="col-4"
+              label="Dominant hand:"
+              label-for="dominant-hand"
+            >
+              <b-form-select
+                id="dominant-hand"
+                v-model="questionnaire.dominant_hand"
+                :options="hand_used_opts"
+                required
+              ></b-form-select>
+            </b-form-group>
             <b-form-group
               class="col-4"
               label="Hand used for experiments:"
@@ -463,10 +487,22 @@ module.exports = {
         keypress_experiment_before: null,
         followed_instructions: null,
         hand_used: null,
+        dominant_hand: null,
+        level_education: null,
       },
       gender_opts: { male: "Male", female: "Female", other: "Other" },
       comp_type_opts: { laptop: "Laptop", desktop: "Desktop", other: "Other" },
       hand_used_opts: { left: "Left", right: "Right", both: "Both" },
+      level_education_opts: {
+        kindergarten_or_below: "Kindergarten and below",
+        first_to_sixth: "1st to 6th grade",
+        seventh_to_ninth: "7th to 9th grade",
+        tenth_to_twelfth: "10th to 12th grade",
+        community_college_or_associate_degree:
+          "Community college or associate degree",
+        bachelor: "Bachelor's degree",
+        master_or_phd: "Master's or doctoral degree",
+      },
 
       countdown_audio: new Audio("/static/gestureApp/sound/countdown.wav"),
 
