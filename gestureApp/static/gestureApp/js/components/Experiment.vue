@@ -560,6 +560,7 @@ module.exports = {
         exp_code: this.experiment.code,
         video_url: this.video_url,
         pdf_url: this.pdf_url,
+        requirements: this.experiment.requirements,
       };
     },
   },

@@ -1,28 +1,53 @@
 <template>
   <div class="container">
-    <h2>Video instructions</h2>
-    <div class="d-flex justify-content-center">
-      <video-player
-        class="vjs-custom-skin"
-        ref="videoPlayer"
-        :options="playerOptions"
-        :playsinline="true"
-        @ready="playerReadied"
+    <template v-if="!requirements_fulfilled">
+      <h2>Experiment requirements</h2>
+      <b-card>
+        <b-card-text style="white-space: pre-wrap">{{
+          requirements
+        }}</b-card-text>
+      </b-card>
+      <br />
+      <button
+        class="btn btn-primary btn-lg btn-block active text-center"
+        @click="requirements_fulfilled = true"
       >
-      </video-player>
-    </div>
-    <br />
-    <h2>Consent</h2>
-    <div class="d-flex justify-content-center">
-      <embed :src="pdf_url" width="100%" height="480" />
-    </div>
-    <br />
-    <button
-      class="btn btn-primary btn-lg btn-block active text-center"
-      @click="$emit('prep-screen-ready')"
-    >
-      Agree and continue to experiment
-    </button>
+        I fulfill the requirements to participate
+      </button>
+    </template>
+    <template v-else-if="!video_seen">
+      <h2>Video instructions</h2>
+      <div class="d-flex justify-content-center">
+        <video-player
+          class="vjs-custom-skin"
+          ref="videoPlayer"
+          :options="playerOptions"
+          :playsinline="true"
+          @ready="playerReadied"
+        >
+        </video-player>
+      </div>
+      <br />
+      <button
+        class="btn btn-primary btn-lg btn-block active text-center"
+        @click="video_seen = true"
+      >
+        Continue
+      </button>
+    </template>
+    <template v-else>
+      <h2>Consent Form</h2>
+      <div class="d-flex justify-content-center">
+        <embed :src="pdf_url" width="100%" height="480" />
+      </div>
+      <br />
+      <button
+        class="btn btn-primary btn-lg btn-block active text-center"
+        @click="$emit('prep-screen-ready')"
+      >
+        Agree and continue to experiment
+      </button>
+    </template>
     <br />
   </div>
 </template>
@@ -31,6 +56,8 @@
 module.exports = {
   data: function () {
     return {
+      requirements_fulfilled: false,
+      video_seen: false,
       // videojs options
       playerOptions: {
         height: "480",
@@ -54,19 +81,11 @@ module.exports = {
     exp_code: String,
     video_url: String,
     pdf_url: String,
+    requirements: String,
   },
-  mounted: function () {
-    setTimeout(() => {
-      console.log("dynamic change options", this.player);
-      this.player.muted(false);
-    }, 2000);
-  },
+  mounted: function () {},
   components: {},
-  computed: {
-    player() {
-      return this.$refs.videoPlayer.player;
-    },
-  },
+  computed: {},
   watch: {},
   methods: {
     isObjectEmpty: function (obj) {
@@ -76,6 +95,7 @@ module.exports = {
     playerReadied(player) {
       // seek to 10s
       console.log("example player 1 readied", player);
+      player.muted(false);
       // player.currentTime(0);
       // console.log('example 01: the player is readied', player)
     },
