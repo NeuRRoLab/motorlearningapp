@@ -209,6 +209,9 @@ def create_trials(request):
             t.save()
             for keypress in trial["keypresses"]:
                 value = keypress["value"]
+                # Don't count special characters
+                if len(value) > 1:
+                    continue
                 timestamp = keypress["timestamp"]
                 keypress = Keypress(
                     trial=t,
