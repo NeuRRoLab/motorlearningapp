@@ -38,6 +38,18 @@
           required
         ></b-form-file>
       </b-form-group>
+      <b-form-group label="Experiment requirements:" label-for="requirements">
+        <b-form-textarea
+          id="requirements"
+          placeholder="Experiment requirements"
+          rows="3"
+          max-rows="8"
+          v-model="requirements"
+          required
+          description="Add the list of requirements that subjects need to fulfill to participate (e.g over 18 years old)"
+        ></b-form-textarea>
+      </b-form-group>
+
       <b-form-group>
         <b-form-checkbox
           switch
@@ -383,6 +395,7 @@ module.exports = {
       with_feedback: this.prop_with_feedback,
       with_feedback_blocks: this.prop_with_feedback_blocks,
       rest_after_practice: this.prop_rest_after_practice,
+      requirements: this.prop_requirements,
     };
   },
   props: {
@@ -402,6 +415,7 @@ module.exports = {
     prop_block_types: Array,
     prop_with_feedback: Boolean,
     prop_with_feedback_blocks: Boolean,
+    prop_requirements: String,
   },
   mounted: function () {},
   components: {
@@ -450,7 +464,8 @@ module.exports = {
         this.consent_file,
         this.with_feedback,
         this.with_feedback_blocks,
-        this.rest_after_practice
+        this.rest_after_practice,
+        this.requirements,
       );
     },
     resetExperiment(evt) {

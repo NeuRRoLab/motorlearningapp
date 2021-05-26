@@ -279,6 +279,7 @@ def create_experiment(request):
             with_feedback=exp_info["with_feedback"],
             with_feedback_blocks=exp_info["with_feedback_blocks"],
             rest_after_practice=exp_info["rest_after_practice"],
+            requirements=exp_info["requirements"],
         )
         for block in exp_info["blocks"]:
             sequence = block["sequence"]
@@ -339,6 +340,8 @@ def edit_experiment(request, pk):
             practice_rest_time=exp_info["practice_rest_time"],
             with_feedback=exp_info["with_feedback"],
             with_feedback_blocks=exp_info["with_feedback_blocks"],
+            rest_after_practice=exp_info["rest_after_practice"],
+            requirements=exp_info["requirements"],
         )
         # Delete blocks not in exp info blocks but that were originally on the experiment
         edit_blocks = [

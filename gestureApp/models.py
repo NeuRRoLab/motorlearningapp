@@ -66,6 +66,9 @@ class Experiment(CloneMixin, models.Model):
     practice_rest_time = models.FloatField(default=5, null=True, blank=True)
     rest_after_practice = models.FloatField(default=0, null=True, blank=True)
 
+    # Requirements
+    requirements = models.TextField()
+
     # For the trials
     with_feedback = models.BooleanField(default=True)
     # For the blocks
@@ -118,6 +121,7 @@ class Experiment(CloneMixin, models.Model):
             "with_feedback": self.with_feedback,
             "with_feedback_blocks": self.with_feedback_blocks,
             "rest_after_practice": self.rest_after_practice,
+            "requirements": self.requirements,
         }
 
 
