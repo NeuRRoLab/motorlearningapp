@@ -28,10 +28,10 @@ handlers:
     script: auto
 
 env_variables:
-  APP_DB_HOST: "/cloudsql/motorlearning:us-central1:motor-learning"
+  APP_DB_HOST: "motor-learning.c13o3v1fgdjv.us-east-2.rds.amazonaws.com"
   APP_DB_USER: "postgres"
-  APP_DB_PASSWORD: "postgres"
-  APP_DB_NAME: "motor-learning-app"
+  APP_DB_PASSWORD: "NeuRRo_Lab"
+  APP_DB_NAME: "motorlearningapp"
   APP_EMAIL_USERNAME: "motorlearningapp@gmail.com"
   APP_EMAIL_PASSWORD: "NeuRRo_Lab"
 # [END django_app]
