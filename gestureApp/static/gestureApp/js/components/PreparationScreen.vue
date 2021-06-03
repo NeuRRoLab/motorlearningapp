@@ -3,9 +3,12 @@
     <template v-if="!requirements_fulfilled">
       <h2>Experiment requirements</h2>
       <b-card>
-        <b-card-text style="white-space: pre-wrap">{{
+        <b-card-text v-if="requirements !== ''" style="white-space: pre-wrap">{{
           requirements
         }}</b-card-text>
+        <b-card-text v-else style="white-space: pre-wrap"
+          >No experiment requirements</b-card-text
+        >
       </b-card>
       <br />
       <button
