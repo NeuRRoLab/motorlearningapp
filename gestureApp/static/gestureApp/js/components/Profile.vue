@@ -5,12 +5,14 @@
       >Create Study</a
     >
     <a
+      v-if="studies.length > 0"
       href="/profile/create_experiment"
       class="btn btn-lg text-center btn-primary"
       >Create Experiment</a
     >
     <br />
     <br />
+    <!-- Unpublished studies -->
     <template v-if="unpublished_studies.length > 0">
       <h4>Unpublished studies:</h4>
       <div
@@ -25,10 +27,7 @@
               Study actions:
               <a :href="`/profile/study/edit/${study.code}`"> Edit </a>
               |
-              <a
-                style="cursor: pointer"
-                @click="$emit('delete-study', study.code)"
-              >
+              <a href="#" @click="$emit('delete-study', study.code)">
                 Delete
               </a>
               |
@@ -64,13 +63,6 @@
                     @click="$emit('duplicate-experiment', experiment.code)"
                   >
                     Duplicate
-                  </a>
-                  |
-                  <a
-                    href="#"
-                    @click="$emit('publish-experiment', experiment.code)"
-                  >
-                    Publish
                   </a>
                   |
                   <a :href="`/experiment/${experiment.code}`"
@@ -110,6 +102,7 @@
       </div>
     </template>
     <br />
+    <!-- Published Studies -->
     <template v-if="published_studies.length > 0">
       <h4>Published studies:</h4>
       <div
@@ -118,10 +111,14 @@
         :key="study.code"
       >
         <b-card-group class="col">
-          <b-card :header="`${study.name} (${study.code})`">
+          <b-card
+            :header="`${study.name} (${study.code}) (${
+              study.enabled ? 'enabled' : 'disabled'
+            })`"
+          >
             <p class="card-text mt-2">
               Study actions:
-              <a :href="`/profile/study/edit/${study.code}`"> Edit </a>
+              <a :href="`/profile/study/edit/${study.code}`"> View </a>
               |
               <a href="#" @click="$emit('delete-study', study.code)">
                 Delete
@@ -131,8 +128,14 @@
                 Duplicate
               </a>
               |
-              <a href="#" @click="$emit('disable-study', study.code)">
-                Disable
+              <a
+                v-if="study.enabled"
+                href="#"
+                @click="$emit('disable-study', study.code)"
+                >Disable
+              </a>
+              <a v-else href="#" @click="$emit('enable-study', study.code)"
+                >Enable
               </a>
             </p>
             <h5>Experiments</h5>
@@ -141,9 +144,11 @@
                 v-for="experiment in study.experiments"
                 :key="'E' + experiment.code"
                 class="d-flex justify-content-between align-items-center"
-                >{{ experiment.name }} ({{ experiment.code }})
+                >{{ experiment.name }} ({{ experiment.code }}) ({{
+                  experiment.enabled ? "enabled" : "disabled"
+                }})
                 <span>
-                  <a :href="`/profile/experiment/view/${experiment.code}`">
+                  <a :href="`/profile/experiment/edit/${experiment.code}`">
                     View
                   </a>
                   |
@@ -162,10 +167,16 @@
                   </a>
                   |
                   <a
+                    v-if="experiment.enabled"
                     href="#"
                     @click="$emit('disable-experiment', experiment.code)"
-                  >
-                    Disable
+                    >Disable
+                  </a>
+                  <a
+                    v-else
+                    href="#"
+                    @click="$emit('enable-experiment', experiment.code)"
+                    >Enable
                   </a>
                   |
                   <a :href="`/experiment/${experiment.code}`">Do Experiment</a>

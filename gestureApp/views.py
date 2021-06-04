@@ -23,7 +23,7 @@ from django.http import (
     Http404,
     FileResponse,
 )
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, reverse_lazy
 from django.utils import timezone
 from django.utils.decorators import method_decorator
@@ -146,6 +146,20 @@ class ExperimentUpdate(UpdateView):
 #         )
 
 
+def study(request, pk):
+    # Get subject code
+    subject_code = request.GET.get("subj-code", None)
+    study = get_object_or_404(Study, pk=pk, published=True, enabled=True)
+    # Exclude disabled experiments
+    experiment = study.experiments.filter(enabled=True).order_by("?").first()
+    if experiment is None:
+        # No enabled experiments in this study
+        return Http404
+
+    # Do the randomization here and redirect to the appropiate experiment
+    return redirect(f"/experiment/{experiment.code}/?subj_code={subject_code}")
+
+
 # Create your views here.
 def experiment(request, pk):
     experiment = get_object_or_404(Experiment, pk=pk)
@@ -262,6 +276,7 @@ def handle_upload_file(cs_bucket, file, code, filename, content_type):
 def create_experiment(request):
     if request.method == "POST":
         exp_info = json.loads(request.body)
+        study = get_object_or_404(Study, pk=exp_info["study"])
         exp_practice_seq = exp_info["practice_seq"]
         if exp_info["with_practice_trials"] and exp_info["practice_is_random_seq"]:
             exp_practice_seq = "".join(
@@ -269,6 +284,7 @@ def create_experiment(request):
             )
         experiment = Experiment.objects.create(
             name=exp_info["name"],
+            study=study,
             creator=request.user,
             with_practice_trials=exp_info["with_practice_trials"],
             num_practice_trials=exp_info["practice_trials"],
@@ -1146,17 +1162,15 @@ def user_studies(request):
         return JsonResponse({"studies": study_array})
 
 
-@login_required
-def publish_experiment(request, pk):
+def _publish_experiment(experiment):
     # Get experiment from code
     # Change the published status to true, and add the published timestamp
-    experiment = get_object_or_404(Experiment, pk=pk, creator=request.user)
     if experiment.published:
-        return JsonResponse({})
+        return
     experiment.published = True
     experiment.published_timestamp = timezone.now()
     experiment.save()
-    return JsonResponse({})
+    return
 
 
 @login_required
@@ -1221,6 +1235,57 @@ def duplicate_experiment(request, pk):
     cs_bucket.copy_blob(
         source_video, cs_bucket, f"experiment_files/{experiment.pk}/video.mp4"
     )
+    return JsonResponse({})
+
+
+@login_required
+def publish_study(request, pk):
+    # Get study from code
+    # Change the published status to true, and add the published timestamp
+    study = get_object_or_404(Study, pk=pk, creator=request.user)
+    if study.published:
+        return JsonResponse({})
+    study.published = True
+    study.published_timestamp = timezone.now()
+    study.save()
+    # Publish all experiments in this study
+    for experiment in study.experiments.all():
+        _publish_experiment(experiment)
+    return JsonResponse({})
+
+
+@login_required
+def delete_study(request, pk):
+    study = get_object_or_404(Study, pk=pk, creator=request.user)
+    study.delete()
+    return JsonResponse({})
+
+
+@login_required
+def disable_study(request, pk):
+    study = get_object_or_404(Study, pk=pk, creator=request.user)
+    study.enabled = False
+    study.save()
+    return JsonResponse({})
+
+
+@login_required
+def enable_study(request, pk):
+    study = get_object_or_404(Study, pk=pk, creator=request.user)
+    study.enabled = True
+    study.save()
+    return JsonResponse({})
+
+
+@login_required
+def duplicate_study(request, pk):
+    study = get_object_or_404(Study, pk=pk, creator=request.user)
+    original_pk_study = study.pk
+    # Clone
+    study.pk = None
+    study.name = "Copy of " + study.name
+    study.save()
+    # TODO: maybe clone the experiments as well
     return JsonResponse({})
 
 

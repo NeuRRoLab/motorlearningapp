@@ -87,6 +87,7 @@ class Study(models.Model):
             "code": self.code,
             "name": self.name,
             "created_at": self.created_at,
+            "published": self.published,
             "creator": self.creator.username,
             "description": self.description,
         }
@@ -156,8 +157,14 @@ class Experiment(CloneMixin, models.Model):
         return self.code + " | " + self.name
 
     def to_dict(self):
+        try:
+            study_code = self.study.code
+        except AttributeError:
+            study_code = None
+
         return {
             "code": self.code,
+            "study": study_code,
             "name": self.name,
             "created_at": self.created_at,
             "creator": self.creator.username,

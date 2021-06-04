@@ -6,6 +6,8 @@ var app = new Vue({
   el: '#app',
   data: function () {
     return {
+      studies: [],
+      study: null,
       experiment_code: null,
       is_experiment_published: false,
       experiment_name: null,
@@ -57,10 +59,13 @@ var app = new Vue({
   computed: {
     getExperimentFormData() {
       return {
+        studies: this.studies,
+
         experiment_code: this.experiment_code,
         editing: this.editing,
         published: this.is_experiment_published,
 
+        prop_study: this.study,
         prop_experiment_name: this.experiment_name,
         prop_with_practice_trials: this.with_practice_trials,
         prop_practice_trials: this.practice_trials,
@@ -79,9 +84,10 @@ var app = new Vue({
     }
   },
   methods: {
-    submitExperiment(name, with_practice_trials, practice_trials, practice_is_random_sequence, practice_seq_length, practice_sequence, practice_trial_time, practice_rest_time, blocks, video_file, consent_file, with_feedback, with_feedback_blocks, rest_after_practice, requirements) {
+    submitExperiment(name, study_code, with_practice_trials, practice_trials, practice_is_random_sequence, practice_seq_length, practice_sequence, practice_trial_time, practice_rest_time, blocks, video_file, consent_file, with_feedback, with_feedback_blocks, rest_after_practice, requirements) {
       let obj = {
         code: this.experiment_code,
+        study: study_code,
         name: name,
         practice_trials: practice_trials,
         blocks: blocks,
@@ -117,8 +123,15 @@ var app = new Vue({
         })
       }
     },
+    getUserStudies() {
+      axios.get('/api/user_studies').then(response => {
+        // Only unpublished studies
+        this.studies = response.data.studies.filter(study => study.published === false);
+      })
+    },
   },
   created() {
+    this.getUserStudies();
     // TODO: Read from HTML if existent
     if (document.getElementById("experiment") !== null && document.getElementById("blocks") !== null) {
       // If no experiment data is available, then we are creating a new experiment
@@ -126,6 +139,7 @@ var app = new Vue({
         return;
       this.editing = true;
       html_experiment = JSON.parse(document.getElementById('experiment').textContent);
+      this.study = html_experiment.study;
       this.experiment_code = html_experiment.code;
       this.is_experiment_published = html_experiment.published;
       this.experiment_name = html_experiment.name;

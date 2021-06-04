@@ -4,6 +4,22 @@
     <h1 v-else-if="published" class="text-center">View experiment {{ experiment_code }}</h1>
     <h1 v-else class="text-center">Edit experiment {{ experiment_code }}</h1>
     <b-form @submit="onSubmitExperiment" @reset="resetExperiment">
+      <b-form-group
+            label="Study:"
+            :label-for="'study'"
+            :description="published ? '' : 'Only unpublished studies will be available. If you don\'t see any studies, you probably will need to create one first.'"
+          >
+            <b-form-select
+              :id="'study'"
+              v-model="study"
+              :options="published ? [{value: study, text: study}] : studies.map(study => {
+                return {value: study.code, text: `${study.name} (${study.code})`}
+              })"
+              required
+              :disabled="published"
+              
+            ></b-form-select>
+          </b-form-group>
       <b-form-group label="Experiment Name:" label-for="name">
         <b-form-input
           name="name"
@@ -15,7 +31,7 @@
           :disabled="published"
         ></b-form-input>
       </b-form-group>
-      <b-form-group label="Instructions video:" label-for="instructions-video">
+      <b-form-group label="Instructions video:" label-for="instructions-video" description="Only .mp4 files allowed">
         <b-form-file
           accept=".mp4"
           id="instructions-video"
@@ -23,7 +39,7 @@
           :state="Boolean(video_file)"
           placeholder="Choose a file or drop it here..."
           drop-placeholder="Drop file here..."
-          description="Only .mp4 files allowed"
+          :disabled="published"
           required
         ></b-form-file>
       </b-form-group>
@@ -35,6 +51,7 @@
           :state="Boolean(consent_file)"
           placeholder="Choose a file or drop it here..."
           drop-placeholder="Drop file here..."
+          :disabled="published"
           required
         ></b-form-file>
       </b-form-group>
@@ -380,6 +397,7 @@
 module.exports = {
   data: function () {
     return {
+      study: this.prop_study,
       experiment_name: this.prop_experiment_name,
       with_practice_trials: this.prop_with_practice_trials,
       practice_trials: this.prop_practice_trials,
@@ -399,9 +417,11 @@ module.exports = {
     };
   },
   props: {
+    studies: Array,
     experiment_code: String,
     editing: Boolean,
     published: Boolean,
+    prop_study: String,
     prop_experiment_name: String,
     prop_with_practice_trials: Boolean,
     prop_practice_trials: Number,
@@ -452,6 +472,7 @@ module.exports = {
       this.$emit(
         "submit-experiment",
         this.experiment_name,
+        this.study,
         this.with_practice_trials,
         this.practice_trials,
         this.practice_is_random_sequence,

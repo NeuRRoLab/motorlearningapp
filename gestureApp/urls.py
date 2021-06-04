@@ -38,6 +38,7 @@ urlpatterns = [
         name="edit_study",
     ),
     re_path(r"^experiment/(?P<pk>[A-Z0-9]{4})/$", views.experiment, name="experiment",),
+    re_path(r"^study/(?P<pk>[A-Z0-9]{4})/$", views.study, name="study",),
     # path("prep_screen/", views.preparation_screen, name="prep_screen"),
     path("raw_data/", views.download_raw_data, name="download_raw_data"),
     path(
@@ -69,15 +70,40 @@ urlpatterns = [
         views.enable_experiment,
         name="experiment_enable",
     ),
-    re_path(
-        r"^api/experiment/publish/(?P<pk>[A-Z0-9]{4})/$",
-        views.publish_experiment,
-        name="experiment_publish",
-    ),
+    # re_path(
+    #     r"^api/experiment/publish/(?P<pk>[A-Z0-9]{4})/$",
+    #     views.publish_experiment,
+    #     name="experiment_publish",
+    # ),
     re_path(
         r"^api/experiment/duplicate/(?P<pk>[A-Z0-9]{4})/$",
         views.duplicate_experiment,
         name="experiment_duplicate",
+    ),
+    re_path(
+        r"^api/study/delete/(?P<pk>[A-Z0-9]{4})/$",
+        views.delete_study,
+        name="study_delete",
+    ),
+    re_path(
+        r"^api/study/disable/(?P<pk>[A-Z0-9]{4})/$",
+        views.disable_study,
+        name="study_disable",
+    ),
+    re_path(
+        r"^api/study/enable/(?P<pk>[A-Z0-9]{4})/$",
+        views.enable_study,
+        name="study_enable",
+    ),
+    re_path(
+        r"^api/study/publish/(?P<pk>[A-Z0-9]{4})/$",
+        views.publish_study,
+        name="study_publish",
+    ),
+    re_path(
+        r"^api/study/duplicate/(?P<pk>[A-Z0-9]{4})/$",
+        views.duplicate_study,
+        name="study_duplicate",
     ),
     re_path(
         r"^api/experiment/end_survey/(?P<pk>[A-Z0-9]{4})/$",

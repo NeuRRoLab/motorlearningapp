@@ -6,13 +6,13 @@
           <b-form-group
             class="col"
             id="input-group"
-            label="Experiment Code:"
+            label="Study Code:"
             label-for="input"
           >
             <b-form-input
               name="code"
               id="input"
-              v-model="experiment_code"
+              v-model="study_code"
               type="text"
               :maxlength="4"
               required
@@ -21,6 +21,7 @@
             ></b-form-input>
           </b-form-group>
         </div>
+        <!-- TODO: Maybe add the possibility of an experiment code, if the subject has one -->
         <b-form-group
           label="Have you done an experiment here before?"
           v-slot="{ ariaDescribedby }"
@@ -46,7 +47,9 @@
                 <span class="font-weight-bold">Your Subject Code:</span>
                 {{ this.subject_code }}
               </b-card-text>
-              <b-card-text>Save this code for future experiments.</b-card-text>
+              <b-card-text
+                >Save this code for future studies/experiments.</b-card-text
+              >
               <b-form inline>
                 <label class="sr-only" for="inline-form-input-name"
                   >Email</label
@@ -109,7 +112,7 @@
 module.exports = {
   data: function () {
     return {
-      experiment_code: "",
+      study_code: "",
       subject_code_input: "",
       email: "",
       answer: null,
@@ -132,11 +135,11 @@ module.exports = {
   },
   methods: {
     onInput: function (input) {
-      this.experiment_code = input.toUpperCase();
+      this.study_code = input.toUpperCase();
     },
     goToExperiment(evt) {
       evt.preventDefault();
-      window.location.href = `/experiment/${this.experiment_code}/?subj-code=${this.subject_code_input}`;
+      window.location.href = `/study/${this.study_code}/?subj-code=${this.subject_code_input}`;
     },
     generateCode(evt) {
       evt.preventDefault();

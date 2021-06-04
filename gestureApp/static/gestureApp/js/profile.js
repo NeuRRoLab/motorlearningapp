@@ -20,11 +20,15 @@ var app = new Vue({
     ></notifications>
       <Profile
         v-bind="getProfileObj"
-        @publish-experiment="publishExperiment"
         @disable-experiment="disableExperiment"
         @enable-experiment="enableExperiment"
         @delete-experiment="deleteExperiment"
         @duplicate-experiment="duplicateExperiment"
+        @publish-study="publishStudy"
+        @disable-study="disableStudy"
+        @enable-study="enableStudy"
+        @delete-study="deleteStudy"
+        @duplicate-study="duplicateStudy"
       />
   </div>
       `,
@@ -50,21 +54,21 @@ var app = new Vue({
         this.studies = response.data.studies;
       })
     },
-    publishExperiment(code) {
-      if (confirm("Publishing the experiment will forbid any future edits and will discard the testing data. Are you sure you want to proceed?")) {
-        axios.post(`/api/experiment/publish/${code}/`).then(response => {
-          this.getUserExperiments();
-          this.$notify({
-            group: 'alerts',
-            title: `Experiment ${code} successfully published`,
-            type: 'success',
-          });
-        });
-      }
-    },
+    // publishExperiment(code) {
+    //   if (confirm("Publishing the experiment will forbid any future edits and will discard the testing data. Are you sure you want to proceed?")) {
+    //     axios.post(`/api/experiment/publish/${code}/`).then(response => {
+    //       this.getUserStudies();
+    //       this.$notify({
+    //         group: 'alerts',
+    //         title: `Experiment ${code} successfully published`,
+    //         type: 'success',
+    //       });
+    //     });
+    //   }
+    // },
     enableExperiment(code) {
       axios.post(`/api/experiment/enable/${code}/`).then(response => {
-        this.getUserExperiments();
+        this.getUserStudies();
         this.$notify({
           group: 'alerts',
           title: `Experiment ${code} successfully enabled`,
@@ -74,7 +78,7 @@ var app = new Vue({
     },
     disableExperiment(code) {
       axios.post(`/api/experiment/disable/${code}/`).then(response => {
-        this.getUserExperiments();
+        this.getUserStudies();
         this.$notify({
           group: 'alerts',
           title: `Experiment ${code} successfully disabled`,
@@ -85,7 +89,7 @@ var app = new Vue({
     deleteExperiment(code) {
       if (prompt(`Are you sure you want to delete Experiment ${code} and all its data? Enter the experiment code to confirm the deletion`) === code) {
         axios.post(`/api/experiment/delete/${code}/`).then(response => {
-          this.getUserExperiments();
+          this.getUserStudies();
           this.$notify({
             group: 'alerts',
             title: `Experiment ${code} successfully deleted`,
@@ -96,10 +100,64 @@ var app = new Vue({
     },
     duplicateExperiment(code) {
       axios.post(`/api/experiment/duplicate/${code}/`).then(response => {
-        this.getUserExperiments();
+        this.getUserStudies();
         this.$notify({
           group: 'alerts',
           title: `Experiment ${code} successfully duplicated`,
+          type: 'success',
+        });
+      });
+    },
+    publishStudy(code) {
+      if (confirm("Publishing the study will forbid any future edits in its experiments and will discard the testing data. Are you sure you want to proceed?")) {
+        axios.post(`/api/study/publish/${code}/`).then(response => {
+          this.getUserStudies();
+          this.$notify({
+            group: 'alerts',
+            title: `Study ${code} successfully published`,
+            type: 'success',
+          });
+        });
+      }
+    },
+    enableStudy(code) {
+      axios.post(`/api/study/enable/${code}/`).then(response => {
+        this.getUserStudies();
+        this.$notify({
+          group: 'alerts',
+          title: `Study ${code} successfully enabled`,
+          type: 'success',
+        });
+      });
+    },
+    disableStudy(code) {
+      axios.post(`/api/study/disable/${code}/`).then(response => {
+        this.getUserStudies();
+        this.$notify({
+          group: 'alerts',
+          title: `Study ${code} successfully disabled`,
+          type: 'success',
+        });
+      });
+    },
+    deleteStudy(code) {
+      if (prompt(`Are you sure you want to delete Study ${code} and all its data? Enter the study code to confirm the deletion`) === code) {
+        axios.post(`/api/study/delete/${code}/`).then(response => {
+          this.getUserStudies();
+          this.$notify({
+            group: 'alerts',
+            title: `Study ${code} successfully deleted`,
+            type: 'success',
+          });
+        });
+      }
+    },
+    duplicateStudy(code) {
+      axios.post(`/api/study/duplicate/${code}/`).then(response => {
+        this.getUserStudies();
+        this.$notify({
+          group: 'alerts',
+          title: `Study ${code} successfully duplicated`,
           type: 'success',
         });
       });
