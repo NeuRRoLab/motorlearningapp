@@ -7,7 +7,7 @@ var app = new Vue({
   data: function () {
     return {
       current_user: {},
-      experiments: [],
+      studies: [],
     }
   },
   template: `
@@ -35,7 +35,7 @@ var app = new Vue({
     getProfileObj() {
       return {
         current_user: this.current_user,
-        experiments: this.experiments,
+        studies: this.studies
       }
     }
   },
@@ -45,10 +45,9 @@ var app = new Vue({
         this.current_user = response.data;
       })
     },
-    getUserExperiments() {
-      console.log("holaa")
-      axios.get('/api/user_experiments').then(response => {
-        this.experiments = response.data.experiments;
+    getUserStudies() {
+      axios.get('/api/user_studies').then(response => {
+        this.studies = response.data.studies;
       })
     },
     publishExperiment(code) {
@@ -108,7 +107,7 @@ var app = new Vue({
   },
   mounted() {
     this.getCurrentUser();
-    this.getUserExperiments();
+    this.getUserStudies();
   },
 });
 

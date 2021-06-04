@@ -1,0 +1,11 @@
+{% extends 'gestureApp/base.html' %} {% block content %}
+<div id="app">
+  <App />
+</div>
+
+{% endblock content %} {% block javascript %} {% load static %}
+{{ study|json_script:"study" }}
+<script src="https://unpkg.com/http-vue-loader"></script>
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<script src="{% static 'gestureApp/js/study_form.js' %}"></script>
+{% endblock %}

@@ -45,11 +45,62 @@ class Subject(models.Model):
         return self.code
 
 
+class Study(models.Model):
+    code = models.CharField(max_length=4, blank=True, editable=False, primary_key=True)
+    name = models.CharField(max_length=100)
+    created_at = models.DateTimeField(auto_now_add=True)
+    creator = models.ForeignKey(User, models.CASCADE, related_name="studies")
+    description = models.TextField(null=True, default="")
+
+    # flag to know if the experiment should be shown or not
+    published = models.BooleanField(default=False)
+    published_timestamp = models.DateTimeField(blank=True, null=True, default=None)
+    enabled = models.BooleanField(default=True)
+
+    def save(self, *args, **kwargs):
+        if not self.code:
+            self.code = "".join(
+                random.choices(string.ascii_uppercase + string.digits, k=4)
+            )
+            # using your function as above or anything else
+        success = False
+        failures = 0
+        while not success:
+            try:
+                super(Study, self).save(*args, **kwargs)
+            except IntegrityError:
+                failures += 1
+                if (
+                    failures > 5
+                ):  # or some other arbitrary cutoff point at which things are clearly wrong
+                    raise
+                else:
+                    # looks like a collision, try another random value
+                    self.code = "".join(
+                        random.choices(string.ascii_uppercase + string.digits, k=4)
+                    )
+            else:
+                success = True
+
+    def to_dict(self):
+        return {
+            "code": self.code,
+            "name": self.name,
+            "created_at": self.created_at,
+            "creator": self.creator.username,
+            "description": self.description,
+        }
+
+
 class Experiment(CloneMixin, models.Model):
     code = models.CharField(max_length=4, blank=True, editable=False, primary_key=True)
     name = models.CharField(max_length=100)
     created_at = models.DateTimeField(auto_now_add=True)
     creator = models.ForeignKey(User, models.CASCADE, related_name="experiments")
+    # FIXME: remove the null
+    study = models.ForeignKey(
+        Study, models.CASCADE, related_name="experiments", null=True
+    )
 
     # flag to know if the experiment should be shown or not
     published = models.BooleanField(default=False)
@@ -205,3 +256,4 @@ class EndSurvey(models.Model):
     hand_used = models.CharField(max_length=15)
     dominant_hand = models.CharField(max_length=10)
     level_education = models.CharField(max_length=50)
+

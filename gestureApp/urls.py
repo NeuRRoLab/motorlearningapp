@@ -21,6 +21,7 @@ urlpatterns = [
     path(
         "profile/create_experiment", views.create_experiment, name="create-experiment"
     ),
+    path("profile/create_study", views.create_study, name="create-study"),
     re_path(
         r"^profile/experiment/upload_files/(?P<pk>[A-Z0-9]{4})/$",
         views.upload_files,
@@ -30,6 +31,11 @@ urlpatterns = [
         r"^profile/experiment/edit/(?P<pk>[A-Z0-9]{4})/$",
         views.edit_experiment,
         name="edit_experiment",
+    ),
+    re_path(
+        r"^profile/study/edit/(?P<pk>[A-Z0-9]{4})/$",
+        views.edit_study,
+        name="edit_study",
     ),
     re_path(r"^experiment/(?P<pk>[A-Z0-9]{4})/$", views.experiment, name="experiment",),
     # path("prep_screen/", views.preparation_screen, name="prep_screen"),
@@ -47,6 +53,7 @@ urlpatterns = [
     path("api/send_subject_code", views.send_subject_code, name="send_subject_code"),
     path("api/current_user", views.current_user, name="current_user"),
     path("api/user_experiments", views.user_experiments, name="user_experiments"),
+    path("api/user_studies", views.user_studies, name="user_studies"),
     re_path(
         r"^api/experiment/delete/(?P<pk>[A-Z0-9]{4})/$",
         views.delete_experiment,
@@ -87,6 +94,8 @@ urlpatterns = [
         views.download_survey,
         name="download_survey",
     ),
-    re_path("loaderio-0e64c936e385b2eed7c32769fccfbffd.txt", views.loaderio, name="loaderio"),
+    re_path(
+        "loaderio-0e64c936e385b2eed7c32769fccfbffd.txt", views.loaderio, name="loaderio"
+    ),
 ]
 

@@ -37,7 +37,7 @@ from google.cloud import storage
 import numpy as np
 
 from .forms import ExperimentCode, UserRegisterForm, BlockFormSet, ExperimentForm
-from .models import Block, Experiment, Keypress, Subject, Trial, User, EndSurvey
+from .models import Block, Experiment, Keypress, Subject, Trial, User, EndSurvey, Study
 
 BUCKET_NAME = "motor-learning"
 
@@ -55,6 +55,7 @@ class Profile(DetailView):
         context["experiments"] = self.request.user.experiments.all().order_by(
             "created_at"
         )
+        context["studies"] = self.request.user.studies.all().order_by("created_at")
         return context
 
 
@@ -392,6 +393,39 @@ def edit_experiment(request, pk):
                     for _ in range(num_repetitions - 1):
                         block_obj.pk = None
                         block_obj.save()
+        return HttpResponseRedirect(reverse("gestureApp:profile"))
+
+
+@login_required
+def create_study(request):
+    if request.method == "POST":
+        study_info = json.loads(request.body)
+        study = Study.objects.create(
+            name=study_info["name"],
+            creator=request.user,
+            description=study_info["description"],
+        )
+
+        return JsonResponse({"code": study.code})
+
+    return render(request, "gestureApp/study_form.html", {},)
+
+
+@login_required
+def edit_study(request, pk):
+    if request.method == "GET":
+        study = get_object_or_404(Study, pk=pk, creator=request.user)
+        return render(
+            request, "gestureApp/study_form.html", {"study": study.to_dict(),},
+        )
+    elif request.method == "POST":
+        study_info = json.loads(request.body)
+        study = Study.objects.get(pk=study_info["code"])
+        Study.objects.filter(pk=study_info["code"]).update(
+            name=study_info["name"],
+            creator=request.user,
+            description=study_info["description"],
+        )
         return HttpResponseRedirect(reverse("gestureApp:profile"))
 
 
@@ -1073,6 +1107,43 @@ def user_experiments(request):
             exp_obj["enabled"] = experiment.enabled
             exp_array.append(exp_obj)
         return JsonResponse({"experiments": exp_array})
+
+
+@login_required
+def user_studies(request):
+    if request.method == "GET":
+        study_array = []
+        for study in request.user.studies.all():
+            study_obj = {}
+            study_obj["code"] = study.code
+            study_obj["name"] = study.name
+            study_obj["published"] = study.published
+            study_obj["enabled"] = study.enabled
+            study_obj["experiments"] = []
+            for experiment in study.experiments.all():
+                exp_obj = {}
+                exp_obj["code"] = experiment.code
+                exp_obj["name"] = experiment.name
+                exp_obj["published"] = experiment.published
+                if experiment.published:
+                    exp_obj["responses"] = (
+                        Subject.objects.filter(
+                            trials__block__experiment=experiment,
+                            trials__started_at__gt=experiment.published_timestamp,
+                        )
+                        .distinct()
+                        .count()
+                    )
+                else:
+                    exp_obj["responses"] = (
+                        Subject.objects.filter(trials__block__experiment=experiment)
+                        .distinct()
+                        .count()
+                    )
+                exp_obj["enabled"] = experiment.enabled
+                study_obj["experiments"].append(exp_obj)
+            study_array.append(study_obj)
+        return JsonResponse({"studies": study_array})
 
 
 @login_required
