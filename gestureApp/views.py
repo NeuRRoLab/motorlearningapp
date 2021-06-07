@@ -549,7 +549,6 @@ def download_raw_data(request):
         current_subject = ""
         current_trial_seq_idx = 0
         for values_dict, diff in zip(queryset_list, diff_keypresses_ms):
-            print(values_dict)
             # Was keypress correct
             if (
                 current_trial == values_dict["trial_id"]
@@ -649,8 +648,6 @@ def download_processed_data(request):
         for res in trials_timestamps_query:
             trial_timestamps[res["id"]].append(res["keypresses__timestamp"])
 
-        accumulated_keypresses = defaultdict(lambda: 0)
-        accumulated_elapsed_time = defaultdict(lambda: 0)
         for values_dict in no_et:
             # List of timestamps, ordered from early to late
             keypresses_timestamps = trial_timestamps[values_dict["trial_id"]]
@@ -747,19 +744,6 @@ def download_processed_data(request):
             writer = csv.DictWriter(response, ["experiment"])
         writer.writerows(no_et)
         return response
-
-
-# FIXME: this is failing
-# /home/lhcubillos/.local/lib/python3.8/site-packages/numpy/core/_methods.py:233: RuntimeWarning: Degrees of freedom <= 0 for slice
-#   ret = _var(a, axis=axis, dtype=dtype, out=out, ddof=ddof,
-# /home/lhcubillos/.local/lib/python3.8/site-packages/numpy/core/_methods.py:226: RuntimeWarning: invalid value encountered in double_scalars
-#   ret = ret.dtype.type(ret / rcount)
-# /home/lhcubillos/.local/lib/python3.8/site-packages/numpy/core/fromnumeric.py:3372: RuntimeWarning: Mean of empty slice.
-#   return _methods._mean(a, axis=axis, dtype=dtype,
-# /home/lhcubillos/.local/lib/python3.8/site-packages/numpy/core/_methods.py:170: RuntimeWarning: invalid value encountered in double_scalars
-#   ret = ret.dtype.type(ret / rcount)
-# /home/lhcubillos/.local/lib/python3.8/site-packages/numpy/core/_methods.py:194: RuntimeWarning: invalid value encountered in true_divide
-#   arrmean = um.true_divide(
 
 
 @login_required
