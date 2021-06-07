@@ -826,7 +826,7 @@ def download_cohen_processed(request, pk):
         )
 
     trials_query = (
-        Trial.objects.filter(partial_correct=True, block__experiment__code=pk)
+        Trial.objects.filter(block__experiment__code=pk)
         .order_by("keypresses__timestamp")
         .values(
             "id",
@@ -836,6 +836,7 @@ def download_cohen_processed(request, pk):
             "finished_at",
             "block__id",
             "subject__code",
+            "partial_correct",
         )
     )
     # From the trials, I need all the keypress timestamps ordered from low to high
@@ -850,6 +851,8 @@ def download_cohen_processed(request, pk):
         trial_dict["block_id"] = res["block__id"]
         # Subject code
         trial_dict["subject_code"] = res["subject__code"]
+        # Partial correct
+        trial_dict["partial_correct"] = res["partial_correct"]
         # Keypresses
         trial_dict["keypresses"] = trial_dict.get("keypresses", []) + [
             res["keypresses__timestamp"]
@@ -865,8 +868,14 @@ def download_cohen_processed(request, pk):
         trial = trials.get(values_dict["trial_id"], None)
         # print(trials, values_dict["trial_id"])
         # Next trial: closest starting timestamp in the same block and subject
-        if trial is not None and len(trial.get("keypresses", [])) > 0:
+        if (
+            trial is not None
+            and len(trial.get("keypresses", [])) > 0
+            and trial["partial_correct"]
+        ):
             execution_time_ms = -1
+            start_time = None
+            finish_time = None
             # Check if the trial is the last one of the block
             if (
                 trial["finished_at"]
@@ -874,50 +883,42 @@ def download_cohen_processed(request, pk):
                     (values_dict["block_id"], values_dict["subject_code"])
                 ][1]
             ):
-                execution_time_ms = (
-                    trial["finished_at"] - trial["keypresses"][0]
-                ).total_seconds() * 1000
+                start_time = trial["keypresses"][0]
+                finish_time = trial["finished_at"]
             # Else, get next trial: same subject and block, minimum starting time that is greater than this finishing time
             else:
-                next_trial_id = sorted(
+                next_trials = sorted(
                     [
                         (key, values["started_at"])
                         for key, values in trials.items()
-                        if values["started_at"] > trial["finished_at"]
+                        if values["started_at"] >= trial["finished_at"]
                         and values["subject_code"] == trial["subject_code"]
                         and values["block_id"] == trial["block_id"]
                     ],
                     key=lambda val: val[1],
-                )[0][0]
+                )
+                try:
+                    next_trial_id = next_trials[0][0]
+                except IndexError:
+                    raise Exception("Next trial not found")
                 next_trial = trials[next_trial_id]
-                # next_trial = (
-                #     Trial.objects.filter(
-                #         subject=trial.subject,
-                #         block=trial.block,
-                #         started_at__gte=trial.finished_at,
-                #     )
-                #     .order_by("started_at")
-                #     .annotate(first_keypress=Min("keypresses__timestamp"))[0]
-                # )
                 # Check if the next trial has any keypresses
                 if len(next_trial["keypresses"]) == 0:
-                    execution_time_ms = -1
-                    print("next trial had no keypresses")
+                    # Then, execution time is as if this is the last trial
+                    finish_time = trial["finished_at"]
                 else:
-                    # Check if it's the first trial
-                    if (
-                        trial["started_at"]
-                        == trial_timestamps[
-                            (values_dict["block_id"], values_dict["subject_code"])
-                        ][0]
-                    ):
-                        execution_time_ms = (
-                            next_trial["keypresses"][0] - trial["started_at"]
-                        ).total_seconds() * 1000
-                    else:
-                        execution_time_ms = (
-                            next_trial["keypresses"][0] - trial["keypresses"][0]
-                        ).total_seconds() * 1000
+                    finish_time = next_trial["keypresses"][0]
+                # Check if it's the first trial
+                if (
+                    trial["started_at"]
+                    == trial_timestamps[
+                        (values_dict["block_id"], values_dict["subject_code"])
+                    ][0]
+                ):
+                    start_time = trial["started_at"]
+                else:
+                    start_time = trial["keypresses"][0]
+            execution_time_ms = (finish_time - start_time).total_seconds() * 1000
             # Tapping speed
             tap_speed = []
             keypresses = trial["keypresses"]
@@ -932,9 +933,6 @@ def download_cohen_processed(request, pk):
             std_dev_tap_speed = np.std(tap_speed, ddof=1)
 
             # Execution time
-            # execution_time_ms = (
-            #     trial.last_keypress - trial.first_keypress
-            # ).total_seconds() * 1000
             values_dict["execution_time_ms"] = execution_time_ms
             # Tapping data
             values_dict["tapping_speed_mean"] = (
