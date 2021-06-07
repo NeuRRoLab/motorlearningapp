@@ -543,16 +543,25 @@ def download_raw_data(request):
         ]
         # Calculate whether or not the keypress input was correct
         # We'll get all keypresses for each trial, and then compare them with the trial sequence
-        current_trial = 0
+        current_trial = -1
+        current_block = -1
+        current_subject = ""
         current_trial_seq_idx = 0
         for values_dict, diff in zip(queryset_list, diff_keypresses_ms):
+            print(values_dict)
             # Was keypress correct
-            if current_trial == values_dict["trial_id"]:
-                # When on the same trial, increase the sequence index
+            if (
+                current_trial == values_dict["trial_id"]
+                and current_block == values_dict["block_id"]
+                and current_subject == values_dict["subject_code"]
+            ):
+                # When on the same trial and block, increase the sequence index
                 current_trial_seq_idx += 1
             else:
-                # When on a different trial, restart the counters
+                # When on a different trial or block, restart the counters
                 current_trial = values_dict["trial_id"]
+                current_block = values_dict["block_id"]
+                current_subject = values_dict["subject_code"]
                 current_trial_seq_idx = 0
             if (
                 values_dict["block_sequence"][current_trial_seq_idx]
@@ -786,6 +795,19 @@ def download_processed_data(request):
             writer = csv.DictWriter(response, ["experiment"])
         writer.writerows(no_et)
         return response
+
+
+# FIXME: this is failing
+# /home/lhcubillos/.local/lib/python3.8/site-packages/numpy/core/_methods.py:233: RuntimeWarning: Degrees of freedom <= 0 for slice
+#   ret = _var(a, axis=axis, dtype=dtype, out=out, ddof=ddof,
+# /home/lhcubillos/.local/lib/python3.8/site-packages/numpy/core/_methods.py:226: RuntimeWarning: invalid value encountered in double_scalars
+#   ret = ret.dtype.type(ret / rcount)
+# /home/lhcubillos/.local/lib/python3.8/site-packages/numpy/core/fromnumeric.py:3372: RuntimeWarning: Mean of empty slice.
+#   return _methods._mean(a, axis=axis, dtype=dtype,
+# /home/lhcubillos/.local/lib/python3.8/site-packages/numpy/core/_methods.py:170: RuntimeWarning: invalid value encountered in double_scalars
+#   ret = ret.dtype.type(ret / rcount)
+# /home/lhcubillos/.local/lib/python3.8/site-packages/numpy/core/_methods.py:194: RuntimeWarning: invalid value encountered in true_divide
+#   arrmean = um.true_divide(
 
 
 @login_required
