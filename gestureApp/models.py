@@ -87,7 +87,9 @@ class Study(models.Model):
             "code": self.code,
             "name": self.name,
             "groups": [g.to_dict() for g in self.groups.all()],
-            "experiments": [e.to_dict() for e in self.experiments.all()],
+            "experiments": [
+                e.to_dict() for e in self.experiments.order_by("created_at").all()
+            ],
             "created_at": self.created_at,
             "published": self.published,
             "creator": self.creator.username,
@@ -97,17 +99,48 @@ class Study(models.Model):
 
 
 class Group(models.Model):
+    code = models.CharField(max_length=4, blank=True, editable=False, primary_key=True)
     name = models.CharField(max_length=100)
     study = models.ForeignKey(Study, on_delete=models.CASCADE, related_name="groups")
     created_at = models.DateTimeField(auto_now_add=True)
     creator = models.ForeignKey(User, models.CASCADE, related_name="study_groups")
+    enabled = models.BooleanField(default=True)
+
+    def save(self, *args, **kwargs):
+        if not self.code:
+            self.code = "".join(
+                random.choices(string.ascii_uppercase + string.digits, k=4)
+            )
+            # using your function as above or anything else
+        success = False
+        failures = 0
+        while not success:
+            try:
+                super(Group, self).save(*args, **kwargs)
+            except IntegrityError:
+                failures += 1
+                if (
+                    failures > 5
+                ):  # or some other arbitrary cutoff point at which things are clearly wrong
+                    raise
+                else:
+                    # looks like a collision, try another random value
+                    self.code = "".join(
+                        random.choices(string.ascii_uppercase + string.digits, k=4)
+                    )
+            else:
+                success = True
 
     def to_dict(self):
         return {
-            "id": self.id,
+            "code": self.code,
             "name": self.name,
+            "experiments": [
+                e.to_dict() for e in self.experiments.order_by("created_at").all()
+            ],
             "created_at": self.created_at,
             "creator": self.creator.username,
+            "enabled": self.enabled,
         }
 
 
@@ -202,7 +235,7 @@ class Experiment(CloneMixin, models.Model):
             study_code = None
             study_name = None
         try:
-            group = self.group.to_dict()
+            group = {"code": self.group.code, "name": self.group.name}
         except AttributeError:
             group = None
 
