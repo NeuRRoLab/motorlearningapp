@@ -22,8 +22,8 @@
       >
         <b-card-group class="col">
           <b-card :header="`${study.name} (${study.code})`">
+            <p v-if="study.description !== ''">{{ study.description }}</p>
             <p class="card-text mt-2">
-              <!-- FIXME: add actions -->
               Study actions:
               <a :href="`/profile/study/edit/${study.code}`"> Edit </a>
               |
@@ -39,6 +39,24 @@
                 Publish
               </a>
             </p>
+            <h6>New group</h6>
+            <b-form inline>
+              <b-form-input
+                id="inline-form-input-name"
+                v-model="group_name"
+                class="mb-2 mr-sm-2 mb-sm-0"
+                placeholder="Group name"
+              ></b-form-input>
+              <b-button
+                variant="primary"
+                @click="
+                  $emit('new-group', group_name, study.code);
+                  group_name = null;
+                "
+                >Save</b-button
+              >
+            </b-form>
+            <br />
             <h5>Experiments</h5>
             <b-list-group v-if="study.experiments.length > 0">
               <b-list-group-item
@@ -116,6 +134,7 @@
               study.enabled ? 'enabled' : 'disabled'
             })`"
           >
+            <p v-if="study.description !== ''">{{ study.description }}</p>
             <p class="card-text mt-2">
               Study actions:
               <a :href="`/profile/study/edit/${study.code}`"> View </a>
@@ -222,7 +241,9 @@
 <script>
 module.exports = {
   data: function () {
-    return {};
+    return {
+      group_name: null,
+    };
   },
   props: {
     current_user: Object,

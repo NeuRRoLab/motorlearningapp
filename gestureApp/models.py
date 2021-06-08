@@ -86,10 +86,28 @@ class Study(models.Model):
         return {
             "code": self.code,
             "name": self.name,
+            "groups": [g.to_dict() for g in self.groups.all()],
+            "experiments": [e.to_dict() for e in self.experiments.all()],
             "created_at": self.created_at,
             "published": self.published,
             "creator": self.creator.username,
             "description": self.description,
+            "enabled": self.enabled,
+        }
+
+
+class Group(models.Model):
+    name = models.CharField(max_length=100)
+    study = models.ForeignKey(Study, on_delete=models.CASCADE, related_name="groups")
+    created_at = models.DateTimeField(auto_now_add=True)
+    creator = models.ForeignKey(User, models.CASCADE, related_name="study_groups")
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "name": self.name,
+            "created_at": self.created_at,
+            "creator": self.creator.username,
         }
 
 
@@ -101,6 +119,9 @@ class Experiment(CloneMixin, models.Model):
     # FIXME: remove the null
     study = models.ForeignKey(
         Study, models.CASCADE, related_name="experiments", null=True
+    )
+    group = models.ForeignKey(
+        Group, models.CASCADE, related_name="experiments", null=True
     )
 
     # flag to know if the experiment should be shown or not
@@ -156,15 +177,39 @@ class Experiment(CloneMixin, models.Model):
     def __str__(self):
         return self.code + " | " + self.name
 
+    def num_responses(self):
+        if self.published:
+            return (
+                Subject.objects.filter(
+                    trials__block__experiment=self,
+                    trials__started_at__gt=self.published_timestamp,
+                )
+                .distinct()
+                .count()
+            )
+        else:
+            return (
+                Subject.objects.filter(trials__block__experiment=self)
+                .distinct()
+                .count()
+            )
+
     def to_dict(self):
         try:
             study_code = self.study.code
+            study_name = self.study.name
         except AttributeError:
             study_code = None
+            study_name = None
+        try:
+            group = self.group.to_dict()
+        except AttributeError:
+            group = None
 
         return {
             "code": self.code,
-            "study": study_code,
+            "study": {"code": study_code, "name": study_name},
+            "group": group,
             "name": self.name,
             "created_at": self.created_at,
             "creator": self.creator.username,
@@ -180,6 +225,8 @@ class Experiment(CloneMixin, models.Model):
             "with_feedback_blocks": self.with_feedback_blocks,
             "rest_after_practice": self.rest_after_practice,
             "requirements": self.requirements,
+            "enabled": self.enabled,
+            "responses": self.num_responses(),
         }
 
 

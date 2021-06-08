@@ -38,7 +38,17 @@ from google.cloud import storage
 import numpy as np
 
 from .forms import ExperimentCode, UserRegisterForm, BlockFormSet, ExperimentForm
-from .models import Block, Experiment, Keypress, Subject, Trial, User, EndSurvey, Study
+from .models import (
+    Block,
+    Experiment,
+    Keypress,
+    Subject,
+    Trial,
+    User,
+    EndSurvey,
+    Study,
+    Group,
+)
 
 BUCKET_NAME = "motor-learning"
 
@@ -1128,38 +1138,9 @@ def user_experiments(request):
 @login_required
 def user_studies(request):
     if request.method == "GET":
-        study_array = []
-        for study in request.user.studies.all():
-            study_obj = {}
-            study_obj["code"] = study.code
-            study_obj["name"] = study.name
-            study_obj["published"] = study.published
-            study_obj["enabled"] = study.enabled
-            study_obj["experiments"] = []
-            for experiment in study.experiments.all():
-                exp_obj = {}
-                exp_obj["code"] = experiment.code
-                exp_obj["name"] = experiment.name
-                exp_obj["published"] = experiment.published
-                if experiment.published:
-                    exp_obj["responses"] = (
-                        Subject.objects.filter(
-                            trials__block__experiment=experiment,
-                            trials__started_at__gt=experiment.published_timestamp,
-                        )
-                        .distinct()
-                        .count()
-                    )
-                else:
-                    exp_obj["responses"] = (
-                        Subject.objects.filter(trials__block__experiment=experiment)
-                        .distinct()
-                        .count()
-                    )
-                exp_obj["enabled"] = experiment.enabled
-                study_obj["experiments"].append(exp_obj)
-            study_array.append(study_obj)
-        return JsonResponse({"studies": study_array})
+        return JsonResponse(
+            {"studies": [s.to_dict() for s in request.user.studies.all()]}
+        )
 
 
 def _publish_experiment(experiment):
@@ -1353,3 +1334,12 @@ def handler404(request, exception, template_name="gestureApp/404.html"):
     response = render(request, "gestureApp/404.html", {})
     response.status_code = 404
     return response
+
+
+def new_group(request):
+    if request.method == "POST":
+        group_info = json.loads(request.body)
+        study = get_object_or_404(Study, pk=group_info["study"])
+        Group.objects.create(name=group_info["name"], study=study, creator=request.user)
+        return JsonResponse({})
+

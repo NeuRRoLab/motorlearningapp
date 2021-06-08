@@ -120,8 +120,6 @@ urlpatterns = [
         views.download_survey,
         name="download_survey",
     ),
-    re_path(
-        "loaderio-0e64c936e385b2eed7c32769fccfbffd.txt", views.loaderio, name="loaderio"
-    ),
+    path("api/group/new/", views.new_group, name="new_group",),
 ]
 

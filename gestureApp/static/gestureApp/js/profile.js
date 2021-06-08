@@ -20,6 +20,7 @@ var app = new Vue({
     ></notifications>
       <Profile
         v-bind="getProfileObj"
+        @new-group="newGroup"
         @disable-experiment="disableExperiment"
         @enable-experiment="enableExperiment"
         @delete-experiment="deleteExperiment"
@@ -54,18 +55,16 @@ var app = new Vue({
         this.studies = response.data.studies;
       })
     },
-    // publishExperiment(code) {
-    //   if (confirm("Publishing the experiment will forbid any future edits and will discard the testing data. Are you sure you want to proceed?")) {
-    //     axios.post(`/api/experiment/publish/${code}/`).then(response => {
-    //       this.getUserStudies();
-    //       this.$notify({
-    //         group: 'alerts',
-    //         title: `Experiment ${code} successfully published`,
-    //         type: 'success',
-    //       });
-    //     });
-    //   }
-    // },
+    newGroup(name, study_code) {
+      axios.post(`/api/group/new/`, { name: name, study: study_code }).then(response => {
+        this.getUserStudies();
+        this.$notify({
+          group: 'alerts',
+          title: `Group '${name}' successfully created in study ${study_code}`,
+          type: 'success',
+        });
+      });
+    },
     enableExperiment(code) {
       axios.post(`/api/experiment/enable/${code}/`).then(response => {
         this.getUserStudies();

@@ -5,21 +5,35 @@
     <h1 v-else class="text-center">Edit experiment {{ experiment_code }}</h1>
     <b-form @submit="onSubmitExperiment" @reset="resetExperiment">
       <b-form-group
-            label="Study:"
-            :label-for="'study'"
-            :description="published ? '' : 'Only unpublished studies will be available. If you don\'t see any studies, you probably will need to create one first.'"
-          >
-            <b-form-select
-              :id="'study'"
-              v-model="study"
-              :options="published ? [{value: study, text: study}] : studies.map(study => {
-                return {value: study.code, text: `${study.name} (${study.code})`}
-              })"
-              required
-              :disabled="published"
-              
-            ></b-form-select>
-          </b-form-group>
+        label="Study:"
+        :label-for="'study'"
+        :description="published ? '' : 'Only unpublished studies will be available. If you don\'t see any studies, you probably will need to create one first.'"
+      >
+        <b-form-select
+          :id="'study'"
+          v-model="study"
+          :options="published ? [{value: study, text: `${study.name} (${study.code})`}] : studies.map(study => {
+            return {value: study, text: `${study.name} (${study.code})`}
+          })"
+          required
+          :disabled="published"
+          
+        ></b-form-select>
+      </b-form-group>
+      <b-form-group
+        label="Study group:"
+        :label-for="'group'"
+        :description="published ? '' : 'Create group in Profile view if none are shown.'"
+      >
+        <b-form-select
+          :id="'group'"
+          v-model="group.id"
+          :options="study.code !== null ? ( published ? [{value: group.id, text: group.name}] : study.groups.map(group => { return {value: group.id, text: group.name}}) ): []"
+          required
+          :disabled="published || study.code === null"
+          
+        ></b-form-select>
+      </b-form-group>
       <b-form-group label="Experiment Name:" label-for="name">
         <b-form-input
           name="name"
@@ -398,6 +412,7 @@ module.exports = {
   data: function () {
     return {
       study: this.prop_study,
+      group: this.prop_group,
       experiment_name: this.prop_experiment_name,
       with_practice_trials: this.prop_with_practice_trials,
       practice_trials: this.prop_practice_trials,
@@ -421,7 +436,8 @@ module.exports = {
     experiment_code: String,
     editing: Boolean,
     published: Boolean,
-    prop_study: String,
+    prop_study: Object,
+    prop_group: Object,
     prop_experiment_name: String,
     prop_with_practice_trials: Boolean,
     prop_practice_trials: Number,
@@ -472,7 +488,8 @@ module.exports = {
       this.$emit(
         "submit-experiment",
         this.experiment_name,
-        this.study,
+        this.study.code,
+        this.group.id,
         this.with_practice_trials,
         this.practice_trials,
         this.practice_is_random_sequence,
@@ -497,6 +514,7 @@ module.exports = {
       this.experiment_blocks = [];
       this.addBlock();
     },
+
   },
 };
 </script>
