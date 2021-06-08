@@ -66,7 +66,9 @@ class Profile(DetailView):
         context["experiments"] = self.request.user.experiments.all().order_by(
             "created_at"
         )
-        context["studies"] = self.request.user.studies.all().order_by("created_at")
+        context["studies"] = [
+            s.to_dict() for s in self.request.user.studies.all().order_by("created_at")
+        ]
         return context
 
 
@@ -288,6 +290,7 @@ def create_experiment(request):
     if request.method == "POST":
         exp_info = json.loads(request.body)
         study = get_object_or_404(Study, pk=exp_info["study"])
+        group = get_object_or_404(Group, pk=exp_info["group"])
         exp_practice_seq = exp_info["practice_seq"]
         if exp_info["with_practice_trials"] and exp_info["practice_is_random_seq"]:
             exp_practice_seq = "".join(
@@ -296,6 +299,7 @@ def create_experiment(request):
         experiment = Experiment.objects.create(
             name=exp_info["name"],
             study=study,
+            group=group,
             creator=request.user,
             with_practice_trials=exp_info["with_practice_trials"],
             num_practice_trials=exp_info["practice_trials"],
@@ -350,6 +354,8 @@ def edit_experiment(request, pk):
         )
     elif request.method == "POST":
         exp_info = json.loads(request.body)
+        study = get_object_or_404(Study, pk=exp_info["study"])
+        group = get_object_or_404(Group, pk=exp_info["group"])
         exp_practice_seq = exp_info["practice_seq"]
         if exp_info["with_practice_trials"] and exp_info["practice_is_random_seq"]:
             exp_practice_seq = "".join(
@@ -358,6 +364,8 @@ def edit_experiment(request, pk):
         experiment = Experiment.objects.get(pk=exp_info["code"])
         Experiment.objects.filter(pk=exp_info["code"]).update(
             name=exp_info["name"],
+            study=study,
+            group=group,
             creator=request.user,
             with_practice_trials=exp_info["with_practice_trials"],
             num_practice_trials=exp_info["practice_trials"],

@@ -11,9 +11,9 @@
       >
         <b-form-select
           :id="'study'"
-          v-model="study"
-          :options="published ? [{value: study, text: `${study.name} (${study.code})`}] : studies.map(study => {
-            return {value: study, text: `${study.name} (${study.code})`}
+          v-model="study.code"
+          :options="published ? [{value: study.code, text: `${study.name} (${study.code})`}] : studies.filter(study => study.published === false).map(study => {
+            return {value: study.code, text: `${study.name} (${study.code})`}
           })"
           required
           :disabled="published"
@@ -23,12 +23,12 @@
       <b-form-group
         label="Study group:"
         :label-for="'group'"
-        :description="published ? '' : 'Create group in Profile view if none are shown.'"
+        :description="published ? '' : 'Create a new group in the Profile view if none are shown.'"
       >
         <b-form-select
           :id="'group'"
-          v-model="group.id"
-          :options="study.code !== null ? ( published ? [{value: group.id, text: group.name}] : study.groups.map(group => { return {value: group.id, text: group.name}}) ): []"
+          v-model="group.code"
+          :options="getGroupOptions"
           required
           :disabled="published || study.code === null"
           
@@ -57,7 +57,7 @@
           required
         ></b-form-file>
       </b-form-group>
-      <b-form-group label="Consent form:" label-for="consent-form">
+      <b-form-group label="Consent form:" label-for="consent-form" description="Only pdf files allowed">
         <b-form-file
           accept=".pdf"
           id="consent-form"
@@ -457,7 +457,17 @@ module.exports = {
   components: {
     "nav-bar": httpVueLoader("/static/gestureApp/js/components/NavBar.vue"),
   },
-  computed: {},
+  computed: {
+    getGroupOptions()
+    {
+      if (this.study.code !== null) {
+        var full_study = this.studies.find(in_study => in_study.code === this.study.code);
+        if (!full_study) return [];
+        return full_study.groups.map(group => { return {value: group.code, text: `${group.name} (${group.code})`}})
+      }
+      return [];
+    }
+  },
   watch: {},
   methods: {
     addBlock() {
@@ -489,7 +499,7 @@ module.exports = {
         "submit-experiment",
         this.experiment_name,
         this.study.code,
-        this.group.id,
+        this.group.code,
         this.with_practice_trials,
         this.practice_trials,
         this.practice_is_random_sequence,

@@ -17,7 +17,7 @@
       <h4>Unpublished studies:</h4>
       <div
         class="row mt-3"
-        v-for="study in unpublished_studies"
+        v-for="(study, std_index) in unpublished_studies"
         :key="study.code"
       >
         <b-card-group class="col">
@@ -39,82 +39,113 @@
                 Publish
               </a>
             </p>
-            <h6>New group</h6>
-            <b-form inline>
-              <b-form-input
-                id="inline-form-input-name"
-                v-model="group_name"
-                class="mb-2 mr-sm-2 mb-sm-0"
-                placeholder="Group name"
-              ></b-form-input>
-              <b-button
-                variant="primary"
-                @click="
-                  $emit('new-group', group_name, study.code);
-                  group_name = null;
-                "
-                >Save</b-button
-              >
-            </b-form>
-            <br />
-            <h5>Experiments</h5>
-            <b-list-group v-if="study.experiments.length > 0">
-              <b-list-group-item
-                v-for="experiment in study.experiments"
-                :key="'E' + experiment.code"
-                class="d-flex justify-content-between align-items-center"
-                >{{ experiment.name }} ({{ experiment.code }})
-                <span>
-                  <a :href="`/profile/experiment/edit/${experiment.code}`">
-                    Edit
-                  </a>
+            <b-button
+              v-b-toggle="'collapse_unpub_' + std_index"
+              variant="primary"
+              size="sm"
+              >Show/hide Study</b-button
+            >
+            <b-collapse :id="'collapse_unpub_' + std_index" class="mt-2">
+              <h6>New group</h6>
+              <b-form inline>
+                <b-form-input
+                  id="inline-form-input-name"
+                  v-model="group_name"
+                  class="mb-2 mr-sm-2 mb-sm-0"
+                  placeholder="Group name"
+                ></b-form-input>
+                <b-button
+                  variant="primary"
+                  @click="
+                    $emit('new-group', group_name, study.code);
+                    group_name = null;
+                  "
+                  >Save</b-button
+                >
+              </b-form>
+              <br />
+              <h5>Groups</h5>
+              <div v-for="group in study.groups" :key="group.id">
+                <h6 class="text-primary">
+                  {{ group.name }} ({{ group.code }})
+                </h6>
+                <p class="card-text mt-2">
+                  Group actions:
+                  <a :href="`/profile/group/edit/${group.code}`"> Edit </a>
                   |
-                  <a
-                    href="#"
-                    @click="$emit('delete-experiment', experiment.code)"
-                  >
+                  <a href="#" @click="$emit('delete-group', group.code)">
                     Delete
                   </a>
-                  |
-                  <a
-                    href="#"
-                    @click="$emit('duplicate-experiment', experiment.code)"
+                </p>
+                <b-list-group v-if="group.experiments.length > 0">
+                  <b-list-group-item
+                    v-for="(experiment, index) in group.experiments"
+                    :key="'E' + experiment.code"
+                    class="d-flex justify-content-between align-items-center"
+                    >{{ index + 1 }}. {{ experiment.name }} ({{
+                      experiment.code
+                    }})
+                    <span>
+                      <a :href="`/profile/experiment/edit/${experiment.code}`">
+                        Edit
+                      </a>
+                      |
+                      <a
+                        href="#"
+                        @click="$emit('delete-experiment', experiment.code)"
+                      >
+                        Delete
+                      </a>
+                      |
+                      <a
+                        href="#"
+                        @click="$emit('duplicate-experiment', experiment.code)"
+                      >
+                        Duplicate
+                      </a>
+                      |
+                      <a :href="`/experiment/${experiment.code}`"
+                        >Test Experiment</a
+                      >
+                      |
+                      <a :href="'/raw_data/?code=' + experiment.code"
+                        >Raw data</a
+                      >
+                      |
+                      <a :href="'/processed_data/?code=' + experiment.code">
+                        Processed data</a
+                      >
+                      |
+                      <a
+                        :href="
+                          '/api/experiment/download_end_survey/' +
+                          experiment.code
+                        "
+                      >
+                        Survey data</a
+                      >
+                      |
+                      <a
+                        :href="
+                          '/api/experiment/cohen_metrics/' + experiment.code
+                        "
+                      >
+                        Cohen metrics</a
+                      >
+                      <b-badge
+                        variant="primary"
+                        pill
+                        v-b-tooltip.hover
+                        :title="experiment.responses + ' responses'"
+                        >{{ experiment.responses }}</b-badge
+                      >
+                    </span></b-list-group-item
                   >
-                    Duplicate
-                  </a>
-                  |
-                  <a :href="`/experiment/${experiment.code}`"
-                    >Test Experiment</a
-                  >
-                  |
-                  <a :href="'/raw_data/?code=' + experiment.code">Raw data</a>
-                  |
-                  <a :href="'/processed_data/?code=' + experiment.code">
-                    Processed data</a
-                  >
-                  |
-                  <a
-                    :href="
-                      '/api/experiment/download_end_survey/' + experiment.code
-                    "
-                  >
-                    Survey data</a
-                  >
-                  |
-                  <a :href="'/api/experiment/cohen_metrics/' + experiment.code">
-                    Cohen metrics</a
-                  >
-                  <b-badge
-                    variant="primary"
-                    pill
-                    v-b-tooltip.hover
-                    :title="experiment.responses + ' responses'"
-                    >{{ experiment.responses }}</b-badge
-                  >
-                </span></b-list-group-item
-              >
-            </b-list-group>
-            <p v-else>No experiments in this study.</p>
+                </b-list-group>
+                <p v-else>No experiments in this group.</p>
+                <br />
+              </div>
+            </b-collapse>
           </b-card>
         </b-card-group>
       </div>
@@ -125,7 +156,7 @@
       <h4>Published studies:</h4>
       <div
         class="row mt-3"
-        v-for="study in published_studies"
+        v-for="(study, std_index_2) in published_studies"
         :key="study.code"
       >
         <b-card-group class="col">
@@ -157,77 +188,123 @@
                 >Enable
               </a>
             </p>
-            <h5>Experiments</h5>
-            <b-list-group v-if="study.experiments.length > 0">
-              <b-list-group-item
-                v-for="experiment in study.experiments"
-                :key="'E' + experiment.code"
-                class="d-flex justify-content-between align-items-center"
-                >{{ experiment.name }} ({{ experiment.code }}) ({{
-                  experiment.enabled ? "enabled" : "disabled"
-                }})
-                <span>
-                  <a :href="`/profile/experiment/edit/${experiment.code}`">
-                    View
-                  </a>
-                  |
-                  <a
-                    href="#"
-                    @click="$emit('delete-experiment', experiment.code)"
-                  >
+            <b-button
+              v-b-toggle="'collapse_pub_' + std_index_2"
+              variant="primary"
+              size="sm"
+              >Show/hide Study</b-button
+            >
+            <b-collapse :id="'collapse_pub_' + std_index_2" class="mt-2">
+              <h5>Groups</h5>
+              <div v-for="group in study.groups" :key="group.id">
+                <h6
+                  :class="{
+                    'text-primary': group.enabled,
+                    'text-danger': !group.enabled,
+                  }"
+                >
+                  {{ group.name }} ({{ group.code }}) ({{
+                    group.enabled ? "enabled" : "disabled"
+                  }})
+                </h6>
+                <p class="card-text mt-2">
+                  Group actions:
+                  <a href="#" @click="$emit('delete-group', group.code)">
                     Delete
                   </a>
                   |
                   <a
+                    v-if="group.enabled"
                     href="#"
-                    @click="$emit('duplicate-experiment', experiment.code)"
-                  >
-                    Duplicate
-                  </a>
-                  |
-                  <a
-                    v-if="experiment.enabled"
-                    href="#"
-                    @click="$emit('disable-experiment', experiment.code)"
+                    @click="$emit('disable-group', group.code)"
                     >Disable
                   </a>
-                  <a
-                    v-else
-                    href="#"
-                    @click="$emit('enable-experiment', experiment.code)"
+                  <a v-else href="#" @click="$emit('enable-group', group.code)"
                     >Enable
                   </a>
-                  |
-                  <a :href="`/experiment/${experiment.code}`">Do Experiment</a>
-                  |
-                  <a :href="'/raw_data/?code=' + experiment.code">Raw data</a>
-                  |
-                  <a :href="'/processed_data/?code=' + experiment.code">
-                    Processed data</a
-                  >
-                  |
-                  <a
-                    :href="
-                      '/api/experiment/download_end_survey/' + experiment.code
-                    "
-                  >
-                    Survey data</a
-                  >
-                  |
-                  <a :href="'/api/experiment/cohen_metrics/' + experiment.code">
-                    Cohen metrics</a
-                  >
-                  <b-badge
-                    variant="primary"
-                    pill
-                    v-b-tooltip.hover
-                    :title="experiment.responses + ' responses'"
-                    >{{ experiment.responses }}</b-badge
-                  >
-                </span></b-list-group-item
-              >
-            </b-list-group>
-            <p v-else>No experiments in this study.</p>
+                </p>
+                <b-list-group v-if="group.experiments.length > 0">
+                  <b-list-group-item
+                    v-for="experiment in study.experiments"
+                    :key="'E' + experiment.code"
+                    class="d-flex justify-content-between align-items-center"
+                    >{{ experiment.name }} ({{ experiment.code }}) ({{
+                      experiment.enabled ? "enabled" : "disabled"
+                    }})
+                    <span>
+                      <a :href="`/profile/experiment/edit/${experiment.code}`">
+                        View
+                      </a>
+                      |
+                      <a
+                        href="#"
+                        @click="$emit('delete-experiment', experiment.code)"
+                      >
+                        Delete
+                      </a>
+                      |
+                      <a
+                        href="#"
+                        @click="$emit('duplicate-experiment', experiment.code)"
+                      >
+                        Duplicate
+                      </a>
+                      |
+                      <a
+                        v-if="experiment.enabled"
+                        href="#"
+                        @click="$emit('disable-experiment', experiment.code)"
+                        >Disable
+                      </a>
+                      <a
+                        v-else
+                        href="#"
+                        @click="$emit('enable-experiment', experiment.code)"
+                        >Enable
+                      </a>
+                      |
+                      <a :href="`/experiment/${experiment.code}`"
+                        >Do Experiment</a
+                      >
+                      |
+                      <a :href="'/raw_data/?code=' + experiment.code"
+                        >Raw data</a
+                      >
+                      |
+                      <a :href="'/processed_data/?code=' + experiment.code">
+                        Processed data</a
+                      >
+                      |
+                      <a
+                        :href="
+                          '/api/experiment/download_end_survey/' +
+                          experiment.code
+                        "
+                      >
+                        Survey data</a
+                      >
+                      |
+                      <a
+                        :href="
+                          '/api/experiment/cohen_metrics/' + experiment.code
+                        "
+                      >
+                        Cohen metrics</a
+                      >
+                      <b-badge
+                        variant="primary"
+                        pill
+                        v-b-tooltip.hover
+                        :title="experiment.responses + ' responses'"
+                        >{{ experiment.responses }}</b-badge
+                      >
+                    </span></b-list-group-item
+                  ></b-list-group
+                >
+                <p v-else>No experiments in this group.</p>
+                <br />
+              </div>
+            </b-collapse>
           </b-card>
         </b-card-group>
       </div>
