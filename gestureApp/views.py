@@ -492,13 +492,6 @@ def download_raw_data(request):
             subject.code: subject.trials.order_by("started_at").first().started_at
             for subject in subjects
         }
-        possible_subjects = [subj.code for subj in subjects]
-        new_subject_codes = {
-            subject: index + 1 for index, subject in enumerate(possible_subjects)
-        }
-        new_subject_codes = {
-            subject: index + 1 for index, subject in enumerate(possible_subjects)
-        }
         # FIXME: may be necessary to force the ordering of trials and blocks
         possible_blocks = unique([value["block_id"] for value in queryset_list])
         new_block_codes = {
