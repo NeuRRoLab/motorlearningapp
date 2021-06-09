@@ -99,7 +99,9 @@ module.exports = {
     stopPractice() {
       this.trialEnded(false);
     },
-    trialEnded(do_rest = true, from_timer = false) {
+    trialEnded(do_rest = true, from_timer = false, started_trial_at = true) {
+      // If the trial doesn't have a starting timestamp, then do nothing
+      if (!started_trial_at) return;
       let sequence = this.sequence;
       if (this.practice) sequence = this.practice_sequence;
       let correct = this.current_inputted_sequence.join("") === sequence;
