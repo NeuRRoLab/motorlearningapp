@@ -26,7 +26,12 @@ SECRET_KEY = "y!7l+(vux@ny4ak((kk=a1^a3)f@&*hn6zssc5a2f=ov^&)ra="
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["neurroexperiment.herokuapp.com", "127.0.0.1", "motorlearning.uc.r.appspot.com"]
+ALLOWED_HOSTS = [
+    "neurroexperiment.herokuapp.com",
+    "127.0.0.1",
+    "motorlearning.uc.r.appspot.com",
+    "experiments.neurro-lab.engin.umich.edu",
+]
 
 
 # Application definition
@@ -82,7 +87,7 @@ if os.getenv("GAE_APPLICATION", None):
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.postgresql_psycopg2",
-            "HOST": os.getenv('APP_DB_HOST'),
+            "HOST": os.getenv("APP_DB_HOST"),
             "USER": os.getenv("APP_DB_USER"),
             "PASSWORD": os.getenv("APP_DB_PASSWORD"),
             "NAME": os.getenv("APP_DB_NAME"),
