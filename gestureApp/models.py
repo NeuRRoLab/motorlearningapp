@@ -227,6 +227,9 @@ class Experiment(CloneMixin, models.Model):
                 .count()
             )
 
+    def has_done_experiment(self, subject):
+        return self.blocks.filter(trials__subject=subject).exists()
+
     def to_dict(self):
         try:
             study_code = self.study.code

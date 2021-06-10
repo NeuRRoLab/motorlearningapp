@@ -27,17 +27,29 @@
               Study actions:
               <a :href="`/profile/study/edit/${study.code}`"> Edit </a>
               |
-              <a href="#" @click="$emit('delete-study', study.code)">
+              <b-button
+                class="p-0"
+                variant="link"
+                @click="$emit('delete-study', study.code)"
+              >
                 Delete
-              </a>
+              </b-button>
               |
-              <a href="#" @click="$emit('duplicate-study', study.code)">
+              <b-button
+                class="p-0"
+                variant="link"
+                @click="$emit('duplicate-study', study.code)"
+              >
                 Duplicate
-              </a>
+              </b-button>
               |
-              <a href="#" @click="$emit('publish-study', study.code)">
+              <b-button
+                class="p-0"
+                variant="link"
+                @click="$emit('publish-study', study.code)"
+              >
                 Publish
-              </a>
+              </b-button>
             </p>
             <b-button
               v-b-toggle="'collapse_unpub_' + std_index"
@@ -71,11 +83,16 @@
                 </h6>
                 <p class="card-text mt-2">
                   Group actions:
+                  <!-- TODO: still missing -->
                   <a :href="`/profile/group/edit/${group.code}`"> Edit </a>
                   |
-                  <a href="#" @click="$emit('delete-group', group.code)">
+                  <b-button
+                    class="p-0"
+                    variant="link"
+                    @click="$emit('delete-group', group.code)"
+                  >
                     Delete
-                  </a>
+                  </b-button>
                 </p>
                 <b-list-group v-if="group.experiments.length > 0">
                   <b-list-group-item
@@ -90,19 +107,21 @@
                         Edit
                       </a>
                       |
-                      <a
-                        href="#"
+                      <b-button
+                        class="p-0"
+                        variant="link"
                         @click="$emit('delete-experiment', experiment.code)"
                       >
                         Delete
-                      </a>
+                      </b-button>
                       |
-                      <a
-                        href="#"
+                      <b-button
+                        class="p-0"
+                        variant="link"
                         @click="$emit('duplicate-experiment', experiment.code)"
                       >
                         Duplicate
-                      </a>
+                      </b-button>
                       |
                       <a :href="`/experiment/${experiment.code}`"
                         >Test Experiment</a
@@ -170,23 +189,36 @@
               Study actions:
               <a :href="`/profile/study/edit/${study.code}`"> View </a>
               |
-              <a href="#" @click="$emit('delete-study', study.code)">
+              <b-button
+                class="p-0"
+                variant="link"
+                @click="$emit('delete-study', study.code)"
+              >
                 Delete
-              </a>
+              </b-button>
               |
-              <a href="#" @click="$emit('duplicate-study', study.code)">
+              <b-button
+                class="p-0"
+                variant="link"
+                @click="$emit('duplicate-study', study.code)"
+              >
                 Duplicate
-              </a>
+              </b-button>
               |
-              <a
+              <b-button
+                class="p-0"
+                variant="link"
                 v-if="study.enabled"
-                href="#"
                 @click="$emit('disable-study', study.code)"
                 >Disable
-              </a>
-              <a v-else href="#" @click="$emit('enable-study', study.code)"
+              </b-button>
+              <b-button
+                class="p-0"
+                variant="link"
+                v-else
+                @click="$emit('enable-study', study.code)"
                 >Enable
-              </a>
+              </b-button>
             </p>
             <b-button
               v-b-toggle="'collapse_pub_' + std_index_2"
@@ -209,59 +241,72 @@
                 </h6>
                 <p class="card-text mt-2">
                   Group actions:
-                  <a href="#" @click="$emit('delete-group', group.code)">
+                  <b-button
+                    class="p-0"
+                    variant="link"
+                    @click="$emit('delete-group', group.code)"
+                  >
                     Delete
-                  </a>
+                  </b-button>
                   |
-                  <a
+                  <b-button
+                    class="p-0"
+                    variant="link"
                     v-if="group.enabled"
-                    href="#"
                     @click="$emit('disable-group', group.code)"
                     >Disable
-                  </a>
-                  <a v-else href="#" @click="$emit('enable-group', group.code)"
+                  </b-button>
+                  <b-button
+                    class="p-0"
+                    variant="link"
+                    v-else
+                    @click="$emit('enable-group', group.code)"
                     >Enable
-                  </a>
+                  </b-button>
                 </p>
                 <b-list-group v-if="group.experiments.length > 0">
                   <b-list-group-item
-                    v-for="experiment in study.experiments"
+                    v-for="(experiment, index) in study.experiments"
                     :key="'E' + experiment.code"
                     class="d-flex justify-content-between align-items-center"
-                    >{{ experiment.name }} ({{ experiment.code }}) ({{
-                      experiment.enabled ? "enabled" : "disabled"
-                    }})
+                    >{{ index + 1 }}. {{ experiment.name }} ({{
+                      experiment.code
+                    }}) ({{ experiment.enabled ? "enabled" : "disabled" }})
                     <span>
                       <a :href="`/profile/experiment/edit/${experiment.code}`">
                         View
                       </a>
                       |
-                      <a
-                        href="#"
+                      <b-button
+                        class="p-0"
+                        variant="link"
                         @click="$emit('delete-experiment', experiment.code)"
                       >
                         Delete
-                      </a>
+                      </b-button>
                       |
-                      <a
-                        href="#"
+                      <b-button
+                        class="p-0"
+                        variant="link"
                         @click="$emit('duplicate-experiment', experiment.code)"
                       >
                         Duplicate
-                      </a>
+                      </b-button>
                       |
-                      <a
+                      <b-button
+                        class="p-0"
+                        variant="link"
                         v-if="experiment.enabled"
-                        href="#"
                         @click="$emit('disable-experiment', experiment.code)"
                         >Disable
-                      </a>
-                      <a
+                      </b-button>
+                      <b-button
+                        class="p-0"
+                        variant="link"
                         v-else
-                        href="#"
                         @click="$emit('enable-experiment', experiment.code)"
                         >Enable
-                      </a>
+                      </b-button>
                       |
                       <a :href="`/experiment/${experiment.code}`"
                         >Do Experiment</a

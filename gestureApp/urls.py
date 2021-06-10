@@ -86,6 +86,21 @@ urlpatterns = [
         name="study_delete",
     ),
     re_path(
+        r"^api/group/delete/(?P<pk>[A-Z0-9]{4})/$",
+        views.delete_group,
+        name="group_delete",
+    ),
+    re_path(
+        r"^api/group/enable/(?P<pk>[A-Z0-9]{4})/$",
+        views.enable_group,
+        name="group_enable",
+    ),
+    re_path(
+        r"^api/group/disable/(?P<pk>[A-Z0-9]{4})/$",
+        views.disable_group,
+        name="group_disable",
+    ),
+    re_path(
         r"^api/study/disable/(?P<pk>[A-Z0-9]{4})/$",
         views.disable_study,
         name="study_disable",

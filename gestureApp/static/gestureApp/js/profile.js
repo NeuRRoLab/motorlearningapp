@@ -30,6 +30,9 @@ var app = new Vue({
         @enable-study="enableStudy"
         @delete-study="deleteStudy"
         @duplicate-study="duplicateStudy"
+        @delete-group="deleteGroup"
+        @disable-group="disableGroup"
+        @enable-group="enableGroup"
       />
   </div>
       `,
@@ -151,12 +154,44 @@ var app = new Vue({
         });
       }
     },
+    deleteGroup(code) {
+      if (prompt(`Are you sure you want to delete Group ${code} and all its data? Enter the group code to confirm the deletion`) === code) {
+        axios.post(`/api/group/delete/${code}/`).then(response => {
+          this.getUserStudies();
+          this.$notify({
+            group: 'alerts',
+            title: `Group ${code} successfully deleted`,
+            type: 'success',
+          });
+        });
+      }
+    },
     duplicateStudy(code) {
       axios.post(`/api/study/duplicate/${code}/`).then(response => {
         this.getUserStudies();
         this.$notify({
           group: 'alerts',
           title: `Study ${code} successfully duplicated`,
+          type: 'success',
+        });
+      });
+    },
+    enableGroup(code) {
+      axios.post(`/api/group/enable/${code}/`).then(response => {
+        this.getUserStudies();
+        this.$notify({
+          group: 'alerts',
+          title: `Group ${code} successfully enabled`,
+          type: 'success',
+        });
+      });
+    },
+    disableGroup(code) {
+      axios.post(`/api/group/disable/${code}/`).then(response => {
+        this.getUserStudies();
+        this.$notify({
+          group: 'alerts',
+          title: `Group ${code} successfully disabled`,
           type: 'success',
         });
       });

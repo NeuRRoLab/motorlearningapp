@@ -3,21 +3,48 @@
     <div class="experiment-form">
       <b-form @submit="goToExperiment">
         <div class="form-row">
-          <b-form-group
-            class="col"
-            id="input-group"
-            label="Study Code:"
-            label-for="input"
-          >
+          <b-form-group class="col" label="Study Code:" label-for="study-code">
             <b-form-input
               name="code"
-              id="input"
+              id="study-code"
               v-model="study_code"
               type="text"
               :maxlength="4"
               required
               placeholder="Code"
-              @input="onInput"
+              @input="onInputStudy"
+            ></b-form-input>
+          </b-form-group>
+        </div>
+        <div class="form-row">
+          <b-form-group
+            class="col"
+            label="Group Code (optional):"
+            label-for="group-code"
+          >
+            <b-form-input
+              name="group-code"
+              id="group-code"
+              v-model="group_code"
+              type="text"
+              :maxlength="4"
+              placeholder="Code"
+              @input="onInputGroup"
+            ></b-form-input>
+          </b-form-group>
+          <b-form-group
+            class="col"
+            label="Experiment Code (optional):"
+            label-for="exp-code"
+          >
+            <b-form-input
+              name="exp-code"
+              id="exp-code"
+              v-model="exp_code"
+              type="text"
+              :maxlength="4"
+              placeholder="Code"
+              @input="onInputExperiment"
             ></b-form-input>
           </b-form-group>
         </div>
@@ -113,6 +140,8 @@ module.exports = {
   data: function () {
     return {
       study_code: "",
+      group_code: "",
+      exp_code: "",
       subject_code_input: "",
       email: "",
       answer: null,
@@ -134,12 +163,26 @@ module.exports = {
     },
   },
   methods: {
-    onInput: function (input) {
+    onInputStudy: function (input) {
       this.study_code = input.toUpperCase();
+    },
+    onInputGroup: function (input) {
+      this.group_code = input.toUpperCase();
+    },
+    onInputExperiment: function (input) {
+      this.exp_code = input.toUpperCase();
     },
     goToExperiment(evt) {
       evt.preventDefault();
-      window.location.href = `/study/${this.study_code}/?subj-code=${this.subject_code_input}`;
+      const url = new URL(`/study/${this.study_code}/`, window.location);
+      // Add params
+      if (this.subject_code_input !== "")
+        url.searchParams.append("subj-code", this.subject_code_input);
+      if (this.group_code !== "")
+        url.searchParams.append("group-code", this.group_code);
+      if (this.exp_code !== "")
+        url.searchParams.append("exp-code", this.exp_code);
+      window.location.href = url.href;
     },
     generateCode(evt) {
       evt.preventDefault();

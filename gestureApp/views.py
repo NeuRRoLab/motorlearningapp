@@ -160,17 +160,60 @@ class ExperimentUpdate(UpdateView):
 
 
 def study(request, pk):
-    # Get subject code
+    # FIXME: only allow published
+    # Do the randomization here and redirect to the appropiate experiment
+    # Get params
     subject_code = request.GET.get("subj-code", None)
-    study = get_object_or_404(Study, pk=pk, published=True, enabled=True)
+    # Don't allow bad subject codes
+    subject = get_object_or_404(Subject, pk=subject_code)
+
+    group_code = request.GET.get("group-code", None)
+    group = None
+    exp_code = request.GET.get("exp-code", None)
+    experiment = None
+    study = get_object_or_404(
+        Study.objects.select_related(), pk=pk, enabled=True, published=True
+    )
+    if group_code is not None:
+        group = get_object_or_404(
+            Group.objects.select_related(), pk=group_code, enabled=True
+        )
+    if exp_code is not None:
+        experiment = get_object_or_404(
+            Experiment.objects.select_related(),
+            pk=exp_code,
+            enabled=True,
+            published=True,
+        )
+
+    if experiment is None and group is None:
+        # Check if the user has performed an experiment in this study before. If he has, use that group
+        for g in study.groups.all():
+            for e in g.experiments.all():
+                if e.has_done_experiment(subject):
+                    group = g
+                    break
+            if group is not None:
+                break
+        if group is None:
+            # Get a random group
+            group = study.groups.filter(enabled=True).order_by("?").first()
+        print(group)
+    if experiment is None and group is not None:
+        # TODO: change experiment order
+        for e in group.experiments.filter(enabled=True, published=True).order_by(
+            "created_at"
+        ):
+            if not e.has_done_experiment(subject):
+                experiment = e
+                break
+
     # Exclude disabled experiments
-    experiment = study.experiments.filter(enabled=True).order_by("?").first()
     if experiment is None:
         # No enabled experiments in this study
         return Http404
 
-    # Do the randomization here and redirect to the appropiate experiment
-    return redirect(f"/experiment/{experiment.code}/?subj_code={subject_code}")
+    return redirect(f"/experiment/{experiment.code}/?subj-code={subject_code}")
 
 
 # Create your views here.
@@ -1255,6 +1298,10 @@ def disable_study(request, pk):
     study = get_object_or_404(Study, pk=pk, creator=request.user)
     study.enabled = False
     study.save()
+    # For every group and experiment inside, enable those too
+    study.groups.all().update(enabled=False)
+    exp_codes = study.groups.all().values_list("experiments__code", flat=True)
+    Experiment.objects.filter(code__in=exp_codes).update(enabled=False)
     return JsonResponse({})
 
 
@@ -1263,6 +1310,10 @@ def enable_study(request, pk):
     study = get_object_or_404(Study, pk=pk, creator=request.user)
     study.enabled = True
     study.save()
+    # For every group and experiment inside, enable those too
+    study.groups.all().update(enabled=True)
+    exp_codes = study.groups.all().values_list("experiments__code", flat=True)
+    Experiment.objects.filter(code__in=exp_codes).update(enabled=True)
     return JsonResponse({})
 
 
@@ -1351,3 +1402,28 @@ def new_group(request):
         Group.objects.create(name=group_info["name"], study=study, creator=request.user)
         return JsonResponse({})
 
+
+def delete_group(request, pk):
+    group = get_object_or_404(Group, pk=pk, creator=request.user)
+    group.delete()
+    return JsonResponse({})
+
+
+@login_required
+def disable_group(request, pk):
+    group = get_object_or_404(Group, pk=pk, creator=request.user)
+    group.enabled = False
+    group.save()
+    # For every group and experiment inside, enable those too
+    group.experiments.all().update(enabled=False)
+    return JsonResponse({})
+
+
+@login_required
+def enable_group(request, pk):
+    group = get_object_or_404(Group, pk=pk, creator=request.user)
+    group.enabled = True
+    group.save()
+    # For every group and experiment inside, enable those too
+    group.experiments.all().update(enabled=True)
+    return JsonResponse({})
