@@ -82,11 +82,13 @@ class Study(models.Model):
             else:
                 success = True
 
-    def to_dict(self):
+    def to_dict2(self):
         return {
             "code": self.code,
             "name": self.name,
-            "groups": [g.to_dict() for g in self.groups.all()],
+            "groups": [
+                g.to_dict() for g in self.groups.prefetch_related("experiments").all()
+            ],
             "experiments": [
                 e.to_dict() for e in self.experiments.order_by("created_at").all()
             ],
@@ -96,6 +98,43 @@ class Study(models.Model):
             "description": self.description,
             "enabled": self.enabled,
         }
+
+    def to_dict(self):
+        experiments = list(self.experiments.values())
+        groups = list(self.groups.values())
+        groups_names = {}
+        for g in groups:
+            groups_names[g["code"]] = g["name"]
+            g.pop("study_id")
+            g["study"] = {"code": self.code, "name": self.name}
+        creator = self.creator.username
+
+        for e in experiments:
+            # Replace group id by a group object
+            group_id = e["group_id"]
+            e["group"] = {"code": group_id, "name": groups_names[group_id]}
+            # Replace study id by a study object
+            e.pop("study_id")
+            e["study"] = {"code": self.code, "name": self.name}
+            # Replace creator by creator username
+            e.pop("creator_id")
+            e["creator"] = creator
+
+        for g in groups:
+            g["experiments"] = [e for e in experiments if e["group_id"] == g["code"]]
+
+        study_dict = {
+            "code": self.code,
+            "name": self.name,
+            "created_at": self.created_at,
+            "published": self.published,
+            "creator": creator,
+            "description": self.description,
+            "enabled": self.enabled,
+            "experiments": experiments,
+            "groups": groups,
+        }
+        return study_dict
 
 
 class Group(models.Model):
