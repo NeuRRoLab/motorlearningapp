@@ -673,7 +673,9 @@ def download_processed_data(request):
                 "blocks__sequence",
                 "blocks__trials",
                 "blocks__trials__correct",
+                "blocks__trials__started_at",
             )
+            .order_by("blocks__trials__started_at")
             .distinct()
         )
         no_et = list(no_et)
@@ -685,6 +687,8 @@ def download_processed_data(request):
             values_dict["block_sequence"] = values_dict.pop("blocks__sequence")
             values_dict["trial_id"] = values_dict.pop("blocks__trials")
             values_dict["correct_trial"] = values_dict.pop("blocks__trials__correct")
+            values_dict.pop("blocks__trials__started_at")
+
             if values_dict["correct_trial"]:
                 acc_correct_trials[
                     (values_dict["block_id"], values_dict["subject_code"])
@@ -824,7 +828,9 @@ def download_cohen_processed(request, pk):
             "blocks__sequence",
             "blocks__trials",
             "blocks__trials__partial_correct",
+            "blocks__trials__started_at",
         )
+        .order_by("blocks__trials__started_at")
         .distinct()
     )
     results = list(results)
@@ -839,6 +845,7 @@ def download_cohen_processed(request, pk):
         values_dict["correct_trial"] = values_dict.pop(
             "blocks__trials__partial_correct"
         )
+        values_dict.pop("blocks__trials__started_at")
         if values_dict["correct_trial"]:
             acc_correct_trials[
                 (values_dict["block_id"], values_dict["subject_code"])
@@ -965,10 +972,14 @@ def download_cohen_processed(request, pk):
                 if index == 0:
                     continue
                 elapsed = (keypress - keypresses[index - 1]).total_seconds()
-                tap_speed.append(1.0 / elapsed)
+                # FIXME: this happens when two keypresses are mapped to the same timestamp
+                try:
+                    tap_speed.append(1.0 / elapsed)
+                except ZeroDivisionError:
+                    tap_speed.append(np.nan)
             # Mean and std deviation of tapping speed
-            mean_tap_speed = np.mean(tap_speed)
-            std_dev_tap_speed = np.std(tap_speed, ddof=1)
+            mean_tap_speed = np.nanmean(tap_speed)
+            std_dev_tap_speed = np.nanstd(tap_speed, ddof=1)
 
             # Execution time
             values_dict["execution_time_ms"] = execution_time_ms
@@ -979,11 +990,18 @@ def download_cohen_processed(request, pk):
             values_dict["tapping_speed_std_dev"] = (
                 std_dev_tap_speed if not np.isnan(std_dev_tap_speed) else None
             )
+            mean_tap_speed_2 = (
+                1000 * len(keypresses) / execution_time_ms
+                if execution_time_ms > 0
+                else None
+            )
+            values_dict["tapping_speed_mean_2"] = mean_tap_speed_2
         else:
             values_dict["execution_time_ms"] = None
             # Tapping data
             values_dict["tapping_speed_mean"] = None
             values_dict["tapping_speed_std_dev"] = None
+            values_dict["tapping_speed_mean_2"] = None
     # Order subjects by time when they started the first trial
     subjects = [
         Subject.objects.get(pk=code)
