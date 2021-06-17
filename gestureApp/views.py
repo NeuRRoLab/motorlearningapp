@@ -262,6 +262,10 @@ def create_trials(request):
     experiment_trials = json.loads(data.get("experiment_trials"))
     tz_offset = data.get("timezone_offset_sec")
     user_timezone = tzoffset(None, tz_offset)
+
+    # First, bulk create the trials
+    trials_to_save = []
+    trials_aux = []
     # print(experiment_trials)
     for i, block in enumerate(experiment_trials):
         for trial in block:
@@ -277,19 +281,29 @@ def create_trials(request):
                     trial["finished_at"] / 1000, user_timezone,
                 ),
             )
-            t.save()
-            for keypress in trial["keypresses"]:
-                value = keypress["value"]
-                # Don't count special characters
-                if len(value) > 1:
-                    continue
-                timestamp = keypress["timestamp"]
-                keypress = Keypress(
-                    trial=t,
-                    value=value,
-                    timestamp=datetime.fromtimestamp(timestamp / 1000, user_timezone),
-                )
-                keypress.save()
+            trials_to_save.append(t)
+            trials_aux.append(trial)
+
+    # Creating bulk trials
+    trials_saved = Trial.objects.bulk_create(trials_to_save)
+    keypresses_to_save = []
+    for trial_db, trial_dict in zip(trials_saved, trials_aux):
+        # t.save()
+        for keypress in trial_dict["keypresses"]:
+            value = keypress["value"]
+            # Don't count special characters
+            if len(value) > 1:
+                continue
+            timestamp = keypress["timestamp"]
+            keypress = Keypress(
+                trial=trial_db,
+                value=value,
+                timestamp=datetime.fromtimestamp(timestamp / 1000, user_timezone),
+            )
+            keypresses_to_save.append(keypress)
+            # keypress.save()
+    # Creating bulk keypresses
+    Keypress.objects.bulk_create(keypresses_to_save)
 
     # Create response
     data = {"subject_code": subject.code}
