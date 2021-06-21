@@ -4,6 +4,8 @@ from django.utils import timezone
 from django.contrib.auth.models import AbstractUser
 from django.core.exceptions import ValidationError
 from model_clone import CloneMixin
+from django.db.models import F
+from collections import defaultdict
 
 
 class User(AbstractUser):
@@ -102,6 +104,22 @@ class Study(models.Model):
     def to_dict(self):
         experiments = list(self.experiments.values())
         groups = list(self.groups.values())
+        subjects = list(
+            Subject.objects.filter(trials__block__experiment__in=self.experiments.all())
+            .annotate(exp_code=F("trials__block__experiment__code"))
+            .annotate(done_at=F("trials__started_at"))
+            .annotate(published=F("trials__block__experiment__published"))
+            .annotate(published_at=F("trials__block__experiment__published_timestamp"))
+            .values()
+        )
+        exp_subjects = defaultdict(set)
+        for s in subjects:
+            # Factor in the published or unpublished status of the experiment
+            if (s["published"] and s["done_at"] > s["published_at"]) or (
+                not s["published"]
+            ):
+                exp_subjects[s["exp_code"]].add(s["code"])
+
         groups_names = {}
         for g in groups:
             groups_names[g["code"]] = g["name"]
@@ -119,6 +137,9 @@ class Study(models.Model):
             # Replace creator by creator username
             e.pop("creator_id")
             e["creator"] = creator
+
+            # Responses
+            e["responses"] = len(exp_subjects[e["code"]])
 
         for g in groups:
             g["experiments"] = [e for e in experiments if e["group_id"] == g["code"]]
