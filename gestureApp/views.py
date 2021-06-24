@@ -820,7 +820,6 @@ def download_processed_data(request):
 
 @login_required
 def download_cohen_processed(request, pk):
-    # FIXME: figure out how to calculate border cases
     # Get all experiments subjects
     experiment = get_object_or_404(Experiment, pk=pk, creator=request.user)
     # If the experiment hasn't been published, get all responses

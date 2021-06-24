@@ -48,7 +48,6 @@
             ></b-form-input>
           </b-form-group>
         </div>
-        <!-- TODO: Maybe add the possibility of an experiment code, if the subject has one -->
         <b-form-group
           label="Have you done an experiment here before?"
           v-slot="{ ariaDescribedby }"
@@ -67,7 +66,7 @@
         <template v-if="answer !== null">
           <template v-if="!answer">
             <button @click="generateCode" class="btn btn-link text-primary row">
-              Generate subject code
+              Click here to generate subject code
             </button>
             <b-card v-if="subject_code">
               <b-card-text>
