@@ -726,7 +726,7 @@ def download_processed_data(request):
             # Next trial: closest starting timestamp in the same block and subject
             if len(keypresses_timestamps) > 0:
                 # Tapping speed
-                tap_speed = []
+                elapsed_list = []
                 for index, keypress_timestamp in enumerate(keypresses_timestamps):
                     if index == 0:
                         continue
@@ -738,10 +738,10 @@ def download_processed_data(request):
                         # We could say that the elapsed value is the minimum possible keypress difference (1ms)
                         # This keypress would get discarded anyway.
                         elapsed = 0.001
-                    tap_speed.append(1.0 / elapsed)
+                    elapsed_list.append(elapsed)
                 # Mean and std deviation of tapping speed
-                mean_tap_speed = np.mean(tap_speed)
-                std_dev_tap_speed = np.std(tap_speed, ddof=1)
+                mean_tap_speed = 1 / np.mean(elapsed_list)
+                std_dev_tap_speed = 1 / np.std(elapsed_list, ddof=1)
 
                 # Execution time
                 execution_time_ms = (
