@@ -51,6 +51,7 @@ from .models import (
 )
 
 BUCKET_NAME = "motor-learning"
+MIN_MS_BETW_KEYPRESSES = 9
 
 
 @method_decorator([login_required], name="dispatch")
@@ -617,6 +618,12 @@ def download_raw_data(request):
         current_subject = ""
         current_trial_seq_idx = 0
         for values_dict, diff in zip(queryset_list, diff_keypresses_ms):
+            diff_mod = None
+            if diff is not None:
+                if diff < MIN_MS_BETW_KEYPRESSES:
+                    diff_mod = MIN_MS_BETW_KEYPRESSES
+                else:
+                    diff_mod = diff
             # Was keypress correct
             if (
                 current_trial == values_dict["trial_id"]
@@ -643,7 +650,7 @@ def download_raw_data(request):
                 values_dict["keypress_timestamp"] = values_dict[
                     "keypress_timestamp"
                 ].strftime("%Y-%m-%d %H:%M:%S.%f")
-            values_dict["diff_between_keypresses_ms"] = diff
+            values_dict["diff_between_keypresses_ms"] = diff_mod
 
         # Output csv
         response = HttpResponse(content_type="text/csv")
@@ -711,37 +718,81 @@ def download_processed_data(request):
                 (values_dict["block_id"], values_dict["subject_code"])
             ]
         trials_timestamps_query = (
-            Trial.objects.filter(correct=True, block__experiment__code=code)
+            Trial.objects.filter(block__experiment__code=code)
             .order_by("keypresses__timestamp")
-            .values("id", "keypresses__id", "keypresses__timestamp")
+            .values(
+                "id",
+                "keypresses__id",
+                "keypresses__timestamp",
+                "block__id",
+                "started_at",
+                "finished_at",
+                "correct",
+                "subject__code",
+            )
         )
         # From the trials, I need all the keypress timestamps ordered from low to high
         trial_timestamps = defaultdict(list)
+        trial_properties = defaultdict(dict)
         for res in trials_timestamps_query:
             trial_timestamps[res["id"]].append(res["keypresses__timestamp"])
+            if res["id"] not in trial_properties:
+                trial_properties[res["id"]]["trial_id"] = res["id"]
+                trial_properties[res["id"]]["block"] = res["block__id"]
+                trial_properties[res["id"]]["started_at"] = res["started_at"]
+                trial_properties[res["id"]]["finished_at"] = res["finished_at"]
+                trial_properties[res["id"]]["correct"] = res["correct"]
+                trial_properties[res["id"]]["subject_code"] = res["subject__code"]
 
         for values_dict in no_et:
+            # Get last trial (closest final keypress to the starting keypress of this one)
+            this_trial_props = trial_properties[values_dict["trial_id"]]
+            previous_trials_this_block = [
+                trial_props
+                for trial_id, trial_props in trial_properties.items()
+                if trial_props["block"] == this_trial_props["block"]
+                and trial_id != values_dict["trial_id"]
+                and trial_props["subject_code"] == values_dict["subject_code"]
+                and trial_props["finished_at"] <= this_trial_props["started_at"]
+            ]
+            last_trial = (
+                sorted(
+                    previous_trials_this_block, key=lambda prop: prop["finished_at"]
+                )[-1]
+                if len(previous_trials_this_block) > 0
+                else None
+            )
             # List of timestamps, ordered from early to late
             keypresses_timestamps = trial_timestamps[values_dict["trial_id"]]
-            # Next trial: closest starting timestamp in the same block and subject
-            if len(keypresses_timestamps) > 0:
+            if len(keypresses_timestamps) > 0 and this_trial_props["correct"]:
                 # Tapping speed
                 elapsed_list = []
+                elapsed_list2 = []
                 for index, keypress_timestamp in enumerate(keypresses_timestamps):
                     if index == 0:
+                        if last_trial is not None:
+                            keypresses_last_trial = trial_timestamps[
+                                last_trial["trial_id"]
+                            ]
+                            if len(keypresses_last_trial) > 0:
+                                elapsed_extra = (
+                                    keypress_timestamp - keypresses_last_trial[-1]
+                                ).total_seconds()
+                                elapsed_list2.append(elapsed_extra)
                         continue
                     elapsed = (
                         keypress_timestamp - keypresses_timestamps[index - 1]
                     ).total_seconds()
-                    if elapsed == 0:
+                    if elapsed < MIN_MS_BETW_KEYPRESSES / 1000:
                         # Something failed while capturing the keypresses timestamp. we should skip this trial.
                         # We could say that the elapsed value is the minimum possible keypress difference (1ms)
                         # This keypress would get discarded anyway.
-                        elapsed = 0.001
+                        elapsed = MIN_MS_BETW_KEYPRESSES / 1000
                     elapsed_list.append(elapsed)
+                    elapsed_list2.append(elapsed)
                 # Mean and std deviation of tapping speed
                 mean_tap_speed = 1 / np.mean(elapsed_list)
-                std_dev_tap_speed = 1 / np.std(elapsed_list, ddof=1)
+                extra_mean_tap_speed = 1 / np.mean(elapsed_list2)
 
                 # Execution time
                 execution_time_ms = (
@@ -752,14 +803,14 @@ def download_processed_data(request):
                 values_dict["tapping_speed_mean"] = (
                     mean_tap_speed if not np.isnan(mean_tap_speed) else None
                 )
-                values_dict["tapping_speed_std_dev"] = (
-                    std_dev_tap_speed if not np.isnan(std_dev_tap_speed) else None
+                values_dict["tapping_speed_extra_keypress"] = (
+                    extra_mean_tap_speed if not np.isnan(extra_mean_tap_speed) else None
                 )
             else:
                 values_dict["execution_time_ms"] = None
                 # Tapping data
                 values_dict["tapping_speed_mean"] = None
-                values_dict["tapping_speed_std_dev"] = None
+                values_dict["tapping_speed_extra_keypress"] = None
 
         # Order subjects by time when they started the first trial
         subjects = [
