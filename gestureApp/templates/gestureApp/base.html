@@ -32,7 +32,11 @@
         </div>
         {% block content %}{% endblock %}
         <!-- Required scripts -->
-        <script src="https://unpkg.com/vue@latest/dist/vue.js"></script>
+        {% if debug %}
+            <script src="{% static 'gestureApp/js/dist/vue.js' %}"></script>
+        {% else %}
+            <script src="{% static 'gestureApp/js/dist/vue.min.js' %}"></script>
+        {% endif %}
         <script src="https://unpkg.com/bootstrap-vue@latest/dist/bootstrap-vue.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
         <script type="module" src="{% static 'gestureApp/js/base.js' %}"></script>

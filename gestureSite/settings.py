@@ -32,7 +32,7 @@ ALLOWED_HOSTS = [
     "motorlearning.uc.r.appspot.com",
     "experiments.neurro-lab.engin.umich.edu",
 ]
-
+INTERNAL_IPS = ("127.0.0.1",)
 
 # Application definition
 
