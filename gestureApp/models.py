@@ -102,7 +102,7 @@ class Study(models.Model):
         }
 
     def to_dict(self):
-        experiments = list(self.experiments.values())
+        experiments = list(self.experiments.order_by("created_at").values())
         groups = list(self.groups.values())
         subjects = list(
             Subject.objects.filter(trials__block__experiment__in=self.experiments.all())
@@ -339,6 +339,7 @@ class Block(CloneMixin, models.Model):
     is_random = models.BooleanField(default=False)
     # Whether or not to show the same sequence everytime
     is_fixed = models.BooleanField(default=True)
+    hand_to_use = models.CharField(max_length=30, default="right")
 
     max_time_per_trial = models.FloatField(default=5)
     resting_time = models.FloatField(default=10)

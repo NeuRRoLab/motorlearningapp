@@ -177,6 +177,13 @@
               blocks[current_block].sequence
             }}</span>
           </p>
+          <p class="text-center h4">
+            Hand to use:
+            <span class="text-center h1 text-primary">{{
+              blocks[current_block].hand_to_use.charAt(0).toUpperCase() +
+              blocks[current_block].hand_to_use.slice(1)
+            }}</span>
+          </p>
         </div>
         <!-- Block -->
         <template v-else>

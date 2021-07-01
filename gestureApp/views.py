@@ -389,6 +389,7 @@ def create_experiment(request):
                     max_time=block["max_time"],
                     num_trials=block["num_trials"],
                     sec_until_next=block["sec_until_next"],
+                    hand_to_use=block["hand_to_use"],
                 )
                 block_obj.full_clean()
                 block_obj.save()
@@ -480,6 +481,7 @@ def edit_experiment(request, pk):
                     max_time=block["max_time"],
                     num_trials=block["num_trials"],
                     sec_until_next=block["sec_until_next"],
+                    hand_to_use=block["hand_to_use"],
                 )
                 if num_repetitions > 1:
                     # Duplicate block as many times as necessary

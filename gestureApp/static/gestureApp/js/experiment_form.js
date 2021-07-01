@@ -37,12 +37,19 @@ var app = new Vue({
           is_random_sequence: false,
           seq_length: null,
           num_repetitions: 1,
+          hand_to_use: null,
         },
       ],
       block_types: [
         { value: null, text: "Please select a block type" },
         { value: "max_time", text: "Maximum time" },
         { value: "num_trials", text: "Number of trials" },
+      ],
+      hands: [
+        { value: null, text: "Please select a hand to use" },
+        { value: "left", text: "Left" },
+        { value: "right", text: "Right" },
+        { value: "both", text: "Both" },
       ],
       // Whether we are creating or editing an experiment
       editing: false,
@@ -83,6 +90,7 @@ var app = new Vue({
         prop_with_feedback_blocks: this.with_feedback_blocks,
         prop_rest_after_practice: this.rest_after_practice,
         prop_requirements: this.requirements,
+        prop_hands: this.hands,
       }
     }
   },
@@ -179,6 +187,7 @@ var app = new Vue({
             is_random_sequence: block.is_random,
             seq_length: block.seq_length,
             num_repetitions: 1,
+            hand_to_use: block.hand_to_use,
           });
         });
       }

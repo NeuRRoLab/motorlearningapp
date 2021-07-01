@@ -302,6 +302,21 @@
         <div class="form-row">
           <b-form-group
             class="col-6"
+            label="Hand to use:"
+            :label-for="'block-hand-' + index"
+          >
+            <b-form-select
+              :id="'block-hand-' + index"
+              v-model="block.hand_to_use"
+              :options="hands"
+              required
+              :disabled="published"
+            ></b-form-select>
+          </b-form-group>
+        </div>
+        <div class="form-row">
+          <b-form-group
+            class="col-6"
             label="Block type:"
             :label-for="'block-type' + index"
           >
@@ -423,6 +438,7 @@ module.exports = {
       practice_rest_time: this.prop_practice_rest_time,
       experiment_blocks: this.prop_experiment_blocks,
       block_types: this.prop_block_types,
+      hands: this.prop_hands,
       video_file: null,
       consent_file: null,
       with_feedback: this.prop_with_feedback,
@@ -449,6 +465,7 @@ module.exports = {
     prop_rest_after_practice: Number,
     prop_experiment_blocks: Array,
     prop_block_types: Array,
+    prop_hands: Array,
     prop_with_feedback: Boolean,
     prop_with_feedback_blocks: Boolean,
     prop_requirements: String,
@@ -483,6 +500,7 @@ module.exports = {
         is_random_sequence: false,
         seq_length: null,
         num_repetitions: 1,
+        hand_to_use: null,
       });
     },
     removeBlock(index) {
