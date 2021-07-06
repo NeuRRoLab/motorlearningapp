@@ -65,10 +65,17 @@
               {{ blocks[current_block].num_trials }} trials
             </p>
             <p class="h4" v-else>
-              On each block, you will have
+              On each block, you will have around
               {{ blocks[current_block].max_time }} seconds to do as many trials
               as you can
             </p>
+            <p class="h4">
+              You will start the experiment with your
+              <span class="text-danger">{{ blocks[0].hand_to_use }}</span>
+              hand. Between blocks you will be instructed on what hand to use
+              for the next one.
+            </p>
+            <p class="h4">Make sure you only use one finger for each key</p>
             <p class="h4">
               After clicking on "Start Experiment", and before each block, you
               MAY hear an auditory cue
@@ -749,7 +756,7 @@ module.exports = {
     },
     playCountdown(data) {
       var remaining = data.seconds + data.milliseconds / 1000.0;
-      if (remaining <= 3.05 && !this.played_countdown) {
+      if (remaining <= 3.15 && !this.played_countdown) {
         this.countdown_audio.play();
         this.played_countdown = true;
       }
