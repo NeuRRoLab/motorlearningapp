@@ -27,16 +27,22 @@
           :options="playerOptions"
           :playsinline="true"
           @ready="playerReadied"
+          @ended="playerEnded"
         >
         </video-player>
       </div>
       <br />
       <button
+        id="continue-button"
         class="btn btn-primary btn-lg btn-block active text-center"
+        :disabled="!video_ended"
         @click="video_seen = true"
       >
         Continue
       </button>
+      <p class="text-center" v-if="!video_ended">
+        To continue, you must finish watching the video.
+      </p>
     </template>
     <template v-else>
       <h2>Consent Form</h2>
@@ -61,11 +67,12 @@ module.exports = {
     return {
       requirements_fulfilled: false,
       video_seen: false,
+      video_ended: false,
       // videojs options
       playerOptions: {
-        height: "480",
-        autoplay: false,
-        muted: true,
+        width: "1080",
+        autoplay: true,
+        muted: false,
         language: "en",
         playbackRates: [1.0],
         sources: [
@@ -98,9 +105,12 @@ module.exports = {
     playerReadied(player) {
       // seek to 10s
       console.log("example player 1 readied", player);
-      player.muted(false);
       // player.currentTime(0);
       // console.log('example 01: the player is readied', player)
+    },
+    playerEnded(player) {
+      console.log("ended!!", player);
+      this.video_ended = true;
     },
   },
 };
