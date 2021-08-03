@@ -776,7 +776,10 @@ def download_processed_data(request):
                             keypresses_last_trial = trial_timestamps[
                                 last_trial["trial_id"]
                             ]
-                            if len(keypresses_last_trial) > 0:
+                            if (
+                                len(keypresses_last_trial) > 0
+                                and keypresses_last_trial[-1] is not None
+                            ):
                                 elapsed_extra = (
                                     keypress_timestamp - keypresses_last_trial[-1]
                                 ).total_seconds()
