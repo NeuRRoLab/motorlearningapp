@@ -6,8 +6,11 @@ from datetime import datetime
 from urllib import parse
 import os
 import time
+import logging
 
+logging.getLogger().setLevel(logging.INFO)
 from collections import defaultdict
+import tempfile
 
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login
@@ -859,19 +862,59 @@ def download_processed_data(request):
     form = ExperimentCode(request.GET)
     if form.is_valid():
         code = form.cleaned_data["code"]
-        output_csv = process_data(request.user, code)
+        output_dict = process_data(request.user, code)
         # Output csv
         response = HttpResponse(content_type="text/csv")
         response[
             "Content-Disposition"
         ] = 'attachment; filename="processed_experiment_{}.csv"'.format(code)
-        if len(output_csv) > 0:
-            writer = csv.DictWriter(response, output_csv[0].keys())
+        if len(output_dict) > 0:
+            writer = csv.DictWriter(response, output_dict[0].keys())
             writer.writeheader()
         else:
             writer = csv.DictWriter(response, ["experiment"])
-        writer.writerows(output_csv)
+        writer.writerows(output_dict)
         return response
+
+
+def cloud_process_data(request):
+    # For every published experiment, run the processing.
+    experiments = Experiment.objects.filter(published=True)
+    cs_bucket = storage.Client().bucket(BUCKET_NAME)
+    for experiment in experiments:
+        num_responses = experiment.num_responses()
+        code = experiment.code
+        user = experiment.creator
+
+        # Check current files, to see if the num of responses is different
+        blob = cs_bucket.get_blob(f"processed_data/{code}.csv")
+        if blob is not None and num_responses == int(blob.metadata["num_responses"]):
+            # Already processed this data
+            logging.info(f"[{code}] Experiment already processed")
+            continue
+
+        logging.info(f"[{code}] Processing experiment...")
+        try:
+            output_dict = process_data(user, code)
+        except Exception as e:
+            logging.error(e)
+            continue
+
+        with tempfile.NamedTemporaryFile("w") as f:
+            if len(output_dict) > 0:
+                writer = csv.DictWriter(f, output_dict[0].keys())
+                writer.writeheader()
+            else:
+                writer = csv.DictWriter(f, ["experiment"])
+            writer.writerows(output_dict)
+
+            logging.info(f"[{code}] Uploading csv to Cloud Storage...")
+            # Upload to Cloud Storage
+            blob = cs_bucket.blob(f"processed_data/{code}.csv")
+            blob.metadata = {"num_responses": num_responses}
+            blob.upload_from_filename(f.name, content_type="text/csv")
+
+    return HttpResponse("<h1>Holaa</h1>")
 
 
 @login_required

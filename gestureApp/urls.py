@@ -136,5 +136,8 @@ urlpatterns = [
         name="download_survey",
     ),
     path("api/group/new/", views.new_group, name="new_group",),
+    path(
+        "api/cloud_process_data", views.cloud_process_data, name="cloud_process_data",
+    ),
 ]
 
