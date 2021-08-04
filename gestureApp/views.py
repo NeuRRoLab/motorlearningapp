@@ -669,208 +669,208 @@ def download_raw_data(request):
         return response
 
 
+def process_data(user, exp_code):
+    code = exp_code
+    experiment = get_object_or_404(Experiment, pk=code, creator=user)
+    # If the experiment hasn't been published, get all responses
+    starting_date_useful_data = experiment.created_at
+    # If it has, then only get those after the publishing timestamp
+    if experiment.published:
+        starting_date_useful_data = experiment.published_timestamp
+    # Make sure that the user downloading it is the owner of the experiment
+    # When not working with sqlite, we will be able to do something like this:
+    #   Trial.objects.filter(block__experiment__code="952P", block=12,subject="E7kMfKZHIZjL375d",correct=True).annotate(first_keypress=Min("keypresses__timestamp")).annotate(last_keypress=Max("keypresses__timestamp")).aggregate(avg_diff=Avg(F("first_keypress")-F("last_keypress")))
+    no_et = (
+        Experiment.objects.filter(
+            pk=code,
+            creator=user,
+            blocks__trials__started_at__gt=starting_date_useful_data,
+        )
+        .values(
+            "code",
+            "blocks",
+            "blocks__trials__subject",
+            "blocks__sequence",
+            "blocks__trials",
+            "blocks__trials__correct",
+            "blocks__trials__started_at",
+        )
+        .order_by("blocks__trials__started_at")
+        .distinct()
+    )
+    no_et = list(no_et)
+    acc_correct_trials = defaultdict(lambda: 0)
+    for values_dict in no_et:
+        values_dict["experiment_code"] = values_dict.pop("code")
+        values_dict["subject_code"] = values_dict.pop("blocks__trials__subject")
+        values_dict["block_id"] = values_dict.pop("blocks")
+        values_dict["block_sequence"] = values_dict.pop("blocks__sequence")
+        values_dict["trial_id"] = values_dict.pop("blocks__trials")
+        values_dict["correct_trial"] = values_dict.pop("blocks__trials__correct")
+        values_dict.pop("blocks__trials__started_at")
+
+        if values_dict["correct_trial"]:
+            acc_correct_trials[
+                (values_dict["block_id"], values_dict["subject_code"])
+            ] += 1
+        values_dict["accumulated_correct_trials"] = acc_correct_trials[
+            (values_dict["block_id"], values_dict["subject_code"])
+        ]
+    trials_timestamps_query = (
+        Trial.objects.filter(block__experiment__code=code)
+        .order_by("keypresses__timestamp")
+        .values(
+            "id",
+            "keypresses__id",
+            "keypresses__timestamp",
+            "block__id",
+            "started_at",
+            "finished_at",
+            "correct",
+            "subject__code",
+        )
+    )
+    # From the trials, I need all the keypress timestamps ordered from low to high
+    trial_timestamps = defaultdict(list)
+    trial_properties = defaultdict(dict)
+    for res in trials_timestamps_query:
+        trial_timestamps[res["id"]].append(res["keypresses__timestamp"])
+        if res["id"] not in trial_properties:
+            trial_properties[res["id"]]["trial_id"] = res["id"]
+            trial_properties[res["id"]]["block"] = res["block__id"]
+            trial_properties[res["id"]]["started_at"] = res["started_at"]
+            trial_properties[res["id"]]["finished_at"] = res["finished_at"]
+            trial_properties[res["id"]]["correct"] = res["correct"]
+            trial_properties[res["id"]]["subject_code"] = res["subject__code"]
+
+    for values_dict in no_et:
+        # Get last trial (closest final keypress to the starting keypress of this one)
+        this_trial_props = trial_properties[values_dict["trial_id"]]
+        previous_trials_this_block = [
+            trial_props
+            for trial_id, trial_props in trial_properties.items()
+            if trial_props["block"] == this_trial_props["block"]
+            and trial_id != values_dict["trial_id"]
+            and trial_props["subject_code"] == values_dict["subject_code"]
+            and trial_props["finished_at"] <= this_trial_props["started_at"]
+        ]
+        last_trial = (
+            sorted(previous_trials_this_block, key=lambda prop: prop["finished_at"])[-1]
+            if len(previous_trials_this_block) > 0
+            else None
+        )
+        # List of timestamps, ordered from early to late
+        keypresses_timestamps = trial_timestamps[values_dict["trial_id"]]
+        if len(keypresses_timestamps) > 0 and this_trial_props["correct"]:
+            # Tapping speed
+            elapsed_list = []
+            elapsed_list2 = []
+            for index, keypress_timestamp in enumerate(keypresses_timestamps):
+                if index == 0:
+                    if last_trial is not None:
+                        keypresses_last_trial = trial_timestamps[last_trial["trial_id"]]
+                        if (
+                            len(keypresses_last_trial) > 0
+                            and keypresses_last_trial[-1] is not None
+                        ):
+                            elapsed_extra = (
+                                keypress_timestamp - keypresses_last_trial[-1]
+                            ).total_seconds()
+                            elapsed_list2.append(elapsed_extra)
+                    continue
+                elapsed = (
+                    keypress_timestamp - keypresses_timestamps[index - 1]
+                ).total_seconds()
+                if elapsed < MIN_MS_BETW_KEYPRESSES / 1000:
+                    # Something failed while capturing the keypresses timestamp. we should skip this trial.
+                    # We could say that the elapsed value is the minimum possible keypress difference (1ms)
+                    # This keypress would get discarded anyway.
+                    elapsed = MIN_MS_BETW_KEYPRESSES / 1000
+                elapsed_list.append(elapsed)
+                elapsed_list2.append(elapsed)
+            # Mean and std deviation of tapping speed
+            mean_tap_speed = 1 / np.mean(elapsed_list)
+            extra_mean_tap_speed = 1 / np.mean(elapsed_list2)
+
+            # Execution time
+            execution_time_ms = (
+                keypresses_timestamps[-1] - keypresses_timestamps[0]
+            ).total_seconds() * 1000
+            values_dict["execution_time_ms"] = execution_time_ms
+            # Tapping data
+            values_dict["tapping_speed_mean"] = (
+                mean_tap_speed if not np.isnan(mean_tap_speed) else None
+            )
+            values_dict["tapping_speed_extra_keypress"] = (
+                extra_mean_tap_speed if not np.isnan(extra_mean_tap_speed) else None
+            )
+        else:
+            values_dict["execution_time_ms"] = None
+            # Tapping data
+            values_dict["tapping_speed_mean"] = None
+            values_dict["tapping_speed_extra_keypress"] = None
+    # Order subjects by time when they started the first trial
+    subjects = [
+        Subject.objects.get(pk=code)
+        for code in unique([value["subject_code"] for value in no_et])
+    ]
+    # Sort by time when the user started the first trial
+    subjects.sort(
+        key=lambda subj: subj.trials.order_by("started_at").first().started_at
+    )
+    subjects_starting_timestamp = {
+        subject.code: subject.trials.order_by("started_at").first().started_at
+        for subject in subjects
+    }
+    possible_blocks = unique([value["block_id"] for value in no_et])
+    new_block_codes = {block: index + 1 for index, block in enumerate(possible_blocks)}
+    # Trials are not fixed across different experiments or blocks.
+    # If we are on the same experiment and block, start adding up
+    # for every combination of block-subject, we have a different count
+    # {(block, subject): {trial_1: 1, trial_2:2, trial_3:3}}
+    aux_values = defaultdict(dict)
+    for values_dict in no_et:
+        # To get the new id
+        trial_id_dict = aux_values[
+            (values_dict["block_id"], values_dict["subject_code"])
+        ]
+        if values_dict["trial_id"] not in trial_id_dict:
+            trial_id_dict[values_dict["trial_id"]] = len(trial_id_dict.keys()) + 1
+    # Change the subject, block and trials ids to a numbered code
+    for values_dict in no_et:
+        values_dict["trial_id"] = aux_values[
+            (values_dict["block_id"], values_dict["subject_code"])
+        ][values_dict["trial_id"]]
+        values_dict["block_id"] = new_block_codes[values_dict["block_id"]]
+    # Order the list by block and then subject
+    no_et.sort(
+        key=lambda value_dict: (
+            subjects_starting_timestamp[value_dict["subject_code"]],
+            value_dict["block_id"],
+            value_dict["trial_id"],
+        )
+    )
+    # Output csv
+    return no_et
+
+
 @login_required
 def download_processed_data(request):
     form = ExperimentCode(request.GET)
     if form.is_valid():
         code = form.cleaned_data["code"]
-        experiment = get_object_or_404(Experiment, pk=code, creator=request.user)
-        # If the experiment hasn't been published, get all responses
-        starting_date_useful_data = experiment.created_at
-        # If it has, then only get those after the publishing timestamp
-        if experiment.published:
-            starting_date_useful_data = experiment.published_timestamp
-        # Make sure that the user downloading it is the owner of the experiment
-        # When not working with sqlite, we will be able to do something like this:
-        #   Trial.objects.filter(block__experiment__code="952P", block=12,subject="E7kMfKZHIZjL375d",correct=True).annotate(first_keypress=Min("keypresses__timestamp")).annotate(last_keypress=Max("keypresses__timestamp")).aggregate(avg_diff=Avg(F("first_keypress")-F("last_keypress")))
-        no_et = (
-            Experiment.objects.filter(
-                pk=code,
-                creator=request.user,
-                blocks__trials__started_at__gt=starting_date_useful_data,
-            )
-            .values(
-                "code",
-                "blocks",
-                "blocks__trials__subject",
-                "blocks__sequence",
-                "blocks__trials",
-                "blocks__trials__correct",
-                "blocks__trials__started_at",
-            )
-            .order_by("blocks__trials__started_at")
-            .distinct()
-        )
-        no_et = list(no_et)
-        acc_correct_trials = defaultdict(lambda: 0)
-        for values_dict in no_et:
-            values_dict["experiment_code"] = values_dict.pop("code")
-            values_dict["subject_code"] = values_dict.pop("blocks__trials__subject")
-            values_dict["block_id"] = values_dict.pop("blocks")
-            values_dict["block_sequence"] = values_dict.pop("blocks__sequence")
-            values_dict["trial_id"] = values_dict.pop("blocks__trials")
-            values_dict["correct_trial"] = values_dict.pop("blocks__trials__correct")
-            values_dict.pop("blocks__trials__started_at")
-
-            if values_dict["correct_trial"]:
-                acc_correct_trials[
-                    (values_dict["block_id"], values_dict["subject_code"])
-                ] += 1
-            values_dict["accumulated_correct_trials"] = acc_correct_trials[
-                (values_dict["block_id"], values_dict["subject_code"])
-            ]
-        trials_timestamps_query = (
-            Trial.objects.filter(block__experiment__code=code)
-            .order_by("keypresses__timestamp")
-            .values(
-                "id",
-                "keypresses__id",
-                "keypresses__timestamp",
-                "block__id",
-                "started_at",
-                "finished_at",
-                "correct",
-                "subject__code",
-            )
-        )
-        # From the trials, I need all the keypress timestamps ordered from low to high
-        trial_timestamps = defaultdict(list)
-        trial_properties = defaultdict(dict)
-        for res in trials_timestamps_query:
-            trial_timestamps[res["id"]].append(res["keypresses__timestamp"])
-            if res["id"] not in trial_properties:
-                trial_properties[res["id"]]["trial_id"] = res["id"]
-                trial_properties[res["id"]]["block"] = res["block__id"]
-                trial_properties[res["id"]]["started_at"] = res["started_at"]
-                trial_properties[res["id"]]["finished_at"] = res["finished_at"]
-                trial_properties[res["id"]]["correct"] = res["correct"]
-                trial_properties[res["id"]]["subject_code"] = res["subject__code"]
-
-        for values_dict in no_et:
-            # Get last trial (closest final keypress to the starting keypress of this one)
-            this_trial_props = trial_properties[values_dict["trial_id"]]
-            previous_trials_this_block = [
-                trial_props
-                for trial_id, trial_props in trial_properties.items()
-                if trial_props["block"] == this_trial_props["block"]
-                and trial_id != values_dict["trial_id"]
-                and trial_props["subject_code"] == values_dict["subject_code"]
-                and trial_props["finished_at"] <= this_trial_props["started_at"]
-            ]
-            last_trial = (
-                sorted(
-                    previous_trials_this_block, key=lambda prop: prop["finished_at"]
-                )[-1]
-                if len(previous_trials_this_block) > 0
-                else None
-            )
-            # List of timestamps, ordered from early to late
-            keypresses_timestamps = trial_timestamps[values_dict["trial_id"]]
-            if len(keypresses_timestamps) > 0 and this_trial_props["correct"]:
-                # Tapping speed
-                elapsed_list = []
-                elapsed_list2 = []
-                for index, keypress_timestamp in enumerate(keypresses_timestamps):
-                    if index == 0:
-                        if last_trial is not None:
-                            keypresses_last_trial = trial_timestamps[
-                                last_trial["trial_id"]
-                            ]
-                            if (
-                                len(keypresses_last_trial) > 0
-                                and keypresses_last_trial[-1] is not None
-                            ):
-                                elapsed_extra = (
-                                    keypress_timestamp - keypresses_last_trial[-1]
-                                ).total_seconds()
-                                elapsed_list2.append(elapsed_extra)
-                        continue
-                    elapsed = (
-                        keypress_timestamp - keypresses_timestamps[index - 1]
-                    ).total_seconds()
-                    if elapsed < MIN_MS_BETW_KEYPRESSES / 1000:
-                        # Something failed while capturing the keypresses timestamp. we should skip this trial.
-                        # We could say that the elapsed value is the minimum possible keypress difference (1ms)
-                        # This keypress would get discarded anyway.
-                        elapsed = MIN_MS_BETW_KEYPRESSES / 1000
-                    elapsed_list.append(elapsed)
-                    elapsed_list2.append(elapsed)
-                # Mean and std deviation of tapping speed
-                mean_tap_speed = 1 / np.mean(elapsed_list)
-                extra_mean_tap_speed = 1 / np.mean(elapsed_list2)
-
-                # Execution time
-                execution_time_ms = (
-                    keypresses_timestamps[-1] - keypresses_timestamps[0]
-                ).total_seconds() * 1000
-                values_dict["execution_time_ms"] = execution_time_ms
-                # Tapping data
-                values_dict["tapping_speed_mean"] = (
-                    mean_tap_speed if not np.isnan(mean_tap_speed) else None
-                )
-                values_dict["tapping_speed_extra_keypress"] = (
-                    extra_mean_tap_speed if not np.isnan(extra_mean_tap_speed) else None
-                )
-            else:
-                values_dict["execution_time_ms"] = None
-                # Tapping data
-                values_dict["tapping_speed_mean"] = None
-                values_dict["tapping_speed_extra_keypress"] = None
-
-        # Order subjects by time when they started the first trial
-        subjects = [
-            Subject.objects.get(pk=code)
-            for code in unique([value["subject_code"] for value in no_et])
-        ]
-        # Sort by time when the user started the first trial
-        subjects.sort(
-            key=lambda subj: subj.trials.order_by("started_at").first().started_at
-        )
-        subjects_starting_timestamp = {
-            subject.code: subject.trials.order_by("started_at").first().started_at
-            for subject in subjects
-        }
-        possible_blocks = unique([value["block_id"] for value in no_et])
-        new_block_codes = {
-            block: index + 1 for index, block in enumerate(possible_blocks)
-        }
-        # Trials are not fixed across different experiments or blocks.
-        # If we are on the same experiment and block, start adding up
-        # for every combination of block-subject, we have a different count
-        # {(block, subject): {trial_1: 1, trial_2:2, trial_3:3}}
-        aux_values = defaultdict(dict)
-        for values_dict in no_et:
-            # To get the new id
-            trial_id_dict = aux_values[
-                (values_dict["block_id"], values_dict["subject_code"])
-            ]
-            if values_dict["trial_id"] not in trial_id_dict:
-                trial_id_dict[values_dict["trial_id"]] = len(trial_id_dict.keys()) + 1
-        # Change the subject, block and trials ids to a numbered code
-        for values_dict in no_et:
-            values_dict["trial_id"] = aux_values[
-                (values_dict["block_id"], values_dict["subject_code"])
-            ][values_dict["trial_id"]]
-            values_dict["block_id"] = new_block_codes[values_dict["block_id"]]
-        # Order the list by block and then subject
-        no_et.sort(
-            key=lambda value_dict: (
-                subjects_starting_timestamp[value_dict["subject_code"]],
-                value_dict["block_id"],
-                value_dict["trial_id"],
-            )
-        )
+        output_csv = process_data(request.user, code)
         # Output csv
         response = HttpResponse(content_type="text/csv")
         response[
             "Content-Disposition"
         ] = 'attachment; filename="processed_experiment_{}.csv"'.format(code)
-        if len(no_et) > 0:
-            writer = csv.DictWriter(response, no_et[0].keys())
+        if len(output_csv) > 0:
+            writer = csv.DictWriter(response, output_csv[0].keys())
             writer.writeheader()
         else:
             writer = csv.DictWriter(response, ["experiment"])
-        writer.writerows(no_et)
+        writer.writerows(output_csv)
         return response
 
 
