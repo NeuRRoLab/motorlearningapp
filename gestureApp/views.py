@@ -859,21 +859,21 @@ def process_data(user, exp_code):
 
 @login_required
 def download_processed_data(request):
+    cloud_process_data(request)
     form = ExperimentCode(request.GET)
     if form.is_valid():
         code = form.cleaned_data["code"]
-        output_dict = process_data(request.user, code)
+        cs_bucket = storage.Client().bucket(BUCKET_NAME)
+        blob = cs_bucket.blob(f"processed_data/{code}.csv")
+        if blob is None:
+            raise Http404("Experiment is not ready for downloading yet")
+        csv_content = blob.download_as_string()
         # Output csv
-        response = HttpResponse(content_type="text/csv")
+        response = HttpResponse(csv_content, content_type="text/csv")
         response[
             "Content-Disposition"
         ] = 'attachment; filename="processed_experiment_{}.csv"'.format(code)
-        if len(output_dict) > 0:
-            writer = csv.DictWriter(response, output_dict[0].keys())
-            writer.writeheader()
-        else:
-            writer = csv.DictWriter(response, ["experiment"])
-        writer.writerows(output_dict)
+
         return response
 
 
@@ -914,7 +914,7 @@ def cloud_process_data(request):
             blob.metadata = {"num_responses": num_responses}
             blob.upload_from_filename(f.name, content_type="text/csv")
 
-    return HttpResponse("<h1>Holaa</h1>")
+    return HttpResponse()
 
 
 @login_required

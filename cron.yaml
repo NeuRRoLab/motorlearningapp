@@ -1,4 +1,4 @@
 cron:
   - description: "data processing"
     url: /api/cloud_process_data
-    schedule: every 20 minutes
+    schedule: every 15 minutes
