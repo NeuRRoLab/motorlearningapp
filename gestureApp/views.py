@@ -7,6 +7,7 @@ from urllib import parse
 import os
 import time
 import logging
+import io
 
 logging.getLogger().setLevel(logging.INFO)
 from collections import defaultdict
@@ -900,18 +901,20 @@ def cloud_process_data(request):
             logging.error(e)
             continue
 
-        with open("temp.csv", "w+") as f:
-            if len(output_dict) > 0:
-                writer = csv.DictWriter(f, output_dict[0].keys())
-                writer.writeheader()
-            else:
-                writer = csv.DictWriter(f, ["experiment"])
-            writer.writerows(output_dict)
-            logging.info(f"[{code}] Uploading csv to Cloud Storage...")
-            # Upload to Cloud Storage
+        f = io.StringIO()
+        if len(output_dict) > 0:
+            writer = csv.DictWriter(f, output_dict[0].keys())
+            writer.writeheader()
+        else:
+            writer = csv.DictWriter(f, ["experiment"])
+        writer.writerows(output_dict)
+        logging.info(f"[{code}] Uploading csv to Cloud Storage...")
+        # Upload to Cloud Storage
         blob = cs_bucket.blob(f"processed_data/{code}.csv")
         blob.metadata = {"num_responses": num_responses}
-        blob.upload_from_filename("temp.csv", content_type="text/csv")
+        f.seek(0)
+        blob.upload_from_file(f, content_type="text/csv")
+        f.close()
 
     return HttpResponse()
 
