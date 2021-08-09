@@ -1,3 +1,7 @@
+// CSRF token for axios
+axios.defaults.xsrfCookieName = 'csrftoken'
+axios.defaults.xsrfHeaderName = "X-CSRFTOKEN"
+
 var app = new Vue({
   el: '#app',
   data: function () {
