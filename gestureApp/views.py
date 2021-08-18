@@ -768,11 +768,15 @@ def process_data(user, exp_code):
         if len(keypresses_timestamps) > 0 and this_trial_props["correct"]:
             # Tapping speed
             elapsed_list = []
+            # Elapsed list that includes the time between the last keypress of last trial and the first of this one
             elapsed_list2 = []
             for index, keypress_timestamp in enumerate(keypresses_timestamps):
+                # First keypress
                 if index == 0:
+                    # On trial that is not the first of a block
                     if last_trial is not None:
                         keypresses_last_trial = trial_timestamps[last_trial["trial_id"]]
+                        # if the last trial has at least a valid keypress
                         if (
                             len(keypresses_last_trial) > 0
                             and keypresses_last_trial[-1] is not None
@@ -935,6 +939,7 @@ def download_cohen_processed(request, pk):
             creator=request.user,
             blocks__trials__started_at__gt=starting_date_useful_data,
         )
+        .annotate(Count("blocks__trials__keypresses"))
         .values(
             "code",
             "blocks",
@@ -942,7 +947,9 @@ def download_cohen_processed(request, pk):
             "blocks__sequence",
             "blocks__trials",
             "blocks__trials__partial_correct",
+            "blocks__trials__correct",
             "blocks__trials__started_at",
+            "blocks__trials__keypresses__count",
         )
         .order_by("blocks__trials__started_at")
         .distinct()
@@ -956,7 +963,8 @@ def download_cohen_processed(request, pk):
         values_dict["block_id"] = values_dict.pop("blocks")
         values_dict["block_sequence"] = values_dict.pop("blocks__sequence")
         values_dict["trial_id"] = values_dict.pop("blocks__trials")
-        values_dict["correct_trial"] = values_dict.pop(
+        values_dict["correct_trial"] = values_dict.pop("blocks__trials__correct")
+        values_dict["partial_correct_trial"] = values_dict.pop(
             "blocks__trials__partial_correct"
         )
         values_dict.pop("blocks__trials__started_at")
@@ -967,6 +975,9 @@ def download_cohen_processed(request, pk):
         values_dict["accumulated_correct_trials"] = acc_correct_trials[
             (values_dict["block_id"], values_dict["subject_code"])
         ]
+        values_dict["num_keypresses"] = values_dict.pop(
+            "blocks__trials__keypresses__count"
+        )
 
     # For each block, subject, get the first and last trial starting and finish timestamps.
     trial_timestamps = {}
@@ -1021,12 +1032,7 @@ def download_cohen_processed(request, pk):
         # If first trial of block: difference between starting of trial and first keypress of next.
         # If last trial of block: difference between first keypress and end of trial
         # else: difference between first keypress of this block, and first of the next.
-        # qs = Trial.objects.filter(
-        #     Q(correct=True) | Q(partial_correct=True), pk=values_dict["trial_id"],
-        # ).annotate(first_keypress=Min("keypresses__timestamp"))
         trial = trials.get(values_dict["trial_id"], None)
-        # print(trials, values_dict["trial_id"])
-        # Next trial: closest starting timestamp in the same block and subject
         if (
             trial is not None
             and len(trial.get("keypresses", [])) > 0
@@ -1098,10 +1104,10 @@ def download_cohen_processed(request, pk):
             # Execution time
             values_dict["execution_time_ms"] = execution_time_ms
             # Tapping data
-            values_dict["tapping_speed_mean"] = (
+            values_dict["tapping_speed_mean_individual"] = (
                 mean_tap_speed if not np.isnan(mean_tap_speed) else None
             )
-            values_dict["tapping_speed_std_dev"] = (
+            values_dict["tapping_speed_std_dev_individual"] = (
                 std_dev_tap_speed if not np.isnan(std_dev_tap_speed) else None
             )
             mean_tap_speed_2 = (
@@ -1109,13 +1115,13 @@ def download_cohen_processed(request, pk):
                 if execution_time_ms > 0
                 else None
             )
-            values_dict["tapping_speed_mean_2"] = mean_tap_speed_2
+            values_dict["tapping_speed_mean_aggregated"] = mean_tap_speed_2
         else:
             values_dict["execution_time_ms"] = None
             # Tapping data
-            values_dict["tapping_speed_mean"] = None
-            values_dict["tapping_speed_std_dev"] = None
-            values_dict["tapping_speed_mean_2"] = None
+            values_dict["tapping_speed_mean_individual"] = None
+            values_dict["tapping_speed_std_dev_individual"] = None
+            values_dict["tapping_speed_mean_aggregated"] = None
     # Order subjects by time when they started the first trial
     subjects = [
         Subject.objects.get(pk=code)
