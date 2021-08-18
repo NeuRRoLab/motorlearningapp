@@ -528,148 +528,148 @@ def edit_study(request, pk):
         return HttpResponseRedirect(reverse("gestureApp:profile"))
 
 
+def raw_data(user, code):
+    experiment = get_object_or_404(Experiment, pk=code, creator=user)
+    # If the experiment hasn't been published, get all responses
+    starting_date_useful_data = experiment.created_at
+    # If it has, then only get those after the publishing timestamp
+    if experiment.published:
+        starting_date_useful_data = experiment.published_timestamp
+    # Make sure that the user downloading it is the owner of the experiment
+    qs = (
+        Experiment.objects.filter(
+            pk=code,
+            creator=user,
+            blocks__trials__started_at__gt=starting_date_useful_data,
+        )
+        .order_by("blocks__trials__keypresses__timestamp")
+        .values(
+            experiment_code=F("code"),
+            subject_code=F("blocks__trials__subject__code"),
+            block_id=F("blocks"),
+            block_sequence=F("blocks__sequence"),
+            trial_id=F("blocks__trials__id"),
+            was_trial_correct=F("blocks__trials__correct"),
+            was_partial_trial_correct=F("blocks__trials__partial_correct"),
+            keypress_timestamp=F("blocks__trials__keypresses__timestamp"),
+            keypress_value=F("blocks__trials__keypresses__value"),
+        )
+    )
+    queryset_list = list(qs)
+    # Order subjects by time when they started the first trial
+    subjects = [
+        Subject.objects.get(pk=code)
+        for code in unique([value["subject_code"] for value in queryset_list])
+    ]
+    subjects.sort(
+        key=lambda subj: subj.trials.order_by("started_at").first().started_at
+    )
+    subjects_starting_timestamp = {
+        subject.code: subject.trials.order_by("started_at").first().started_at
+        for subject in subjects
+    }
+    # FIXME: may be necessary to force the ordering of trials and blocks
+    possible_blocks = unique([value["block_id"] for value in queryset_list])
+    new_block_codes = {block: index + 1 for index, block in enumerate(possible_blocks)}
+    # Trials are not fixed across different experiments or blocks.
+    # If we are on the same experiment and block, start adding up
+    # for every combination of block-subject, we have a different count
+    # {(block, subject): [trial_1, trial_2, trial_3]}
+    aux_values = defaultdict(dict)
+    for values_dict in queryset_list:
+        trial_id_dict = aux_values[
+            (values_dict["block_id"], values_dict["subject_code"])
+        ]
+        if values_dict["trial_id"] not in trial_id_dict:
+            trial_id_dict[values_dict["trial_id"]] = len(trial_id_dict.keys()) + 1
+    # Change the subject, block and trials ids to a numbered code
+    for values_dict in queryset_list:
+        values_dict["trial_id"] = aux_values[
+            (values_dict["block_id"], values_dict["subject_code"])
+        ][values_dict["trial_id"]]
+        # values_dict["subject_code"] = new_subject_codes[values_dict["subject_code"]]
+        values_dict["block_id"] = new_block_codes[values_dict["block_id"]]
+        # values_dict["trial_id"] = new_trial_codes[values_dict["trial_id"]]
+    # Order the list by block and then subject
+    queryset_list.sort(
+        key=lambda value_dict: (
+            subjects_starting_timestamp[value_dict["subject_code"]],
+            value_dict["block_id"],
+            value_dict["trial_id"],
+            value_dict["keypress_timestamp"],
+        )
+    )
+    keypresses = [
+        (v_dict["keypress_timestamp"], v_dict["subject_code"])
+        for v_dict in queryset_list
+    ]
+    diff_keypresses_ms = [None] + [
+        (y[0] - x[0]).total_seconds() * 1000
+        if x[1] == y[1] and x[0] is not None and y[0] is not None
+        else None
+        for x, y in zip(keypresses, keypresses[1:])
+    ]
+    # Calculate whether or not the keypress input was correct
+    # We'll get all keypresses for each trial, and then compare them with the trial sequence
+    current_trial = -1
+    current_block = -1
+    current_subject = ""
+    current_trial_seq_idx = 0
+    for values_dict, diff in zip(queryset_list, diff_keypresses_ms):
+        diff_mod = None
+        if diff is not None:
+            if diff < MIN_MS_BETW_KEYPRESSES:
+                diff_mod = MIN_MS_BETW_KEYPRESSES
+            else:
+                diff_mod = diff
+        # Was keypress correct
+        if (
+            current_trial == values_dict["trial_id"]
+            and current_block == values_dict["block_id"]
+            and current_subject == values_dict["subject_code"]
+        ):
+            # When on the same trial and block, increase the sequence index
+            current_trial_seq_idx += 1
+        else:
+            # When on a different trial or block, restart the counters
+            current_trial = values_dict["trial_id"]
+            current_block = values_dict["block_id"]
+            current_subject = values_dict["subject_code"]
+            current_trial_seq_idx = 0
+        if (
+            values_dict["block_sequence"][current_trial_seq_idx]
+            == values_dict["keypress_value"]
+        ):
+            # If the corresponding value of the sequence is equal to the keypress, show True, else False
+            values_dict["was_keypress_correct"] = True
+        else:
+            values_dict["was_keypress_correct"] = False
+        if values_dict["keypress_timestamp"] is not None:
+            values_dict["keypress_timestamp"] = values_dict[
+                "keypress_timestamp"
+            ].strftime("%Y-%m-%d %H:%M:%S.%f")
+        values_dict["diff_between_keypresses_ms"] = diff_mod
+
+    return queryset_list
+
+
 @login_required
 def download_raw_data(request):
-    from djqscsv import render_to_csv_response
-
+    cloud_process_data(request)
     form = ExperimentCode(request.GET)
     if form.is_valid():
         code = form.cleaned_data["code"]
-        experiment = get_object_or_404(Experiment, pk=code, creator=request.user)
-        # If the experiment hasn't been published, get all responses
-        starting_date_useful_data = experiment.created_at
-        # If it has, then only get those after the publishing timestamp
-        if experiment.published:
-            starting_date_useful_data = experiment.published_timestamp
-        # Make sure that the user downloading it is the owner of the experiment
-        qs = (
-            Experiment.objects.filter(
-                pk=code,
-                creator=request.user,
-                blocks__trials__started_at__gt=starting_date_useful_data,
-            )
-            .order_by("blocks__trials__keypresses__timestamp")
-            .values(
-                experiment_code=F("code"),
-                subject_code=F("blocks__trials__subject__code"),
-                block_id=F("blocks"),
-                block_sequence=F("blocks__sequence"),
-                trial_id=F("blocks__trials__id"),
-                was_trial_correct=F("blocks__trials__correct"),
-                was_partial_trial_correct=F("blocks__trials__partial_correct"),
-                keypress_timestamp=F("blocks__trials__keypresses__timestamp"),
-                keypress_value=F("blocks__trials__keypresses__value"),
-            )
-        )
-        queryset_list = list(qs)
-        # Order subjects by time when they started the first trial
-        subjects = [
-            Subject.objects.get(pk=code)
-            for code in unique([value["subject_code"] for value in queryset_list])
-        ]
-        subjects.sort(
-            key=lambda subj: subj.trials.order_by("started_at").first().started_at
-        )
-        subjects_starting_timestamp = {
-            subject.code: subject.trials.order_by("started_at").first().started_at
-            for subject in subjects
-        }
-        # FIXME: may be necessary to force the ordering of trials and blocks
-        possible_blocks = unique([value["block_id"] for value in queryset_list])
-        new_block_codes = {
-            block: index + 1 for index, block in enumerate(possible_blocks)
-        }
-        # Trials are not fixed across different experiments or blocks.
-        # If we are on the same experiment and block, start adding up
-        # for every combination of block-subject, we have a different count
-        # {(block, subject): [trial_1, trial_2, trial_3]}
-        aux_values = defaultdict(dict)
-        for values_dict in queryset_list:
-            trial_id_dict = aux_values[
-                (values_dict["block_id"], values_dict["subject_code"])
-            ]
-            if values_dict["trial_id"] not in trial_id_dict:
-                trial_id_dict[values_dict["trial_id"]] = len(trial_id_dict.keys()) + 1
-        # Change the subject, block and trials ids to a numbered code
-        for values_dict in queryset_list:
-            values_dict["trial_id"] = aux_values[
-                (values_dict["block_id"], values_dict["subject_code"])
-            ][values_dict["trial_id"]]
-            # values_dict["subject_code"] = new_subject_codes[values_dict["subject_code"]]
-            values_dict["block_id"] = new_block_codes[values_dict["block_id"]]
-            # values_dict["trial_id"] = new_trial_codes[values_dict["trial_id"]]
-        # Order the list by block and then subject
-        queryset_list.sort(
-            key=lambda value_dict: (
-                subjects_starting_timestamp[value_dict["subject_code"]],
-                value_dict["block_id"],
-                value_dict["trial_id"],
-                value_dict["keypress_timestamp"],
-            )
-        )
-        keypresses = [
-            (v_dict["keypress_timestamp"], v_dict["subject_code"])
-            for v_dict in queryset_list
-        ]
-        diff_keypresses_ms = [None] + [
-            (y[0] - x[0]).total_seconds() * 1000
-            if x[1] == y[1] and x[0] is not None and y[0] is not None
-            else None
-            for x, y in zip(keypresses, keypresses[1:])
-        ]
-        # Calculate whether or not the keypress input was correct
-        # We'll get all keypresses for each trial, and then compare them with the trial sequence
-        current_trial = -1
-        current_block = -1
-        current_subject = ""
-        current_trial_seq_idx = 0
-        for values_dict, diff in zip(queryset_list, diff_keypresses_ms):
-            diff_mod = None
-            if diff is not None:
-                if diff < MIN_MS_BETW_KEYPRESSES:
-                    diff_mod = MIN_MS_BETW_KEYPRESSES
-                else:
-                    diff_mod = diff
-            # Was keypress correct
-            if (
-                current_trial == values_dict["trial_id"]
-                and current_block == values_dict["block_id"]
-                and current_subject == values_dict["subject_code"]
-            ):
-                # When on the same trial and block, increase the sequence index
-                current_trial_seq_idx += 1
-            else:
-                # When on a different trial or block, restart the counters
-                current_trial = values_dict["trial_id"]
-                current_block = values_dict["block_id"]
-                current_subject = values_dict["subject_code"]
-                current_trial_seq_idx = 0
-            if (
-                values_dict["block_sequence"][current_trial_seq_idx]
-                == values_dict["keypress_value"]
-            ):
-                # If the corresponding value of the sequence is equal to the keypress, show True, else False
-                values_dict["was_keypress_correct"] = True
-            else:
-                values_dict["was_keypress_correct"] = False
-            if values_dict["keypress_timestamp"] is not None:
-                values_dict["keypress_timestamp"] = values_dict[
-                    "keypress_timestamp"
-                ].strftime("%Y-%m-%d %H:%M:%S.%f")
-            values_dict["diff_between_keypresses_ms"] = diff_mod
-
+        cs_bucket = storage.Client().bucket(BUCKET_NAME)
+        blob = cs_bucket.blob(f"raw_data/{code}.csv")
+        if blob is None:
+            raise Http404("Experiment is not ready for downloading yet")
+        csv_content = blob.download_as_string()
         # Output csv
-        response = HttpResponse(content_type="text/csv")
+        response = HttpResponse(csv_content, content_type="text/csv")
         response[
             "Content-Disposition"
-        ] = 'attachment; filename="raw_experiment_{}.csv"'.format(code)
+        ] = 'attachment; filename="raw_data_{}.csv"'.format(code)
 
-        if len(queryset_list) > 0:
-            writer = csv.DictWriter(response, queryset_list[0].keys())
-            writer.writeheader()
-        else:
-            writer = csv.DictWriter(response, ["experiment"])
-        writer.writerows(queryset_list)
         return response
 
 
@@ -886,47 +886,52 @@ def cloud_process_data(request):
     # For every published experiment, run the processing.
     experiments = Experiment.objects.filter(published=True)
     cs_bucket = storage.Client().bucket(BUCKET_NAME)
+    file_names = ["processed_data", "bonstrup_processed", "raw_data"]
+    methods = [process_data, process_bonstrup, raw_data]
     for experiment in experiments:
         num_responses = experiment.num_responses()
         code = experiment.code
         user = experiment.creator
 
-        # Check current files, to see if the num of responses is different
-        blob = cs_bucket.get_blob(f"processed_data/{code}.csv")
-        if blob is not None and num_responses == int(blob.metadata["num_responses"]):
-            # Already processed this data
-            logging.info(f"[{code}] Experiment already processed")
-            continue
+        for file_name, method in zip(file_names, methods):
+            # Check current files, to see if the num of responses is different
+            blob = cs_bucket.get_blob(f"{file_name}/{code}.csv")
+            if blob is not None and num_responses == int(
+                blob.metadata["num_responses"]
+            ):
+                # Already processed this data
+                logging.info(f"[{code}][{file_name}] Experiment already processed")
+                continue
 
-        logging.info(f"[{code}] Processing experiment...")
-        try:
-            output_dict = process_data(user, code)
-        except Exception as e:
-            logging.error(e)
-            continue
+            logging.info(f"[{code}][{file_name}] Processing experiment...")
+            try:
+                output_dict = method(user, code)
+            except Exception as e:
+                logging.error(e)
+                continue
 
-        f = io.StringIO()
-        if len(output_dict) > 0:
-            writer = csv.DictWriter(f, output_dict[0].keys())
-            writer.writeheader()
-        else:
-            writer = csv.DictWriter(f, ["experiment"])
-        writer.writerows(output_dict)
-        logging.info(f"[{code}] Uploading csv to Cloud Storage...")
-        # Upload to Cloud Storage
-        blob = cs_bucket.blob(f"processed_data/{code}.csv")
-        blob.metadata = {"num_responses": num_responses}
-        f.seek(0)
-        blob.upload_from_file(f, content_type="text/csv")
-        f.close()
+            f = io.StringIO()
+            if len(output_dict) > 0:
+                writer = csv.DictWriter(f, output_dict[0].keys())
+                writer.writeheader()
+            else:
+                writer = csv.DictWriter(f, ["experiment"])
+            writer.writerows(output_dict)
+            logging.info(f"[{code}][{file_name}] Uploading csv to Cloud Storage...")
+            # Upload to Cloud Storage
+            blob = cs_bucket.blob(f"{file_name}/{code}.csv")
+            blob.metadata = {"num_responses": num_responses}
+            f.seek(0)
+            blob.upload_from_file(f, content_type="text/csv")
+            f.close()
 
     return HttpResponse()
 
 
-@login_required
-def download_bonstrup_processed(request, pk):
+def process_bonstrup(user, exp_code):
+    pk = exp_code
     # Get all experiments subjects
-    experiment = get_object_or_404(Experiment, pk=pk, creator=request.user)
+    experiment = get_object_or_404(Experiment, pk=pk, creator=user)
     # If the experiment hasn't been published, get all responses
     starting_date_useful_data = experiment.created_at
     # If it has, then only get those after the publishing timestamp
@@ -936,7 +941,7 @@ def download_bonstrup_processed(request, pk):
     results = (
         Experiment.objects.filter(
             pk=pk,
-            creator=request.user,
+            creator=user,
             blocks__trials__started_at__gt=starting_date_useful_data,
         )
         .annotate(Count("blocks__trials__keypresses"))
@@ -1169,17 +1174,24 @@ def download_bonstrup_processed(request, pk):
             value_dict["trial_id"],
         )
     )
+
+    return results
+
+
+@login_required
+def download_bonstrup_processed(request, pk):
+    cloud_process_data(request)
+    cs_bucket = storage.Client().bucket(BUCKET_NAME)
+    blob = cs_bucket.blob(f"bonstrup_processed/{pk}.csv")
+    if blob is None:
+        raise Http404("Experiment is not ready for downloading yet")
+    csv_content = blob.download_as_string()
     # Output csv
-    response = HttpResponse(content_type="text/csv")
+    response = HttpResponse(csv_content, content_type="text/csv")
     response[
         "Content-Disposition"
-    ] = 'attachment; filename="bonstrup_processed_experiment_{}.csv"'.format(pk)
-    if len(results) > 0:
-        writer = csv.DictWriter(response, results[0].keys())
-        writer.writeheader()
-    else:
-        writer = csv.DictWriter(response, ["experiment"])
-    writer.writerows(results)
+    ] = 'attachment; filename="bonstrup_processed_{}.csv"'.format(pk)
+
     return response
 
 
