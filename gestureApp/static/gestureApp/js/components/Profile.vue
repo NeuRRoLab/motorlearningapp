@@ -146,10 +146,10 @@
                       |
                       <a
                         :href="
-                          '/api/experiment/cohen_metrics/' + experiment.code
+                          '/api/experiment/bonstrup_metrics/' + experiment.code
                         "
                       >
-                        Cohen metrics</a
+                        Bonstrup metrics</a
                       >
                       <b-badge
                         variant="primary"
@@ -331,10 +331,10 @@
                       |
                       <a
                         :href="
-                          '/api/experiment/cohen_metrics/' + experiment.code
+                          '/api/experiment/bonstrup_metrics/' + experiment.code
                         "
                       >
-                        Cohen metrics</a
+                        Bonstrup metrics</a
                       >
                       <b-badge
                         variant="primary"

@@ -924,7 +924,7 @@ def cloud_process_data(request):
 
 
 @login_required
-def download_cohen_processed(request, pk):
+def download_bonstrup_processed(request, pk):
     # Get all experiments subjects
     experiment = get_object_or_404(Experiment, pk=pk, creator=request.user)
     # If the experiment hasn't been published, get all responses
@@ -1173,7 +1173,7 @@ def download_cohen_processed(request, pk):
     response = HttpResponse(content_type="text/csv")
     response[
         "Content-Disposition"
-    ] = 'attachment; filename="cohen_processed_experiment_{}.csv"'.format(pk)
+    ] = 'attachment; filename="bonstrup_processed_experiment_{}.csv"'.format(pk)
     if len(results) > 0:
         writer = csv.DictWriter(response, results[0].keys())
         writer.writeheader()

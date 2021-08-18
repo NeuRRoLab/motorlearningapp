@@ -126,9 +126,9 @@ urlpatterns = [
         name="end_survey",
     ),
     re_path(
-        r"^api/experiment/cohen_metrics/(?P<pk>[A-Z0-9]{4})/$",
-        views.download_cohen_processed,
-        name="cohen_metrics",
+        r"^api/experiment/bonstrup_metrics/(?P<pk>[A-Z0-9]{4})/$",
+        views.download_bonstrup_processed,
+        name="bonstrup_metrics",
     ),
     re_path(
         r"^api/experiment/download_end_survey/(?P<pk>[A-Z0-9]{4})/$",
