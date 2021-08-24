@@ -886,8 +886,8 @@ def cloud_process_data(request):
     # For every published experiment, run the processing.
     experiments = Experiment.objects.filter(published=True)
     cs_bucket = storage.Client().bucket(BUCKET_NAME)
-    file_names = ["processed_data", "bonstrup_processed", "raw_data"]
-    methods = [process_data, process_bonstrup, raw_data]
+    file_names = ["processed_data", "raw_data"]
+    methods = [process_data, raw_data]
     for experiment in experiments:
         num_responses = experiment.num_responses()
         code = experiment.code

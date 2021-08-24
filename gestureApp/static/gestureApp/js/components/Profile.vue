@@ -143,14 +143,6 @@
                       >
                         Survey data</a
                       >
-                      |
-                      <a
-                        :href="
-                          '/api/experiment/bonstrup_metrics/' + experiment.code
-                        "
-                      >
-                        Bonstrup metrics</a
-                      >
                       <b-badge
                         variant="primary"
                         pill
@@ -327,14 +319,6 @@
                         "
                       >
                         Survey data</a
-                      >
-                      |
-                      <a
-                        :href="
-                          '/api/experiment/bonstrup_metrics/' + experiment.code
-                        "
-                      >
-                        Bonstrup metrics</a
                       >
                       <b-badge
                         variant="primary"
