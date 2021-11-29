@@ -339,7 +339,7 @@
             </b-form-group>
           </div>
           <div class="form-row">
-            <b-form-group class="col-4" label="Do you excercise regularly?">
+            <b-form-group class="col-4" label="Do you exercise regularly?">
               <b-form-radio-group
                 id="exercise-radio"
                 v-model="questionnaire.excercise_regularly"
