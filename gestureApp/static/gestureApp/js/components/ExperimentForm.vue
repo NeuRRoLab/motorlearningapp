@@ -45,24 +45,25 @@
           :disabled="published"
         ></b-form-input>
       </b-form-group>
-      <b-form-group label="Instructions video:" label-for="instructions-video" description="Only .mp4 files allowed">
+      <b-form-group label="Instructions video:" :invalid-feedback="invalidFeedbackVideoFile" label-for="instructions-video" :description="'Only .mp4 files allowed. Max size: '+ this.max_video_size / (1024*1024) +'MB'">
         <b-form-file
           accept=".mp4"
           id="instructions-video"
           v-model="video_file"
-          :state="Boolean(video_file)"
+          :state="videoFileState"
           placeholder="Choose a file or drop it here..."
           drop-placeholder="Drop file here..."
           :disabled="published"
           required
+          
         ></b-form-file>
       </b-form-group>
-      <b-form-group label="Consent form:" label-for="consent-form" description="Only pdf files allowed">
+      <b-form-group label="Consent form:" label-for="consent-form" description="Only pdf files allowed.">
         <b-form-file
           accept=".pdf"
           id="consent-form"
           v-model="consent_file"
-          :state="Boolean(consent_file)"
+          :state="consentFileState"
           placeholder="Choose a file or drop it here..."
           drop-placeholder="Drop file here..."
           :disabled="published"
@@ -413,8 +414,11 @@
           >
         </div>
         <div class="col">
-          <b-button type="submit" class="btn btn-block" variant="primary" :disabled="published"
+          <b-button v-if="!submitting" type="submit" class="btn btn-block" variant="primary" :disabled="published"
             >Submit</b-button
+          >
+          <b-button v-else class="btn btn-block" variant="primary" :disabled="true"
+            ><b-spinner label="Spinning"></b-spinner></b-button
           >
         </div>
       </div>
@@ -445,6 +449,8 @@ module.exports = {
       with_feedback_blocks: this.prop_with_feedback_blocks,
       rest_after_practice: this.prop_rest_after_practice,
       requirements: this.prop_requirements,
+      submitting: false,
+      max_video_size: 50*1024*1024,
     };
   },
   props: {
@@ -483,6 +489,23 @@ module.exports = {
         return full_study.groups.map(group => { return {value: group.code, text: `${group.name} (${group.code})`}})
       }
       return [];
+    },
+    videoFileState(){
+      if (this.video_file === null) return null;
+      if (this.video_file.size > this.max_video_size)
+        return false;
+      else return true;
+    },
+    invalidFeedbackVideoFile(){
+      if (this.video_file !== null && this.video_file.size > this.max_video_size) {
+        this.video_file = null;
+        confirm("File size too big. Max size is " + this.max_video_size / (1024*1024) + "MB");
+        return "";
+      }
+    },
+    consentFileState(){
+      if (this.consent_file === null) return null;
+      else return true;
     }
   },
   watch: {},
@@ -512,6 +535,9 @@ module.exports = {
     },
     onSubmitExperiment(evt) {
       evt.preventDefault();
+      // This two changes are only to disable everything while the request to create the experiment loads
+      this.submitting = true;
+      this.published = true;
 
       this.$emit(
         "submit-experiment",

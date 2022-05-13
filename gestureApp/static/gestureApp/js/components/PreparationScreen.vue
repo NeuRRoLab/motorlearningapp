@@ -104,12 +104,12 @@ module.exports = {
     // player is ready
     playerReadied(player) {
       // seek to 10s
-      console.log("example player 1 readied", player);
+      // console.log("example player 1 readied", player);
       // player.currentTime(0);
       // console.log('example 01: the player is readied', player)
     },
     playerEnded(player) {
-      console.log("ended!!", player);
+      // console.log("ended!!", player);
       this.video_ended = true;
     },
   },
