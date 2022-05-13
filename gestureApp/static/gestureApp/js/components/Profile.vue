@@ -51,33 +51,34 @@
                 Publish
               </b-button>
             </p>
+
+            <h6>New group</h6>
+            <b-form inline>
+              <b-form-input
+                id="inline-form-input-name"
+                v-model="group_name"
+                class="mb-2 mr-sm-2 mb-sm-0"
+                placeholder="Group name"
+              ></b-form-input>
+              <b-button
+                variant="primary"
+                @click="
+                  $emit('new-group', group_name, study.code);
+                  group_name = null;
+                "
+                >Save</b-button
+              >
+            </b-form>
+            <br />
             <b-button
               v-b-toggle="'collapse_unpub_' + std_index"
               variant="primary"
               size="sm"
-              >Show/hide Study</b-button
+              >Show/hide groups</b-button
             >
             <b-collapse :id="'collapse_unpub_' + std_index" class="mt-2">
-              <h6>New group</h6>
-              <b-form inline>
-                <b-form-input
-                  id="inline-form-input-name"
-                  v-model="group_name"
-                  class="mb-2 mr-sm-2 mb-sm-0"
-                  placeholder="Group name"
-                ></b-form-input>
-                <b-button
-                  variant="primary"
-                  @click="
-                    $emit('new-group', group_name, study.code);
-                    group_name = null;
-                  "
-                  >Save</b-button
-                >
-              </b-form>
-              <br />
               <h5>Groups</h5>
-              <div v-for="group in study.groups" :key="group.id">
+              <div v-for="(group, group_index) in study.groups" :key="group.id">
                 <h6 class="text-primary">
                   {{ group.name }} ({{ group.code }})
                 </h6>
@@ -94,65 +95,82 @@
                     Delete
                   </b-button>
                 </p>
-                <b-list-group v-if="group.experiments.length > 0">
-                  <b-list-group-item
-                    v-for="(experiment, index) in group.experiments"
-                    :key="'E' + experiment.code"
-                    class="d-flex justify-content-between align-items-center"
-                    >{{ index + 1 }}. {{ experiment.name }} ({{
-                      experiment.code
-                    }})
-                    <span>
-                      <a :href="`/profile/experiment/edit/${experiment.code}`">
-                        Edit
-                      </a>
-                      |
-                      <b-button
-                        class="p-0"
-                        variant="link"
-                        @click="$emit('delete-experiment', experiment.code)"
-                      >
-                        Delete
-                      </b-button>
-                      |
-                      <b-button
-                        class="p-0"
-                        variant="link"
-                        @click="$emit('duplicate-experiment', experiment.code)"
-                      >
-                        Duplicate
-                      </b-button>
-                      |
-                      <a :href="`/experiment/${experiment.code}`"
-                        >Test Experiment</a
-                      >
-                      |
-                      <a :href="'/raw_data/?code=' + experiment.code"
-                        >Raw data</a
-                      >
-                      |
-                      <a :href="'/processed_data/?code=' + experiment.code">
-                        Processed data</a
-                      >
-                      |
-                      <a
-                        :href="
-                          '/api/experiment/download_end_survey/' +
-                          experiment.code
-                        "
-                      >
-                        Survey data</a
-                      >
-                      <b-badge
-                        variant="primary"
-                        pill
-                        v-b-tooltip.hover
-                        :title="experiment.responses + ' responses'"
-                        >{{ experiment.responses }}</b-badge
-                      >
-                    </span></b-list-group-item
-                  >
-                </b-list-group>
+                <b-button
+                  v-b-toggle="'collapse_unpub_exp_' + group_index"
+                  variant="primary"
+                  size="sm"
+                  >Show/hide experiments</b-button
+                >
+                <br />
+                <b-collapse
+                  :id="'collapse_unpub_exp_' + group_index"
+                  class="mt-2"
+                  v-if="group.experiments.length > 0"
+                >
+                  <b-list-group>
+                    <b-list-group-item
+                      v-for="(experiment, index) in group.experiments"
+                      :key="'E' + experiment.code"
+                      class="d-flex justify-content-between align-items-center"
+                      >{{ index + 1 }}. {{ experiment.name }} ({{
+                        experiment.code
+                      }})
+                      <span>
+                        <a
+                          :href="`/profile/experiment/edit/${experiment.code}`"
+                        >
+                          Edit
+                        </a>
+                        |
+                        <b-button
+                          class="p-0"
+                          variant="link"
+                          @click="$emit('delete-experiment', experiment.code)"
+                        >
+                          Delete
+                        </b-button>
+                        |
+                        <b-button
+                          class="p-0"
+                          variant="link"
+                          @click="
+                            $emit('duplicate-experiment', experiment.code)
+                          "
+                        >
+                          Duplicate
+                        </b-button>
+                        |
+                        <a :href="`/experiment/${experiment.code}`"
+                          >Test Experiment</a
+                        >
+                        |
+                        <a :href="'/raw_data/?code=' + experiment.code"
+                          >Raw data</a
+                        >
+                        |
+                        <a :href="'/processed_data/?code=' + experiment.code">
+                          Processed data</a
+                        >
+                        |
+                        <a
+                          :href="
+                            '/api/experiment/download_end_survey/' +
+                            experiment.code
+                          "
+                        >
+                          Survey data</a
+                        >
+                        <b-badge
+                          variant="primary"
+                          pill
+                          v-b-tooltip.hover
+                          :title="experiment.responses + ' responses'"
+                          >{{ experiment.responses }}</b-badge
+                        >
+                      </span></b-list-group-item
+                    >
+                  </b-list-group>
+                </b-collapse>
                 <p v-else>No experiments in this group.</p>
                 <br />
               </div>
