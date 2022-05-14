@@ -123,12 +123,21 @@
         </template>
 
         <b-button
+          v-if="!logging_in"
           type="submit"
           class="btn btn-block"
           variant="primary"
           :disabled="subject_code_input.length !== subject_code_seq_length"
           >Submit</b-button
         >
+        <b-button
+          v-else
+          type="submit"
+          class="btn btn-block"
+          variant="primary"
+          :disabled="true"
+          ><b-spinner label="Spinning"></b-spinner
+        ></b-button>
       </b-form>
     </div>
   </div>
@@ -145,6 +154,7 @@ module.exports = {
       email: "",
       answer: null,
       subject_code_seq_length: 16,
+      logging_in: false,
     };
   },
   props: {
@@ -173,6 +183,7 @@ module.exports = {
     },
     goToExperiment(evt) {
       evt.preventDefault();
+      this.logging_in = true;
       const url = new URL(`/study/${this.study_code}/`, window.location);
       // Add params
       if (this.subject_code_input !== "")
