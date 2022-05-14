@@ -22,6 +22,7 @@ var app = new Vue({
       practice_rest_time: null,
       with_feedback: true,
       with_feedback_blocks: true,
+      with_shown_instructions: true,
       rest_after_practice: null,
       requirements: null,
       experiment_blocks: [
@@ -88,6 +89,7 @@ var app = new Vue({
         prop_block_types: this.block_types,
         prop_with_feedback: this.with_feedback,
         prop_with_feedback_blocks: this.with_feedback_blocks,
+        prop_with_shown_instructions: this.with_shown_instructions,
         prop_rest_after_practice: this.rest_after_practice,
         prop_requirements: this.requirements,
         prop_hands: this.hands,
@@ -95,7 +97,7 @@ var app = new Vue({
     }
   },
   methods: {
-    submitExperiment(name, study_code, group_code, with_practice_trials, practice_trials, practice_is_random_sequence, practice_seq_length, practice_sequence, practice_trial_time, practice_rest_time, blocks, video_file, consent_file, with_feedback, with_feedback_blocks, rest_after_practice, requirements) {
+    submitExperiment(name, study_code, group_code, with_practice_trials, practice_trials, practice_is_random_sequence, practice_seq_length, practice_sequence, practice_trial_time, practice_rest_time, blocks, video_file, consent_file, with_feedback, with_feedback_blocks, with_shown_instructions, rest_after_practice, requirements) {
       let obj = {
         code: this.experiment_code,
         study: study_code,
@@ -111,6 +113,7 @@ var app = new Vue({
         practice_rest_time: practice_rest_time,
         with_feedback: with_feedback,
         with_feedback_blocks: with_feedback_blocks,
+        with_shown_instructions: with_shown_instructions,
         rest_after_practice: rest_after_practice,
         requirements: requirements,
       }
@@ -147,7 +150,6 @@ var app = new Vue({
   },
   created() {
     this.getUserStudies();
-    // TODO: Read from HTML if existent
     if (document.getElementById("experiment") !== null && document.getElementById("blocks") !== null) {
       // If no experiment data is available, then we are creating a new experiment
       if (!JSON.parse(document.getElementById('experiment').textContent) || !JSON.parse(document.getElementById('blocks').textContent))
@@ -168,6 +170,7 @@ var app = new Vue({
       this.practice_rest_time = html_experiment.practice_rest_time;
       this.with_feedback = html_experiment.with_feedback;
       this.with_feedback_blocks = html_experiment.with_feedback_blocks;
+      this.with_shown_instructions = html_experiment.with_shown_instructions;
       this.rest_after_practice = html_experiment.rest_after_practice;
       this.requirements = html_experiment.requirements;
 

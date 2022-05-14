@@ -239,6 +239,8 @@ class Experiment(CloneMixin, models.Model):
     with_feedback = models.BooleanField(default=True)
     # For the blocks
     with_feedback_blocks = models.BooleanField(default=True)
+    # Whether to show instructions during experiment
+    with_shown_instructions = models.BooleanField(default=True)
 
     _clone_m2o_or_o2m_fields = ["blocks"]
 
@@ -319,6 +321,7 @@ class Experiment(CloneMixin, models.Model):
             "published": self.published,
             "with_feedback": self.with_feedback,
             "with_feedback_blocks": self.with_feedback_blocks,
+            "with_shown_instructions": self.with_shown_instructions,
             "rest_after_practice": self.rest_after_practice,
             "requirements": self.requirements,
             "enabled": self.enabled,

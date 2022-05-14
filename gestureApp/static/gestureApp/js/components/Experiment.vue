@@ -148,7 +148,7 @@
         </b-progress>
         <br />
         <!-- Show block type -->
-        <p class="text-center h3">
+        <p v-if="experiment.with_shown_instructions" class="text-center h3">
           Instructions:
           {{
             isTypeNumTrials

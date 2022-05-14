@@ -70,7 +70,7 @@
           required
         ></b-form-file>
       </b-form-group>
-      <b-form-group label="Experiment requirements:" label-for="requirements">
+      <b-form-group label="Experiment requirements:" label-for="requirements" description="Add the list of requirements that subjects need to fulfill to participate (e.g. 'Over 18 years old')">
         <b-form-textarea
           id="requirements"
           placeholder="Experiment requirements"
@@ -78,32 +78,42 @@
           max-rows="8"
           v-model="requirements"
           required
-          description="Add the list of requirements that subjects need to fulfill to participate (e.g over 18 years old)"
         ></b-form-textarea>
       </b-form-group>
 
-      <b-form-group>
+      <b-form-group description="Turn on if you want the user to know when they input the wrong key in a sequence">
         <b-form-checkbox
           switch
           id="checkbox-feedback"
           v-model="with_feedback"
           name="checkbox-feedback"
           :disabled="published"
-          description="Switch on if you want the user to know when they input the wrong key in a sequence"
         >
           Show Feedback in Trials
         </b-form-checkbox>
       </b-form-group>
-      <b-form-group>
+      <b-form-group description="Turn on if you want the user to know their performance across one block"
+>
         <b-form-checkbox
           switch
           id="checkbox-feedback-blocks"
           v-model="with_feedback_blocks"
           name="checkbox-feedback-blocks"
           :disabled="published"
-          description="Switch on if you want the user to know their performance across one block"
         >
           Show Block Performance Bar
+        </b-form-checkbox>
+      </b-form-group>
+      <b-form-group description="Turn on if you want the user to know their performance across one block">
+        <b-form-checkbox
+          switch
+          id="checkbox-show-instructions"
+          v-model="with_shown_instructions"
+          name="checkbox-show-instructions"
+          :disabled="published"
+          
+        >
+          Show instructions during experiment
         </b-form-checkbox>
       </b-form-group>
       <b-form-group>
@@ -447,6 +457,7 @@ module.exports = {
       consent_file: null,
       with_feedback: this.prop_with_feedback,
       with_feedback_blocks: this.prop_with_feedback_blocks,
+      with_shown_instructions: this.prop_with_shown_instructions,
       rest_after_practice: this.prop_rest_after_practice,
       requirements: this.prop_requirements,
       submitting: false,
@@ -474,6 +485,7 @@ module.exports = {
     prop_hands: Array,
     prop_with_feedback: Boolean,
     prop_with_feedback_blocks: Boolean,
+    prop_with_shown_instructions: Boolean,
     prop_requirements: String,
   },
   mounted: function () {},
@@ -556,6 +568,7 @@ module.exports = {
         this.consent_file,
         this.with_feedback,
         this.with_feedback_blocks,
+        this.with_shown_instructions,
         this.rest_after_practice,
         this.requirements,
       );

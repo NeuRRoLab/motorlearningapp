@@ -372,6 +372,7 @@ def create_experiment(request):
             practice_rest_time=exp_info["practice_rest_time"],
             with_feedback=exp_info["with_feedback"],
             with_feedback_blocks=exp_info["with_feedback_blocks"],
+            with_shown_instructions=exp_info["with_shown_instructions"],
             rest_after_practice=exp_info["rest_after_practice"],
             requirements=exp_info["requirements"],
         )
@@ -439,6 +440,7 @@ def edit_experiment(request, pk):
             practice_rest_time=exp_info["practice_rest_time"],
             with_feedback=exp_info["with_feedback"],
             with_feedback_blocks=exp_info["with_feedback_blocks"],
+            with_shown_instructions=exp_info["with_shown_instructions"],
             rest_after_practice=exp_info["rest_after_practice"],
             requirements=exp_info["requirements"],
         )
