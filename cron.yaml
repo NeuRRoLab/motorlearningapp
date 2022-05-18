@@ -1,4 +1,5 @@
 cron:
   - description: "data processing"
     url: /api/cloud_process_data
-    schedule: every 15 minutes
+    schedule: every 1 hours from 08:00 to 23:00
+    timezone: EST

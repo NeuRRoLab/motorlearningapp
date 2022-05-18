@@ -44,10 +44,6 @@ urlpatterns = [
     path(
         "processed_data/", views.download_processed_data, name="download_processed_data"
     ),
-    # # Test
-    # path(
-    #     "experiment_create", views.ExperimentCreate.as_view(), name="experiment_create"
-    # ),
     # API
     path("api/create_trials", views.create_trials, name="create_trials"),
     path("api/create_subject", views.create_subject, name="create_subject"),
@@ -70,11 +66,6 @@ urlpatterns = [
         views.enable_experiment,
         name="experiment_enable",
     ),
-    # re_path(
-    #     r"^api/experiment/publish/(?P<pk>[A-Z0-9]{4})/$",
-    #     views.publish_experiment,
-    #     name="experiment_publish",
-    # ),
     re_path(
         r"^api/experiment/duplicate/(?P<pk>[A-Z0-9]{4})/$",
         views.duplicate_experiment,
@@ -125,11 +116,11 @@ urlpatterns = [
         views.end_survey,
         name="end_survey",
     ),
-    re_path(
-        r"^api/experiment/bonstrup_metrics/(?P<pk>[A-Z0-9]{4})/$",
-        views.download_bonstrup_processed,
-        name="bonstrup_metrics",
-    ),
+    # re_path(
+    #     r"^api/experiment/bonstrup_metrics/(?P<pk>[A-Z0-9]{4})/$",
+    #     views.download_bonstrup_processed,
+    #     name="bonstrup_metrics",
+    # ),
     re_path(
         r"^api/experiment/download_end_survey/(?P<pk>[A-Z0-9]{4})/$",
         views.download_survey,

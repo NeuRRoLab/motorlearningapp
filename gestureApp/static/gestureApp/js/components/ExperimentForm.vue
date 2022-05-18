@@ -1,29 +1,47 @@
 <template>
   <div class="container">
     <h1 v-if="!editing" class="text-center">Create new Experiment</h1>
-    <h1 v-else-if="published" class="text-center">View experiment {{ experiment_code }}</h1>
+    <h1 v-else-if="published" class="text-center">
+      View experiment {{ experiment_code }}
+    </h1>
     <h1 v-else class="text-center">Edit experiment {{ experiment_code }}</h1>
     <b-form @submit="onSubmitExperiment" @reset="resetExperiment">
       <b-form-group
         label="Study:"
         :label-for="'study'"
-        :description="published ? '' : 'Only unpublished studies will be available. If you don\'t see any studies, you probably will need to create one first.'"
+        :description="
+          published
+            ? ''
+            : 'Only unpublished studies will be available. If you don\'t see any studies, you probably will need to create one first.'
+        "
       >
         <b-form-select
           :id="'study'"
           v-model="study.code"
-          :options="published ? [{value: study.code, text: `${study.name} (${study.code})`}] : studies.filter(study => study.published === false).map(study => {
-            return {value: study.code, text: `${study.name} (${study.code})`}
-          })"
+          :options="
+            published
+              ? [{ value: study.code, text: `${study.name} (${study.code})` }]
+              : studies
+                  .filter((study) => study.published === false)
+                  .map((study) => {
+                    return {
+                      value: study.code,
+                      text: `${study.name} (${study.code})`,
+                    };
+                  })
+          "
           required
           :disabled="published"
-          
         ></b-form-select>
       </b-form-group>
       <b-form-group
         label="Study group:"
         :label-for="'group'"
-        :description="published ? '' : 'Create a new group in the Profile view if none are shown.'"
+        :description="
+          published
+            ? ''
+            : 'Create a new group in the Profile view if none are shown.'
+        "
       >
         <b-form-select
           :id="'group'"
@@ -31,7 +49,6 @@
           :options="getGroupOptions"
           required
           :disabled="published || study.code === null"
-          
         ></b-form-select>
       </b-form-group>
       <b-form-group label="Experiment Name:" label-for="name">
@@ -45,7 +62,16 @@
           :disabled="published"
         ></b-form-input>
       </b-form-group>
-      <b-form-group label="Instructions video:" :invalid-feedback="invalidFeedbackVideoFile" label-for="instructions-video" :description="'Only .mp4 files allowed. Max size: '+ this.max_video_size / (1024*1024) +'MB'">
+      <b-form-group
+        label="Instructions video:"
+        :invalid-feedback="invalidFeedbackVideoFile"
+        label-for="instructions-video"
+        :description="
+          'Only .mp4 files allowed. Max size: ' +
+          this.max_video_size / (1024 * 1024) +
+          'MB'
+        "
+      >
         <b-form-file
           accept=".mp4"
           id="instructions-video"
@@ -55,10 +81,13 @@
           drop-placeholder="Drop file here..."
           :disabled="published"
           required
-          
         ></b-form-file>
       </b-form-group>
-      <b-form-group label="Consent form:" label-for="consent-form" description="Only pdf files allowed.">
+      <b-form-group
+        label="Consent form:"
+        label-for="consent-form"
+        description="Only pdf files allowed."
+      >
         <b-form-file
           accept=".pdf"
           id="consent-form"
@@ -70,7 +99,11 @@
           required
         ></b-form-file>
       </b-form-group>
-      <b-form-group label="Experiment requirements:" label-for="requirements" description="Add the list of requirements that subjects need to fulfill to participate (e.g. 'Over 18 years old')">
+      <b-form-group
+        label="Experiment requirements:"
+        label-for="requirements"
+        description="Add the list of requirements that subjects need to fulfill to participate (e.g. 'Over 18 years old')"
+      >
         <b-form-textarea
           id="requirements"
           placeholder="Experiment requirements"
@@ -81,7 +114,9 @@
         ></b-form-textarea>
       </b-form-group>
 
-      <b-form-group description="Turn on if you want the user to know when they input the wrong key in a sequence">
+      <b-form-group
+        description="Turn on if you want the user to know when they input the wrong key in a sequence"
+      >
         <b-form-checkbox
           switch
           id="checkbox-feedback"
@@ -92,8 +127,9 @@
           Show Feedback in Trials
         </b-form-checkbox>
       </b-form-group>
-      <b-form-group description="Turn on if you want the user to know their performance across one block"
->
+      <b-form-group
+        description="Turn on if you want the user to know their performance across one block"
+      >
         <b-form-checkbox
           switch
           id="checkbox-feedback-blocks"
@@ -104,14 +140,15 @@
           Show Block Performance Bar
         </b-form-checkbox>
       </b-form-group>
-      <b-form-group description="Turn on if you want the user to know their performance across one block">
+      <b-form-group
+        description="Turn on if you want the user to know their performance across one block"
+      >
         <b-form-checkbox
           switch
           id="checkbox-show-instructions"
           v-model="with_shown_instructions"
           name="checkbox-show-instructions"
           :disabled="published"
-          
         >
           Show instructions during experiment
         </b-form-checkbox>
@@ -213,6 +250,7 @@
               placeholder=""
               :disabled="published"
             ></b-form-input>
+          </b-form-group>
         </div>
         <div class="form-row">
           <b-form-group
@@ -234,13 +272,19 @@
         </div>
       </template>
       <h5>Blocks:</h5>
-      <button @click="removeAllBlocks" class="btn btn-link text-danger" :disabled="published">Remove all blocks</button>
+      <button
+        @click="removeAllBlocks"
+        class="btn btn-link text-danger"
+        :disabled="published"
+      >
+        Remove all blocks
+      </button>
       <div
         class="block-form"
         v-for="(block, index) in experiment_blocks"
         :key="index"
       >
-        <p class="font-weight-bold">Block {{index + 1}}</p>
+        <p class="font-weight-bold">Block {{ index + 1 }}</p>
         <div class="form-row">
           <b-form-group
             class="col"
@@ -256,7 +300,11 @@
               placeholder="Sequence of characters"
               :disabled="block.is_random_sequence || published"
             ></b-form-input>
-            <b-form-checkbox switch v-model="block.is_random_sequence" :disabled="published">
+            <b-form-checkbox
+              switch
+              v-model="block.is_random_sequence"
+              :disabled="published"
+            >
               Random Sequence
             </b-form-checkbox>
           </b-form-group>
@@ -411,25 +459,44 @@
           </b-form-group>
         </div>
         <div class="form-row">
-          <button @click="removeBlock" class="btn btn-link text-danger" :disabled="published">
+          <button
+            @click="removeBlock"
+            class="btn btn-link text-danger"
+            :disabled="published"
+          >
             Remove block
           </button>
         </div>
       </div>
-      <button @click="addBlock" class="btn btn-link" :disabled="published">Add block</button>
+      <button @click="addBlock" class="btn btn-link" :disabled="published">
+        Add block
+      </button>
       <div class="form-row">
         <div class="col">
-          <b-button type="reset" class="btn btn-block" variant="danger" :disabled="published"
+          <b-button
+            type="reset"
+            class="btn btn-block"
+            variant="danger"
+            :disabled="published"
             >Reset</b-button
           >
         </div>
         <div class="col">
-          <b-button v-if="!submitting" type="submit" class="btn btn-block" variant="primary" :disabled="published"
+          <b-button
+            v-if="!submitting"
+            type="submit"
+            class="btn btn-block"
+            variant="primary"
+            :disabled="published"
             >Submit</b-button
           >
-          <b-button v-else class="btn btn-block" variant="primary" :disabled="true"
-            ><b-spinner label="Spinning"></b-spinner></b-button
-          >
+          <b-button
+            v-else
+            class="btn btn-block"
+            variant="primary"
+            :disabled="true"
+            ><b-spinner label="Spinning"></b-spinner
+          ></b-button>
         </div>
       </div>
     </b-form>
@@ -461,7 +528,7 @@ module.exports = {
       rest_after_practice: this.prop_rest_after_practice,
       requirements: this.prop_requirements,
       submitting: false,
-      max_video_size: 50*1024*1024,
+      max_video_size: 50 * 1024 * 1024,
     };
   },
   props: {
@@ -493,32 +560,41 @@ module.exports = {
     "nav-bar": httpVueLoader("/static/gestureApp/js/components/NavBar.vue"),
   },
   computed: {
-    getGroupOptions()
-    {
+    getGroupOptions() {
       if (this.study.code !== null) {
-        var full_study = this.studies.find(in_study => in_study.code === this.study.code);
+        var full_study = this.studies.find(
+          (in_study) => in_study.code === this.study.code
+        );
         if (!full_study) return [];
-        return full_study.groups.map(group => { return {value: group.code, text: `${group.name} (${group.code})`}})
+        return full_study.groups.map((group) => {
+          return { value: group.code, text: `${group.name} (${group.code})` };
+        });
       }
       return [];
     },
-    videoFileState(){
+    videoFileState() {
       if (this.video_file === null) return null;
-      if (this.video_file.size > this.max_video_size)
-        return false;
+      if (this.video_file.size > this.max_video_size) return false;
       else return true;
     },
-    invalidFeedbackVideoFile(){
-      if (this.video_file !== null && this.video_file.size > this.max_video_size) {
+    invalidFeedbackVideoFile() {
+      if (
+        this.video_file !== null &&
+        this.video_file.size > this.max_video_size
+      ) {
         this.video_file = null;
-        confirm("File size too big. Max size is " + this.max_video_size / (1024*1024) + "MB");
+        alert(
+          "File size too big. Max size is " +
+            this.max_video_size / (1024 * 1024) +
+            "MB"
+        );
         return "";
       }
     },
-    consentFileState(){
+    consentFileState() {
       if (this.consent_file === null) return null;
       else return true;
-    }
+    },
   },
   watch: {},
   methods: {
@@ -570,7 +646,7 @@ module.exports = {
         this.with_feedback_blocks,
         this.with_shown_instructions,
         this.rest_after_practice,
-        this.requirements,
+        this.requirements
       );
     },
     resetExperiment(evt) {
@@ -581,7 +657,6 @@ module.exports = {
       this.experiment_blocks = [];
       this.addBlock();
     },
-
   },
 };
 </script>

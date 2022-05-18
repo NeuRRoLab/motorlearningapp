@@ -3,9 +3,6 @@ import json
 import random
 import string
 from datetime import datetime
-from urllib import parse
-import os
-import time
 import logging
 import io
 
@@ -26,7 +23,6 @@ from django.http import (
     HttpResponseRedirect,
     JsonResponse,
     Http404,
-    FileResponse,
 )
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, reverse_lazy
@@ -34,7 +30,7 @@ from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.utils.timezone import make_aware, now
 from django.views.generic.detail import DetailView
-from django.views.generic.edit import CreateView, FormView, UpdateView
+from django.views.generic.edit import CreateView, UpdateView
 
 from dateutil.tz import tzoffset
 
@@ -60,6 +56,9 @@ MIN_MS_BETW_KEYPRESSES = 9
 
 @method_decorator([login_required], name="dispatch")
 class Profile(DetailView):
+    """Profile view for the current user. Shows the current studies, groups and experiments.
+    """
+
     model = User
     template_name = "gestureApp/profile.html"
 
@@ -78,107 +77,116 @@ class Profile(DetailView):
 
 
 class SignUpView(CreateView):
+    """View that allows users to sign up as new users.
+    """
+
     template_name = "gestureApp/register.html"
     success_url = reverse_lazy("gestureApp:profile")
     form_class = UserRegisterForm
 
     def form_valid(self, form):
+        """Determines whether the sign up form was filled up successfully.
+
+        Args:
+            form: user sign up form
+
+        Returns:
+            bool: whether the form was valid or not
+        """
         valid = super(SignUpView, self).form_valid(form)
-        username, password = (
-            form.cleaned_data.get("username"),
-            form.cleaned_data.get("password"),
-        )
-        # new_user = authenticate(username=username, password=password)
+        # self.object contains the newly created object
         login(self.request, self.object)
         return valid
 
 
-class ExperimentCreate(CreateView):
-    model = Experiment
-    template_name = "gestureApp/experiment_form.html"
-    form_class = ExperimentForm
-    success_url = None
+# class ExperimentCreate(CreateView):
+#     """"View to create Experiment"""
 
-    def get_context_data(self, **kwargs):
-        data = super(ExperimentCreate, self).get_context_data(**kwargs)
-        if self.request.POST:
-            data["blocks"] = BlockFormSet(self.request.POST)
-        else:
-            data["blocks"] = BlockFormSet()
-        return data
+#     model = Experiment
+#     template_name = "gestureApp/experiment_form.html"
+#     form_class = ExperimentForm
+#     success_url = None
 
-    def form_valid(self, form):
-        context = self.get_context_data()
-        blocks = context["blocks"]
-        with transaction.atomic():
-            print(form.instance)
-        return super(ExperimentCreate, self).form_valid(form)
+#     def get_context_data(self, **kwargs):
+#         data = super(ExperimentCreate, self).get_context_data(**kwargs)
+#         # If request is POST, means that the experiment is being created.
+#         if self.request.POST:
+#             # Adds formset to be able to create multiple blocks.
+#             data["blocks"] = BlockFormSet(self.request.POST)
+#         # If request is GET, then the user just entered the view
+#         else:
+#             data["blocks"] = BlockFormSet()
+#         return data
 
-    def get_success_url(self):
-        return reverse_lazy(
-            "gestureApp:experiment_create", kwargs={"pk": self.object.pk}
-        )
+#     def form_valid(self, form):
+#         """Uses the inherited form valid method to determine validity"""
+#         return super(ExperimentCreate, self).form_valid(form)
 
-
-class ExperimentUpdate(UpdateView):
-    model = Experiment
-    template_name = "gestureApp/experiment_form.html"
-    form_class = ExperimentForm
-    success_url = None
-
-    def get_context_data(self, **kwargs):
-        data = super(ExperimentUpdate, self).get_context_data(**kwargs)
-        if self.request.POST:
-            data["blocks"] = BlockFormSet(self.request.POST)
-        else:
-            data["blocks"] = BlockFormSet()
-        return data
-
-    def form_valid(self, form):
-        context = self.get_context_data()
-        blocks = context["blocks"]
-        with transaction.atomic():
-            print(form.instance)
-        return super(ExperimentCreate, self).form_valid(form)
-
-    def get_success_url(self):
-        return reverse_lazy(
-            "gestureApp:experiment_create", kwargs={"pk": self.object.pk}
-        )
-
-
-# def preparation_screen(request):
-#     form = ExperimentCode(request.GET)
-#     if form.is_valid():
-#         code = form.cleaned_data["code"]
-#         experiment = get_object_or_404(Experiment, pk=code)
-#         if not experiment.published or not experiment.enabled:
-#             raise Http404
-#         return render(request, "gestureApp/prep_screen.html", {"exp_code": code},)
-#     else:
-#         form = ExperimentCode()
-#         return render(
-#             request,
-#             "gestureApp/home.html",
-#             {"form": form, "error_message": "Form invalid"},
+#     def get_success_url(self):
+#         # self.object contains the newly created object (in this case, the experiment)
+#         return reverse_lazy(
+#             "gestureApp:experiment_create", kwargs={"pk": self.object.pk}
 #         )
 
 
+# class ExperimentUpdate(UpdateView):
+#     model = Experiment
+#     template_name = "gestureApp/experiment_form.html"
+#     form_class = ExperimentForm
+#     success_url = None
+
+#     def get_context_data(self, **kwargs):
+#         data = super(ExperimentUpdate, self).get_context_data(**kwargs)
+#         if self.request.POST:
+#             data["blocks"] = BlockFormSet(self.request.POST)
+#         else:
+#             data["blocks"] = BlockFormSet()
+#         return data
+
+#     def form_valid(self, form):
+#         context = self.get_context_data()
+#         blocks = context["blocks"]
+#         with transaction.atomic():
+#             print(form.instance)
+#         return super(ExperimentCreate, self).form_valid(form)
+
+#     def get_success_url(self):
+#         return reverse_lazy(
+#             "gestureApp:experiment_create", kwargs={"pk": self.object.pk}
+#         )
+
+
+def home(request):
+    """Handles a GET request to the home page
+    """
+    form = ExperimentCode()
+    return render(request, "gestureApp/home.html", {"form": form})
+
+
 def study(request, pk):
-    # FIXME: only allow published
-    # Do the randomization here and redirect to the appropiate experiment
+    """View called when users click "Submit" on the Home page.
+    Checks whether the study exists, and then redirects user to the appropriate experiment in that study.
+
+    Args:
+        request: HTML request. Should contain subj-code, and can also contain group-code and exp-code.
+        pk (str): study identifier
+
+    Returns:
+        _type_: _description_
+    """
     # Get params
     subject_code = request.GET.get("subj-code", None)
     # Don't allow bad subject codes
     subject = get_object_or_404(Subject, pk=subject_code)
 
     group_code = request.GET.get("group-code", None)
-    group = None
     exp_code = request.GET.get("exp-code", None)
+    group = None
     experiment = None
     study = get_object_or_404(
         Study.objects.select_related(), pk=pk, enabled=True, published=True
     )
+    # Extract group and experiment if present
     if group_code is not None:
         group = get_object_or_404(
             Group.objects.select_related(), pk=group_code, enabled=True
@@ -192,7 +200,7 @@ def study(request, pk):
         )
 
     if experiment is None and group is None:
-        # Check if the user has performed an experiment in this study before. If he has, use that group
+        # Check if the user has performed an experiment in this study before. If they have, use that group
         for g in study.groups.all():
             for e in g.experiments.all():
                 if e.has_done_experiment(subject):
@@ -201,11 +209,13 @@ def study(request, pk):
             if group is not None:
                 break
         if group is None:
-            # Get a random group
+            # Randomly assign to group
             group = study.groups.filter(enabled=True).order_by("?").first()
-        print(group)
     if experiment is None and group is not None:
-        # TODO: change experiment order
+        # TODO: allow a custom experiment order
+        # For now, experiments are ordered by the date they were created at, and users
+        # will be redirected to those experiments in order as they enter the same study and/or group
+        # codes.
         for e in group.experiments.filter(enabled=True, published=True).order_by(
             "created_at"
         ):
@@ -218,12 +228,24 @@ def study(request, pk):
         # No enabled experiments in this study
         return Http404
 
+    # Redirect user to appropriate experiment
     return redirect(f"/experiment/{experiment.code}/?subj-code={subject_code}")
 
 
-# Create your views here.
 def experiment(request, pk):
+    """Loads the experiment and shows it to the user.
+
+    Args:
+        request: HTML request. Can contain the subj-code.
+        pk (str): experiment identifier
+
+    Raises:
+        Exception: if the subject already participated in the experiment
+        Http404: if experiment with identifier does not exist.
+
+    """
     experiment = get_object_or_404(Experiment, pk=pk)
+    # Get subject code if present
     subject_code = request.GET.get("subj-code", None)
     if subject_code is not None and subject_code != "":
         subject = get_object_or_404(Subject, pk=subject_code)
@@ -231,10 +253,10 @@ def experiment(request, pk):
         if experiment.blocks.filter(trials__subject=subject).exists():
             raise Exception("Subject already participated in experiment")
     if not experiment.published or not experiment.enabled:
-        # If not testing experiment, raise 404
-        print(request.user)
+        # If experiment not published or enabled, and the exp creator is different than the current user, don't allow access.
         if experiment.creator != request.user:
             raise Http404
+    # Add experiment, blocks and subject code to the render, so it's accessible from Vue.
     return render(
         request,
         "gestureApp/experiment.html",
@@ -246,18 +268,20 @@ def experiment(request, pk):
     )
 
 
-def home(request):
-    form = ExperimentCode()
-    return render(request, "gestureApp/home.html", {"form": form})
-
-
 def create_trials(request):
+    """Saves experiment performance to database given by the current user.
+
+    Args:
+        request: HTML request. Contains the full experiment performance data.
+
+    """
+    # Experiment performance
     data = json.loads(request.body)
     exp_code = data.get("experiment")
     experiment = get_object_or_404(Experiment, pk=exp_code)
     subj_code = data.get("subject_code")
 
-    # Create a new subject
+    # Create a new subject if none was specified
     subject = None
     if subj_code is not None and subj_code != "":
         subject = get_object_or_404(Subject, pk=subj_code)
@@ -271,7 +295,6 @@ def create_trials(request):
     # First, bulk create the trials
     trials_to_save = []
     trials_aux = []
-    # print(experiment_trials)
     for i, block in enumerate(experiment_trials):
         for trial in block:
             t = Trial(
@@ -289,8 +312,9 @@ def create_trials(request):
             trials_to_save.append(t)
             trials_aux.append(trial)
 
-    # Creating bulk trials
+    # Creating bulk trials in database
     trials_saved = Trial.objects.bulk_create(trials_to_save)
+    # Create bulk keypresses
     keypresses_to_save = []
     for trial_db, trial_dict in zip(trials_saved, trials_aux):
         # t.save()
@@ -306,7 +330,6 @@ def create_trials(request):
                 timestamp=datetime.fromtimestamp(timestamp / 1000, user_timezone),
             )
             keypresses_to_save.append(keypress)
-            # keypress.save()
     # Creating bulk keypresses
     Keypress.objects.bulk_create(keypresses_to_save)
 
@@ -316,11 +339,20 @@ def create_trials(request):
 
 
 def upload_files(request, pk):
+    """Uploads video and consent form to Google Cloud Storage for a given experiment identifier pk.json
+
+    Args:
+        request: HTML request
+        pk (str): experiment identifier
+
+    """
     if request.method == "POST":
         cs_bucket = storage.Client().bucket(BUCKET_NAME)
+        # Upload consent form
         handle_upload_file(
             cs_bucket, request.FILES["consent"], pk, "consent.pdf", "application/pdf"
         )
+        # Upload video
         handle_upload_file(
             cs_bucket,
             request.FILES["video"],
@@ -332,32 +364,41 @@ def upload_files(request, pk):
 
 
 def handle_upload_file(cs_bucket, file, code, filename, content_type):
+    """Uploads specific file to Google Cloud Storage
+
+    Args:
+        cs_bucket (cloud storage bucket): Cloud Storage Bucket
+        file (file descriptor): file to upload
+        code (str): experiment code
+        filename (str): filename to save it with at CS
+        content_type (str): type of the content (pdf or video)
+    """
     # Upload file to cloud storage
     blob = cs_bucket.blob(f"experiment_files/{code}/{filename}")
     blob.upload_from_string(file.read(), content_type=content_type)
-    # if not os.path.exists(f"exp_files/{code}/"):
-    #     os.makedirs(f"exp_files/{code}/")
-    # # Remove existing file before
-    # for f in os.listdir(f"exp_files/{code}/"):
-    #     if f.startswith(filename.split(".")[0]):
-    #         os.remove(os.path.join(f"exp_files/{code}/", f))
-
-    # with open(f"exp_files/{code}/{filename}", "wb+") as destination:
-    #     for chunk in file.chunks():
-    #         destination.write(chunk)
 
 
+# Requires login to create experiments
 @login_required
 def create_experiment(request):
+    """Creates experiment from the form attached in the request (if it is a POST request), 
+    or views the experiment creation form if a GET request.
+
+    Args:
+        request (HTML request): Contains the experiment form if a POST request
+
+    """
     if request.method == "POST":
         exp_info = json.loads(request.body)
         study = get_object_or_404(Study, pk=exp_info["study"])
         group = get_object_or_404(Group, pk=exp_info["group"])
+        # If trying to get a random number of practice sequences, calculate it here
         exp_practice_seq = exp_info["practice_seq"]
         if exp_info["with_practice_trials"] and exp_info["practice_is_random_seq"]:
             exp_practice_seq = "".join(
                 random.choices(string.digits, k=exp_info["practice_seq_length"])
             )
+        # Create the experiment
         experiment = Experiment.objects.create(
             name=exp_info["name"],
             study=study,
@@ -376,6 +417,7 @@ def create_experiment(request):
             rest_after_practice=exp_info["rest_after_practice"],
             requirements=exp_info["requirements"],
         )
+        # Create all the blocks in the experiment
         for block in exp_info["blocks"]:
             sequence = block["sequence"]
             if block["is_random_sequence"]:
@@ -383,6 +425,7 @@ def create_experiment(request):
             # Repeat the block n number of times
             num_repetitions = block["num_repetitions"]
             for _ in range(num_repetitions):
+                # Depending on the number of repetitions, create the blocks
                 block_obj = Block(
                     experiment=experiment,
                     sequence=sequence,
@@ -396,6 +439,7 @@ def create_experiment(request):
                     sec_until_next=block["sec_until_next"],
                     hand_to_use=block["hand_to_use"],
                 )
+                # Validate all the block fields
                 block_obj.full_clean()
                 block_obj.save()
 
@@ -404,10 +448,21 @@ def create_experiment(request):
     return render(request, "gestureApp/experiment_form.html", {},)
 
 
+# Requires login to edit an experiment
 @login_required
 def edit_experiment(request, pk):
+    """View to edit an existing experiment. If GET request, then just show the form.
+    If POST request, update the corresponding experiment.
+
+    Args:
+        request (HTML request): POST or GET request.
+        pk (str): experiment identifier
+
+    """
     if request.method == "GET":
+        # User entering the edit experiment view
         experiment = get_object_or_404(Experiment, pk=pk, creator=request.user)
+        # Pass the existing experiment into the template for it to be able to show all experiment fields
         return render(
             request,
             "gestureApp/experiment_form.html",
@@ -417,7 +472,9 @@ def edit_experiment(request, pk):
             },
         )
     elif request.method == "POST":
+        # User has made the changes and is trying to update an existing experiment
         exp_info = json.loads(request.body)
+        # Get the corresponding study and experiment
         study = get_object_or_404(Study, pk=exp_info["study"])
         group = get_object_or_404(Group, pk=exp_info["group"])
         exp_practice_seq = exp_info["practice_seq"]
@@ -425,7 +482,9 @@ def edit_experiment(request, pk):
             exp_practice_seq = "".join(
                 random.choices(string.digits, k=exp_info["practice_seq_length"])
             )
+        # Get the experiment referenced
         experiment = Experiment.objects.get(pk=exp_info["code"])
+        # Update the experiment
         Experiment.objects.filter(pk=exp_info["code"]).update(
             name=exp_info["name"],
             study=study,
@@ -497,9 +556,17 @@ def edit_experiment(request, pk):
         return HttpResponseRedirect(reverse("gestureApp:profile"))
 
 
+# Requires logging in to create a study
 @login_required
 def create_study(request):
+    """View to create a new study
+
+    Args:
+        request (HTML request)
+
+    """
     if request.method == "POST":
+        # If the user actually clicked submit and is trying to create a new study
         study_info = json.loads(request.body)
         study = Study.objects.create(
             name=study_info["name"],
@@ -508,20 +575,31 @@ def create_study(request):
         )
 
         return JsonResponse({"code": study.code})
-
+    # If the user is trying to enter the view
     return render(request, "gestureApp/study_form.html", {},)
 
 
+# Requires logging in to edit a study
 @login_required
 def edit_study(request, pk):
+    """View to edit an existing study
+
+    Args:
+        request (HTML request): can be POST or GET
+        pk (str): study identifier
+
+    """
     if request.method == "GET":
+        # If entering the view to start editing the study
         study = get_object_or_404(Study, pk=pk, creator=request.user)
         return render(
             request, "gestureApp/study_form.html", {"study": study.to_dict(),},
         )
     elif request.method == "POST":
+        # If user modified study and is trying to change it
         study_info = json.loads(request.body)
         study = Study.objects.get(pk=study_info["code"])
+        # Update study
         Study.objects.filter(pk=study_info["code"]).update(
             name=study_info["name"],
             creator=request.user,
@@ -531,6 +609,13 @@ def edit_study(request, pk):
 
 
 def raw_data(user, code):
+    """Method that extracts the raw data of the experiment given by 'code' and
+    returns a list that then can be converted into a csv file.
+
+    Args:
+        user (object): current user object
+        code (str): experiment identifier
+    """
     experiment = get_object_or_404(Experiment, pk=code, creator=user)
     # If the experiment hasn't been published, get all responses
     starting_date_useful_data = experiment.created_at
@@ -538,6 +623,7 @@ def raw_data(user, code):
     if experiment.published:
         starting_date_useful_data = experiment.published_timestamp
     # Make sure that the user downloading it is the owner of the experiment
+    # Customized query so that we get the values we are searching for
     qs = (
         Experiment.objects.filter(
             pk=code,
@@ -558,22 +644,23 @@ def raw_data(user, code):
         )
     )
     queryset_list = list(qs)
-    # Order subjects by time when they started the first trial
+    # Get all subjects that performed the experiment
     subjects = [
         Subject.objects.get(pk=code)
         for code in unique([value["subject_code"] for value in queryset_list])
     ]
+    # Order subjects by the time when they started the first trial
     subjects.sort(
         key=lambda subj: subj.trials.order_by("started_at").first().started_at
     )
+    # Dictionary with the subject code as key and the date they started the experiment as value
     subjects_starting_timestamp = {
         subject.code: subject.trials.order_by("started_at").first().started_at
         for subject in subjects
     }
-    # FIXME: may be necessary to force the ordering of trials and blocks
     possible_blocks = unique([value["block_id"] for value in queryset_list])
     new_block_codes = {block: index + 1 for index, block in enumerate(possible_blocks)}
-    # Trials are not fixed across different experiments or blocks.
+    # Trials are not fixed across different experiments or blocks (they have different IDs)
     # If we are on the same experiment and block, start adding up
     # for every combination of block-subject, we have a different count
     # {(block, subject): [trial_1, trial_2, trial_3]}
@@ -584,15 +671,14 @@ def raw_data(user, code):
         ]
         if values_dict["trial_id"] not in trial_id_dict:
             trial_id_dict[values_dict["trial_id"]] = len(trial_id_dict.keys()) + 1
-    # Change the subject, block and trials ids to a numbered code
+    # Change the subject, block and trials ids to a numbered code, to avoid the random codes
+    #   used by default in the database
     for values_dict in queryset_list:
         values_dict["trial_id"] = aux_values[
             (values_dict["block_id"], values_dict["subject_code"])
         ][values_dict["trial_id"]]
-        # values_dict["subject_code"] = new_subject_codes[values_dict["subject_code"]]
         values_dict["block_id"] = new_block_codes[values_dict["block_id"]]
-        # values_dict["trial_id"] = new_trial_codes[values_dict["trial_id"]]
-    # Order the list by block and then subject
+    # Order the list by starting timestamp, block number, trial number and then keypress timestamp
     queryset_list.sort(
         key=lambda value_dict: (
             subjects_starting_timestamp[value_dict["subject_code"]],
@@ -601,10 +687,13 @@ def raw_data(user, code):
             value_dict["keypress_timestamp"],
         )
     )
+    # Tuple containing all keypresses for each subject, ordered as before
     keypresses = [
         (v_dict["keypress_timestamp"], v_dict["subject_code"])
         for v_dict in queryset_list
     ]
+    # Gets the difference between consecutive keypresses, only in the cases where the subject
+    #   of the consecutive keypresses are the same
     diff_keypresses_ms = [None] + [
         (y[0] - x[0]).total_seconds() * 1000
         if x[1] == y[1] and x[0] is not None and y[0] is not None
@@ -618,13 +707,13 @@ def raw_data(user, code):
     current_subject = ""
     current_trial_seq_idx = 0
     for values_dict, diff in zip(queryset_list, diff_keypresses_ms):
+        # If the difference between keypresses is lower than the minimum possible, set it to the minimum possible.
         diff_mod = None
         if diff is not None:
             if diff < MIN_MS_BETW_KEYPRESSES:
                 diff_mod = MIN_MS_BETW_KEYPRESSES
             else:
                 diff_mod = diff
-        # Was keypress correct
         if (
             current_trial == values_dict["trial_id"]
             and current_block == values_dict["block_id"]
@@ -638,6 +727,7 @@ def raw_data(user, code):
             current_block = values_dict["block_id"]
             current_subject = values_dict["subject_code"]
             current_trial_seq_idx = 0
+        # Was keypress correct?
         if (
             values_dict["block_sequence"][current_trial_seq_idx]
             == values_dict["keypress_value"]
@@ -655,8 +745,12 @@ def raw_data(user, code):
     return queryset_list
 
 
+# Requires to be logged in to download the raw data
 @login_required
 def download_raw_data(request):
+    """Runs the full cloud process to calculate raw data if necessary, and then downloads the file from cloud storage.
+    """
+    # Process the experiment if it hasn't been processed yet.
     cloud_process_data(request)
     form = ExperimentCode(request.GET)
     if form.is_valid():
@@ -676,6 +770,12 @@ def download_raw_data(request):
 
 
 def process_data(user, exp_code):
+    """Processes an experiment's data and returns a list with all the relevant information
+
+    Args:
+        user (object): current user object
+        exp_code (str): experiment identifier
+    """
     code = exp_code
     experiment = get_object_or_404(Experiment, pk=code, creator=user)
     # If the experiment hasn't been published, get all responses
@@ -684,9 +784,7 @@ def process_data(user, exp_code):
     if experiment.published:
         starting_date_useful_data = experiment.published_timestamp
     # Make sure that the user downloading it is the owner of the experiment
-    # When not working with sqlite, we will be able to do something like this:
-    #   Trial.objects.filter(block__experiment__code="952P", block=12,subject="E7kMfKZHIZjL375d",correct=True).annotate(first_keypress=Min("keypresses__timestamp")).annotate(last_keypress=Max("keypresses__timestamp")).aggregate(avg_diff=Avg(F("first_keypress")-F("last_keypress")))
-    no_et = (
+    queryset = (
         Experiment.objects.filter(
             pk=code,
             creator=user,
@@ -704,9 +802,11 @@ def process_data(user, exp_code):
         .order_by("blocks__trials__started_at")
         .distinct()
     )
-    no_et = list(no_et)
+    queryset = list(queryset)
+    # Dict containing an accumulated count of correct trials for every block and subject
     acc_correct_trials = defaultdict(lambda: 0)
-    for values_dict in no_et:
+    for values_dict in queryset:
+        # Changing the names of the keys to more readable ones
         values_dict["experiment_code"] = values_dict.pop("code")
         values_dict["subject_code"] = values_dict.pop("blocks__trials__subject")
         values_dict["block_id"] = values_dict.pop("blocks")
@@ -716,12 +816,15 @@ def process_data(user, exp_code):
         values_dict.pop("blocks__trials__started_at")
 
         if values_dict["correct_trial"]:
+            # The key is (block_id, subject_code)
             acc_correct_trials[
                 (values_dict["block_id"], values_dict["subject_code"])
             ] += 1
+        # Show the number of accumulated correct trials for each subject-block pair
         values_dict["accumulated_correct_trials"] = acc_correct_trials[
             (values_dict["block_id"], values_dict["subject_code"])
         ]
+    # Trials ordered by keypresses timestamps
     trials_timestamps_query = (
         Trial.objects.filter(block__experiment__code=code)
         .order_by("keypresses__timestamp")
@@ -737,7 +840,9 @@ def process_data(user, exp_code):
         )
     )
     # From the trials, I need all the keypress timestamps ordered from low to high
+    # Just the timestamps of all keypresses per trial
     trial_timestamps = defaultdict(list)
+    # All the other information per trial
     trial_properties = defaultdict(dict)
     for res in trials_timestamps_query:
         trial_timestamps[res["id"]].append(res["keypresses__timestamp"])
@@ -749,7 +854,7 @@ def process_data(user, exp_code):
             trial_properties[res["id"]]["correct"] = res["correct"]
             trial_properties[res["id"]]["subject_code"] = res["subject__code"]
 
-    for values_dict in no_et:
+    for values_dict in queryset:
         # Get last trial (closest final keypress to the starting keypress of this one)
         this_trial_props = trial_properties[values_dict["trial_id"]]
         previous_trials_this_block = [
@@ -760,15 +865,16 @@ def process_data(user, exp_code):
             and trial_props["subject_code"] == values_dict["subject_code"]
             and trial_props["finished_at"] <= this_trial_props["started_at"]
         ]
+        # Get the last trial if exists
         last_trial = (
             sorted(previous_trials_this_block, key=lambda prop: prop["finished_at"])[-1]
             if len(previous_trials_this_block) > 0
             else None
         )
-        # List of timestamps, ordered from early to late
+        # List of timestamps for this trial, ordered from early to late
         keypresses_timestamps = trial_timestamps[values_dict["trial_id"]]
         if len(keypresses_timestamps) > 0 and this_trial_props["correct"]:
-            # Tapping speed
+            # Elapsed time between keypresses list
             elapsed_list = []
             # Elapsed list that includes the time between the last keypress of last trial and the first of this one
             elapsed_list2 = []
@@ -788,13 +894,12 @@ def process_data(user, exp_code):
                             ).total_seconds()
                             elapsed_list2.append(elapsed_extra)
                     continue
+                # Elapsed time is in seconds
                 elapsed = (
                     keypress_timestamp - keypresses_timestamps[index - 1]
                 ).total_seconds()
                 if elapsed < MIN_MS_BETW_KEYPRESSES / 1000:
-                    # Something failed while capturing the keypresses timestamp. we should skip this trial.
-                    # We could say that the elapsed value is the minimum possible keypress difference (1ms)
-                    # This keypress would get discarded anyway.
+                    # Something failed while capturing the keypresses timestamp. We set the elapsed time to the minimum possible.
                     elapsed = MIN_MS_BETW_KEYPRESSES / 1000
                 elapsed_list.append(elapsed)
                 elapsed_list2.append(elapsed)
@@ -802,7 +907,7 @@ def process_data(user, exp_code):
             mean_tap_speed = 1 / np.mean(elapsed_list)
             extra_mean_tap_speed = 1 / np.mean(elapsed_list2)
 
-            # Execution time
+            # Execution time in milliseconds
             execution_time_ms = (
                 keypresses_timestamps[-1] - keypresses_timestamps[0]
             ).total_seconds() * 1000
@@ -811,6 +916,7 @@ def process_data(user, exp_code):
             values_dict["tapping_speed_mean"] = (
                 mean_tap_speed if not np.isnan(mean_tap_speed) else None
             )
+            # Also considering the reaction speed of the first keypress of a trial
             values_dict["tapping_speed_extra_keypress"] = (
                 extra_mean_tap_speed if not np.isnan(extra_mean_tap_speed) else None
             )
@@ -819,27 +925,29 @@ def process_data(user, exp_code):
             # Tapping data
             values_dict["tapping_speed_mean"] = None
             values_dict["tapping_speed_extra_keypress"] = None
-    # Order subjects by time when they started the first trial
+    # Get all subjects
     subjects = [
         Subject.objects.get(pk=code)
-        for code in unique([value["subject_code"] for value in no_et])
+        for code in unique([value["subject_code"] for value in queryset])
     ]
-    # Sort by time when the user started the first trial
+    # Sort subjects by time when the user started the first trial
     subjects.sort(
         key=lambda subj: subj.trials.order_by("started_at").first().started_at
     )
+    # Get the timestamp at which each user started the first trial.
     subjects_starting_timestamp = {
         subject.code: subject.trials.order_by("started_at").first().started_at
         for subject in subjects
     }
-    possible_blocks = unique([value["block_id"] for value in no_et])
+    ## Convert blocks and trials IDs into enumerated values, for easier interpretation.
+    possible_blocks = unique([value["block_id"] for value in queryset])
     new_block_codes = {block: index + 1 for index, block in enumerate(possible_blocks)}
     # Trials are not fixed across different experiments or blocks.
     # If we are on the same experiment and block, start adding up
     # for every combination of block-subject, we have a different count
     # {(block, subject): {trial_1: 1, trial_2:2, trial_3:3}}
     aux_values = defaultdict(dict)
-    for values_dict in no_et:
+    for values_dict in queryset:
         # To get the new id
         trial_id_dict = aux_values[
             (values_dict["block_id"], values_dict["subject_code"])
@@ -847,13 +955,13 @@ def process_data(user, exp_code):
         if values_dict["trial_id"] not in trial_id_dict:
             trial_id_dict[values_dict["trial_id"]] = len(trial_id_dict.keys()) + 1
     # Change the subject, block and trials ids to a numbered code
-    for values_dict in no_et:
+    for values_dict in queryset:
         values_dict["trial_id"] = aux_values[
             (values_dict["block_id"], values_dict["subject_code"])
         ][values_dict["trial_id"]]
         values_dict["block_id"] = new_block_codes[values_dict["block_id"]]
-    # Order the list by block and then subject
-    no_et.sort(
+    # Order the list by starting timestamp, block and then subject
+    queryset.sort(
         key=lambda value_dict: (
             subjects_starting_timestamp[value_dict["subject_code"]],
             value_dict["block_id"],
@@ -861,11 +969,13 @@ def process_data(user, exp_code):
         )
     )
     # Output csv
-    return no_et
+    return queryset
 
 
 @login_required
 def download_processed_data(request):
+    """Runs the full cloud process to calculate processed data if necessary, and then downloads the file from cloud storage.
+    """
     cloud_process_data(request)
     form = ExperimentCode(request.GET)
     if form.is_valid():
@@ -885,7 +995,11 @@ def download_processed_data(request):
 
 
 def cloud_process_data(request):
-    # For every published experiment, run the processing.
+    """Method to be run often that processes the experiment data available and generates the raw and processed data files
+    that can then be downloaded from Cloud Storage
+        _type_: _description_
+    """
+    # For every published experiment, run the processing only if needed.
     experiments = Experiment.objects.filter(published=True)
     cs_bucket = storage.Client().bucket(BUCKET_NAME)
     file_names = ["processed_data", "raw_data"]
@@ -896,6 +1010,7 @@ def cloud_process_data(request):
         user = experiment.creator
 
         for file_name, method in zip(file_names, methods):
+            # If the number of responses hasn't changed, the experiment is already processed.
             # Check current files, to see if the num of responses is different
             blob = cs_bucket.get_blob(f"{file_name}/{code}.csv")
             if blob is not None and num_responses == int(
@@ -907,6 +1022,7 @@ def cloud_process_data(request):
 
             logging.info(f"[{code}][{file_name}] Processing experiment...")
             try:
+                # Run the corresponding method
                 output_dict = method(user, code)
             except Exception as e:
                 logging.error(e)
@@ -922,6 +1038,7 @@ def cloud_process_data(request):
             logging.info(f"[{code}][{file_name}] Uploading csv to Cloud Storage...")
             # Upload to Cloud Storage
             blob = cs_bucket.blob(f"{file_name}/{code}.csv")
+            # Add number of responses to metadata for easy check on whether we should run the processing again or not.
             blob.metadata = {"num_responses": num_responses}
             f.seek(0)
             blob.upload_from_file(f, content_type="text/csv")
@@ -930,275 +1047,284 @@ def cloud_process_data(request):
     return HttpResponse()
 
 
-def process_bonstrup(user, exp_code):
-    pk = exp_code
-    # Get all experiments subjects
-    experiment = get_object_or_404(Experiment, pk=pk, creator=user)
-    # If the experiment hasn't been published, get all responses
-    starting_date_useful_data = experiment.created_at
-    # If it has, then only get those after the publishing timestamp
-    if experiment.published:
-        starting_date_useful_data = experiment.published_timestamp
+# region
+# def process_bonstrup(user, exp_code):
+#     pk = exp_code
+#     # Get all experiments subjects
+#     experiment = get_object_or_404(Experiment, pk=pk, creator=user)
+#     # If the experiment hasn't been published, get all responses
+#     starting_date_useful_data = experiment.created_at
+#     # If it has, then only get those after the publishing timestamp
+#     if experiment.published:
+#         starting_date_useful_data = experiment.published_timestamp
 
-    results = (
-        Experiment.objects.filter(
-            pk=pk,
-            creator=user,
-            blocks__trials__started_at__gt=starting_date_useful_data,
-        )
-        .annotate(Count("blocks__trials__keypresses"))
-        .values(
-            "code",
-            "blocks",
-            "blocks__trials__subject",
-            "blocks__sequence",
-            "blocks__trials",
-            "blocks__trials__partial_correct",
-            "blocks__trials__correct",
-            "blocks__trials__started_at",
-            "blocks__trials__keypresses__count",
-        )
-        .order_by("blocks__trials__started_at")
-        .distinct()
-    )
-    results = list(results)
+#     results = (
+#         Experiment.objects.filter(
+#             pk=pk,
+#             creator=user,
+#             blocks__trials__started_at__gt=starting_date_useful_data,
+#         )
+#         .annotate(Count("blocks__trials__keypresses"))
+#         .values(
+#             "code",
+#             "blocks",
+#             "blocks__trials__subject",
+#             "blocks__sequence",
+#             "blocks__trials",
+#             "blocks__trials__partial_correct",
+#             "blocks__trials__correct",
+#             "blocks__trials__started_at",
+#             "blocks__trials__keypresses__count",
+#         )
+#         .order_by("blocks__trials__started_at")
+#         .distinct()
+#     )
+#     results = list(results)
 
-    acc_correct_trials = defaultdict(lambda: 0)
-    for values_dict in results:
-        values_dict["experiment_code"] = values_dict.pop("code")
-        values_dict["subject_code"] = values_dict.pop("blocks__trials__subject")
-        values_dict["block_id"] = values_dict.pop("blocks")
-        values_dict["block_sequence"] = values_dict.pop("blocks__sequence")
-        values_dict["trial_id"] = values_dict.pop("blocks__trials")
-        values_dict["correct_trial"] = values_dict.pop("blocks__trials__correct")
-        values_dict["partial_correct_trial"] = values_dict.pop(
-            "blocks__trials__partial_correct"
-        )
-        values_dict.pop("blocks__trials__started_at")
-        if values_dict["correct_trial"]:
-            acc_correct_trials[
-                (values_dict["block_id"], values_dict["subject_code"])
-            ] += 1
-        values_dict["accumulated_correct_trials"] = acc_correct_trials[
-            (values_dict["block_id"], values_dict["subject_code"])
-        ]
-        values_dict["num_keypresses"] = values_dict.pop(
-            "blocks__trials__keypresses__count"
-        )
+#     acc_correct_trials = defaultdict(lambda: 0)
+#     for values_dict in results:
+#         values_dict["experiment_code"] = values_dict.pop("code")
+#         values_dict["subject_code"] = values_dict.pop("blocks__trials__subject")
+#         values_dict["block_id"] = values_dict.pop("blocks")
+#         values_dict["block_sequence"] = values_dict.pop("blocks__sequence")
+#         values_dict["trial_id"] = values_dict.pop("blocks__trials")
+#         values_dict["correct_trial"] = values_dict.pop("blocks__trials__correct")
+#         values_dict["partial_correct_trial"] = values_dict.pop(
+#             "blocks__trials__partial_correct"
+#         )
+#         values_dict.pop("blocks__trials__started_at")
+#         if values_dict["correct_trial"]:
+#             acc_correct_trials[
+#                 (values_dict["block_id"], values_dict["subject_code"])
+#             ] += 1
+#         values_dict["accumulated_correct_trials"] = acc_correct_trials[
+#             (values_dict["block_id"], values_dict["subject_code"])
+#         ]
+#         values_dict["num_keypresses"] = values_dict.pop(
+#             "blocks__trials__keypresses__count"
+#         )
 
-    # For each block, subject, get the first and last trial starting and finish timestamps.
-    trial_timestamps = {}
-    block_results = (
-        Block.objects.filter(experiment__code=pk, trials__partial_correct=True)
-        .annotate(first_trial_started_at=Min("trials__started_at"))
-        .annotate(last_trial_finished_at=Max("trials__finished_at"))
-        .values(
-            "id", "trials__subject", "first_trial_started_at", "last_trial_finished_at"
-        )
-    )
-    for values_dict in block_results:
-        trial_timestamps[(values_dict["id"], values_dict["trials__subject"])] = (
-            values_dict["first_trial_started_at"],
-            values_dict["last_trial_finished_at"],
-        )
+#     # For each block, subject, get the first and last trial starting and finish timestamps.
+#     trial_timestamps = {}
+#     block_results = (
+#         Block.objects.filter(experiment__code=pk, trials__partial_correct=True)
+#         .annotate(first_trial_started_at=Min("trials__started_at"))
+#         .annotate(last_trial_finished_at=Max("trials__finished_at"))
+#         .values(
+#             "id", "trials__subject", "first_trial_started_at", "last_trial_finished_at"
+#         )
+#     )
+#     for values_dict in block_results:
+#         trial_timestamps[(values_dict["id"], values_dict["trials__subject"])] = (
+#             values_dict["first_trial_started_at"],
+#             values_dict["last_trial_finished_at"],
+#         )
 
-    trials_query = (
-        Trial.objects.filter(block__experiment__code=pk)
-        .order_by("keypresses__timestamp")
-        .values(
-            "id",
-            "keypresses__id",
-            "keypresses__timestamp",
-            "started_at",
-            "finished_at",
-            "block__id",
-            "subject__code",
-            "partial_correct",
-        )
-    )
-    # From the trials, I need all the keypress timestamps ordered from low to high
-    trials = {}
-    for res in trials_query:
-        trial_dict = trials.get(res["id"], {})
-        # Starting timestamp
-        trial_dict["started_at"] = res["started_at"]
-        # Finishing timestamp
-        trial_dict["finished_at"] = res["finished_at"]
-        # Block id
-        trial_dict["block_id"] = res["block__id"]
-        # Subject code
-        trial_dict["subject_code"] = res["subject__code"]
-        # Partial correct
-        trial_dict["partial_correct"] = res["partial_correct"]
-        # Keypresses
-        trial_dict["keypresses"] = trial_dict.get("keypresses", []) + [
-            res["keypresses__timestamp"]
-        ]
-        trials[res["id"]] = trial_dict
-    for values_dict in results:
-        # If first trial of block: difference between starting of trial and first keypress of next.
-        # If last trial of block: difference between first keypress and end of trial
-        # else: difference between first keypress of this block, and first of the next.
-        trial = trials.get(values_dict["trial_id"], None)
-        if (
-            trial is not None
-            and len(trial.get("keypresses", [])) > 0
-            and trial["partial_correct"]
-        ):
-            execution_time_ms = -1
-            start_time = None
-            finish_time = None
-            # Check if the trial is the last one of the block
-            if (
-                trial["finished_at"]
-                == trial_timestamps[
-                    (values_dict["block_id"], values_dict["subject_code"])
-                ][1]
-            ):
-                start_time = trial["keypresses"][0]
-                finish_time = trial["finished_at"]
-            # Else, get next trial: same subject and block, minimum starting time that is greater than this finishing time
-            else:
-                next_trials = sorted(
-                    [
-                        (key, values["started_at"])
-                        for key, values in trials.items()
-                        if values["started_at"] >= trial["finished_at"]
-                        and values["subject_code"] == trial["subject_code"]
-                        and values["block_id"] == trial["block_id"]
-                    ],
-                    key=lambda val: val[1],
-                )
-                try:
-                    next_trial_id = next_trials[0][0]
-                except IndexError:
-                    raise Exception("Next trial not found")
-                next_trial = trials[next_trial_id]
-                # Check if the next trial has any keypresses
-                if len(next_trial["keypresses"]) == 0:
-                    # Then, execution time is as if this is the last trial
-                    finish_time = trial["finished_at"]
-                else:
-                    finish_time = next_trial["keypresses"][0]
-                # Check if it's the first trial
-                if (
-                    trial["started_at"]
-                    == trial_timestamps[
-                        (values_dict["block_id"], values_dict["subject_code"])
-                    ][0]
-                ):
-                    start_time = trial["started_at"]
-                else:
-                    start_time = trial["keypresses"][0]
-            execution_time_ms = (finish_time - start_time).total_seconds() * 1000
-            # Tapping speed
-            tap_speed = []
-            keypresses = trial["keypresses"]
-            # print("keypresses", keypresses)
-            for index, keypress in enumerate(keypresses):
-                if index == 0:
-                    continue
-                elapsed = (keypress - keypresses[index - 1]).total_seconds()
-                # FIXME: this happens when two keypresses are mapped to the same timestamp
-                try:
-                    tap_speed.append(1.0 / elapsed)
-                except ZeroDivisionError:
-                    tap_speed.append(np.nan)
-            # Mean and std deviation of tapping speed
-            mean_tap_speed = np.nanmean(tap_speed)
-            std_dev_tap_speed = np.nanstd(tap_speed, ddof=1)
+#     trials_query = (
+#         Trial.objects.filter(block__experiment__code=pk)
+#         .order_by("keypresses__timestamp")
+#         .values(
+#             "id",
+#             "keypresses__id",
+#             "keypresses__timestamp",
+#             "started_at",
+#             "finished_at",
+#             "block__id",
+#             "subject__code",
+#             "partial_correct",
+#         )
+#     )
+#     # From the trials, I need all the keypress timestamps ordered from low to high
+#     trials = {}
+#     for res in trials_query:
+#         trial_dict = trials.get(res["id"], {})
+#         # Starting timestamp
+#         trial_dict["started_at"] = res["started_at"]
+#         # Finishing timestamp
+#         trial_dict["finished_at"] = res["finished_at"]
+#         # Block id
+#         trial_dict["block_id"] = res["block__id"]
+#         # Subject code
+#         trial_dict["subject_code"] = res["subject__code"]
+#         # Partial correct
+#         trial_dict["partial_correct"] = res["partial_correct"]
+#         # Keypresses
+#         trial_dict["keypresses"] = trial_dict.get("keypresses", []) + [
+#             res["keypresses__timestamp"]
+#         ]
+#         trials[res["id"]] = trial_dict
+#     for values_dict in results:
+#         # If first trial of block: difference between starting of trial and first keypress of next.
+#         # If last trial of block: difference between first keypress and end of trial
+#         # else: difference between first keypress of this block, and first of the next.
+#         trial = trials.get(values_dict["trial_id"], None)
+#         if (
+#             trial is not None
+#             and len(trial.get("keypresses", [])) > 0
+#             and trial["partial_correct"]
+#         ):
+#             execution_time_ms = -1
+#             start_time = None
+#             finish_time = None
+#             # Check if the trial is the last one of the block
+#             if (
+#                 trial["finished_at"]
+#                 == trial_timestamps[
+#                     (values_dict["block_id"], values_dict["subject_code"])
+#                 ][1]
+#             ):
+#                 start_time = trial["keypresses"][0]
+#                 finish_time = trial["finished_at"]
+#             # Else, get next trial: same subject and block, minimum starting time that is greater than this finishing time
+#             else:
+#                 next_trials = sorted(
+#                     [
+#                         (key, values["started_at"])
+#                         for key, values in trials.items()
+#                         if values["started_at"] >= trial["finished_at"]
+#                         and values["subject_code"] == trial["subject_code"]
+#                         and values["block_id"] == trial["block_id"]
+#                     ],
+#                     key=lambda val: val[1],
+#                 )
+#                 try:
+#                     next_trial_id = next_trials[0][0]
+#                 except IndexError:
+#                     raise Exception("Next trial not found")
+#                 next_trial = trials[next_trial_id]
+#                 # Check if the next trial has any keypresses
+#                 if len(next_trial["keypresses"]) == 0:
+#                     # Then, execution time is as if this is the last trial
+#                     finish_time = trial["finished_at"]
+#                 else:
+#                     finish_time = next_trial["keypresses"][0]
+#                 # Check if it's the first trial
+#                 if (
+#                     trial["started_at"]
+#                     == trial_timestamps[
+#                         (values_dict["block_id"], values_dict["subject_code"])
+#                     ][0]
+#                 ):
+#                     start_time = trial["started_at"]
+#                 else:
+#                     start_time = trial["keypresses"][0]
+#             execution_time_ms = (finish_time - start_time).total_seconds() * 1000
+#             # Tapping speed
+#             tap_speed = []
+#             keypresses = trial["keypresses"]
+#             # print("keypresses", keypresses)
+#             for index, keypress in enumerate(keypresses):
+#                 if index == 0:
+#                     continue
+#                 elapsed = (keypress - keypresses[index - 1]).total_seconds()
+#                 # FIXME: this happens when two keypresses are mapped to the same timestamp
+#                 try:
+#                     tap_speed.append(1.0 / elapsed)
+#                 except ZeroDivisionError:
+#                     tap_speed.append(np.nan)
+#             # Mean and std deviation of tapping speed
+#             mean_tap_speed = np.nanmean(tap_speed)
+#             std_dev_tap_speed = np.nanstd(tap_speed, ddof=1)
 
-            # Execution time
-            values_dict["execution_time_ms"] = execution_time_ms
-            # Tapping data
-            values_dict["tapping_speed_mean_individual"] = (
-                mean_tap_speed if not np.isnan(mean_tap_speed) else None
-            )
-            values_dict["tapping_speed_std_dev_individual"] = (
-                std_dev_tap_speed if not np.isnan(std_dev_tap_speed) else None
-            )
-            mean_tap_speed_2 = (
-                1000 * len(keypresses) / execution_time_ms
-                if execution_time_ms > 0
-                else None
-            )
-            values_dict["tapping_speed_mean_aggregated"] = mean_tap_speed_2
-        else:
-            values_dict["execution_time_ms"] = None
-            # Tapping data
-            values_dict["tapping_speed_mean_individual"] = None
-            values_dict["tapping_speed_std_dev_individual"] = None
-            values_dict["tapping_speed_mean_aggregated"] = None
-    # Order subjects by time when they started the first trial
-    subjects = [
-        Subject.objects.get(pk=code)
-        for code in unique([value["subject_code"] for value in results])
-    ]
-    # Sort by time when the user started the first trial
-    subjects.sort(
-        key=lambda subj: subj.trials.order_by("started_at").first().started_at
-    )
-    subjects_starting_timestamp = {
-        subject.code: subject.trials.order_by("started_at").first().started_at
-        for subject in subjects
-    }
-    possible_subjects = [subj.code for subj in subjects]
-    new_subject_codes = {
-        subject: index + 1 for index, subject in enumerate(possible_subjects)
-    }
-    possible_blocks = unique([value["block_id"] for value in results])
-    new_block_codes = {block: index + 1 for index, block in enumerate(possible_blocks)}
-    # Trials are not fixed across different experiments or blocks.
-    # If we are on the same experiment and block, start adding up
-    # for every combination of block-subject, we have a different count
-    # {(block, subject): {trial_1: 1, trial_2:2, trial_3:3}}
-    aux_values = defaultdict(dict)
-    for values_dict in results:
-        # To get the new id
-        trial_id_dict = aux_values[
-            (values_dict["block_id"], values_dict["subject_code"])
-        ]
-        if values_dict["trial_id"] not in trial_id_dict:
-            trial_id_dict[values_dict["trial_id"]] = len(trial_id_dict.keys()) + 1
-    # Change the subject, block and trials ids to a numbered code
-    for values_dict in results:
-        values_dict["trial_id"] = aux_values[
-            (values_dict["block_id"], values_dict["subject_code"])
-        ][values_dict["trial_id"]]
-        # values_dict["subject_code"] = new_subject_codes[values_dict["subject_code"]]
-        values_dict["block_id"] = new_block_codes[values_dict["block_id"]]
-        # values_dict["trial_id"] = new_trial_codes[values_dict["trial_id"]]
-    # Order the list by block and then subject
-    results.sort(
-        key=lambda value_dict: (
-            subjects_starting_timestamp[value_dict["subject_code"]],
-            value_dict["block_id"],
-            value_dict["trial_id"],
-        )
-    )
+#             # Execution time
+#             values_dict["execution_time_ms"] = execution_time_ms
+#             # Tapping data
+#             values_dict["tapping_speed_mean_individual"] = (
+#                 mean_tap_speed if not np.isnan(mean_tap_speed) else None
+#             )
+#             values_dict["tapping_speed_std_dev_individual"] = (
+#                 std_dev_tap_speed if not np.isnan(std_dev_tap_speed) else None
+#             )
+#             mean_tap_speed_2 = (
+#                 1000 * len(keypresses) / execution_time_ms
+#                 if execution_time_ms > 0
+#                 else None
+#             )
+#             values_dict["tapping_speed_mean_aggregated"] = mean_tap_speed_2
+#         else:
+#             values_dict["execution_time_ms"] = None
+#             # Tapping data
+#             values_dict["tapping_speed_mean_individual"] = None
+#             values_dict["tapping_speed_std_dev_individual"] = None
+#             values_dict["tapping_speed_mean_aggregated"] = None
+#     # Order subjects by time when they started the first trial
+#     subjects = [
+#         Subject.objects.get(pk=code)
+#         for code in unique([value["subject_code"] for value in results])
+#     ]
+#     # Sort by time when the user started the first trial
+#     subjects.sort(
+#         key=lambda subj: subj.trials.order_by("started_at").first().started_at
+#     )
+#     subjects_starting_timestamp = {
+#         subject.code: subject.trials.order_by("started_at").first().started_at
+#         for subject in subjects
+#     }
+#     possible_subjects = [subj.code for subj in subjects]
+#     new_subject_codes = {
+#         subject: index + 1 for index, subject in enumerate(possible_subjects)
+#     }
+#     possible_blocks = unique([value["block_id"] for value in results])
+#     new_block_codes = {block: index + 1 for index, block in enumerate(possible_blocks)}
+#     # Trials are not fixed across different experiments or blocks.
+#     # If we are on the same experiment and block, start adding up
+#     # for every combination of block-subject, we have a different count
+#     # {(block, subject): {trial_1: 1, trial_2:2, trial_3:3}}
+#     aux_values = defaultdict(dict)
+#     for values_dict in results:
+#         # To get the new id
+#         trial_id_dict = aux_values[
+#             (values_dict["block_id"], values_dict["subject_code"])
+#         ]
+#         if values_dict["trial_id"] not in trial_id_dict:
+#             trial_id_dict[values_dict["trial_id"]] = len(trial_id_dict.keys()) + 1
+#     # Change the subject, block and trials ids to a numbered code
+#     for values_dict in results:
+#         values_dict["trial_id"] = aux_values[
+#             (values_dict["block_id"], values_dict["subject_code"])
+#         ][values_dict["trial_id"]]
+#         # values_dict["subject_code"] = new_subject_codes[values_dict["subject_code"]]
+#         values_dict["block_id"] = new_block_codes[values_dict["block_id"]]
+#         # values_dict["trial_id"] = new_trial_codes[values_dict["trial_id"]]
+#     # Order the list by block and then subject
+#     results.sort(
+#         key=lambda value_dict: (
+#             subjects_starting_timestamp[value_dict["subject_code"]],
+#             value_dict["block_id"],
+#             value_dict["trial_id"],
+#         )
+#     )
 
-    return results
+#     return results
 
 
-@login_required
-def download_bonstrup_processed(request, pk):
-    cloud_process_data(request)
-    cs_bucket = storage.Client().bucket(BUCKET_NAME)
-    blob = cs_bucket.blob(f"bonstrup_processed/{pk}.csv")
-    if blob is None:
-        raise Http404("Experiment is not ready for downloading yet")
-    csv_content = blob.download_as_string()
-    # Output csv
-    response = HttpResponse(csv_content, content_type="text/csv")
-    response[
-        "Content-Disposition"
-    ] = 'attachment; filename="bonstrup_processed_{}.csv"'.format(pk)
+# @login_required
+# def download_bonstrup_processed(request, pk):
+#     cloud_process_data(request)
+#     cs_bucket = storage.Client().bucket(BUCKET_NAME)
+#     blob = cs_bucket.blob(f"bonstrup_processed/{pk}.csv")
+#     if blob is None:
+#         raise Http404("Experiment is not ready for downloading yet")
+#     csv_content = blob.download_as_string()
+#     # Output csv
+#     response = HttpResponse(csv_content, content_type="text/csv")
+#     response[
+#         "Content-Disposition"
+#     ] = 'attachment; filename="bonstrup_processed_{}.csv"'.format(pk)
 
-    return response
+#     return response
+# endregion
 
 
 @login_required
 def download_survey(request, pk):
+    """Downloads a csv file containing the end survey for the experiment
+
+    Args:
+        request (HTML request)
+        pk (str): Experiment identifier
+
+    """
     # Get all experiments subjects
     experiment = get_object_or_404(Experiment, pk=pk, creator=request.user)
     # If the experiment hasn't been published, get all responses
