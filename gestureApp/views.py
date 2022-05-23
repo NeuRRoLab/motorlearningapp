@@ -1343,7 +1343,6 @@ def download_survey(request, pk):
         .distinct()
     )
     subjects_surveys = list(subjects_surveys)
-    # Order subjects by time when they started the first trial
     subjects = [
         Subject.objects.get(pk=code)
         for code in unique(
@@ -1354,6 +1353,7 @@ def download_survey(request, pk):
     subjects.sort(
         key=lambda subj: subj.trials.order_by("started_at").first().started_at
     )
+    # Dict containing the starting timestamp for each subject
     subjects_starting_timestamp = {
         subject.code: subject.trials.order_by("started_at").first().started_at
         for subject in subjects
@@ -1361,11 +1361,7 @@ def download_survey(request, pk):
     possible_subjects = [
         (subj.code, subj.trials.order_by("started_at").first()) for subj in subjects
     ]
-    new_subject_codes = {
-        subject: (index + 1, timestamp)
-        for index, (subject, timestamp) in enumerate(possible_subjects)
-    }
-    # If they do, complete the row. If not, keep it empty.
+    # Translation of the survey components
     survey = {
         "age": "Age",
         "gender": "Gender",
@@ -1382,13 +1378,10 @@ def download_survey(request, pk):
     }
     for values_dict in subjects_surveys:
         values_dict["experiment_code"] = values_dict.pop("code")
-        started_experiment_at = new_subject_codes[
+        started_experiment_at = possible_subjects[
             values_dict["blocks__trials__subject"]
         ][1]
         values_dict["subject_code"] = values_dict.pop("blocks__trials__subject")
-        # values_dict["subject_code"] = new_subject_codes[
-        #     values_dict.pop("blocks__trials__subject")
-        # ][0]
         values_dict["started_experiment_at"] = started_experiment_at
 
         for value in survey.values():
@@ -1420,11 +1413,21 @@ def download_survey(request, pk):
 
 
 def unique(sequence):
+    """Helper method to get a set of unique values from a sequence
+
+    Args:
+        sequence (iterable): sequence from which we want to extract 
+
+    Returns:
+        list: unique set of elements
+    """
     seen = set()
     return [x for x in sequence if not (x in seen or seen.add(x))]
 
 
 def current_user(request):
+    """API method that returns a dictionary containing the current user information
+    """
     if request.method == "GET":
         if request.user.is_anonymous:
             return JsonResponse({})
@@ -1437,6 +1440,12 @@ def current_user(request):
 
 @login_required
 def user_experiments(request):
+    """API method to get all the experiments for the current user
+
+
+    Returns:
+        list: list of experiment dictionaries
+    """
     if request.method == "GET":
         exp_array = []
         for experiment in request.user.experiments.all():
@@ -1466,13 +1475,20 @@ def user_experiments(request):
 
 @login_required
 def user_studies(request):
+    """API method to get all studies from the current user"""
     if request.method == "GET":
         return JsonResponse(
             {"studies": [s.to_dict() for s in request.user.studies.all()]}
         )
 
 
+@login_required
 def _publish_experiment(experiment):
+    """Manages the publishing of an experiment, modifying the date at which it was published
+
+    Args:
+        experiment (object): experiment to publish
+    """
     # Get experiment from code
     # Change the published status to true, and add the published timestamp
     if experiment.published:
@@ -1485,6 +1501,7 @@ def _publish_experiment(experiment):
 
 @login_required
 def delete_experiment(request, pk):
+    """Deletes an experiment given by the pk experiment identifier. Also deletes data from Cloud Storage"""
     experiment = get_object_or_404(Experiment, pk=pk, creator=request.user)
     # Remove stuff from Cloud Storage
     cs_bucket = storage.Client().bucket(BUCKET_NAME)
@@ -1498,6 +1515,7 @@ def delete_experiment(request, pk):
 
 @login_required
 def disable_experiment(request, pk):
+    """Disables an experiment given by the pk experiment identifier"""
     experiment = get_object_or_404(Experiment, pk=pk, creator=request.user)
     experiment.enabled = False
     experiment.save()
@@ -1506,6 +1524,7 @@ def disable_experiment(request, pk):
 
 @login_required
 def enable_experiment(request, pk):
+    """Enables an experiment given by the pk experiment identifier"""
     experiment = get_object_or_404(Experiment, pk=pk, creator=request.user)
     experiment.enabled = True
     experiment.save()
@@ -1514,6 +1533,7 @@ def enable_experiment(request, pk):
 
 @login_required
 def duplicate_experiment(request, pk):
+    """Creates a copy of an experiment given by the pk experiment identifier"""
     experiment = get_object_or_404(Experiment, pk=pk, creator=request.user)
     original_pk_experiment = experiment.pk
     blocks = list(experiment.blocks.order_by("id"))
@@ -1550,6 +1570,7 @@ def duplicate_experiment(request, pk):
 
 @login_required
 def publish_study(request, pk):
+    """Publishes study (and all it contains) given by the study identifier pk"""
     # Get study from code
     # Change the published status to true, and add the published timestamp
     study = get_object_or_404(Study, pk=pk, creator=request.user)
@@ -1566,6 +1587,7 @@ def publish_study(request, pk):
 
 @login_required
 def delete_study(request, pk):
+    """Delete study given by the study identifier pk"""
     study = get_object_or_404(Study, pk=pk, creator=request.user)
     study.delete()
     return JsonResponse({})
@@ -1573,6 +1595,7 @@ def delete_study(request, pk):
 
 @login_required
 def disable_study(request, pk):
+    """Disables study (and everything inside them) given by the pk study identifier"""
     study = get_object_or_404(Study, pk=pk, creator=request.user)
     study.enabled = False
     study.save()
@@ -1585,6 +1608,7 @@ def disable_study(request, pk):
 
 @login_required
 def enable_study(request, pk):
+    """Enable study (and all experiments inside) given by pk study identifier"""
     study = get_object_or_404(Study, pk=pk, creator=request.user)
     study.enabled = True
     study.save()
@@ -1597,8 +1621,8 @@ def enable_study(request, pk):
 
 @login_required
 def duplicate_study(request, pk):
+    """Duplicate study given by pk study identifier (but does not duplicate groups and experiments)"""
     study = get_object_or_404(Study, pk=pk, creator=request.user)
-    original_pk_study = study.pk
     # Clone
     study.pk = None
     study.name = "Copy of " + study.name
@@ -1608,6 +1632,7 @@ def duplicate_study(request, pk):
 
 
 def end_survey(request, pk):
+    """Create the end survey in the database from the info on the body"""
     experiment = get_object_or_404(Experiment, pk=pk)
     info = json.loads(request.body)
     subject = None
@@ -1615,7 +1640,7 @@ def end_survey(request, pk):
         subject = Subject.objects.get(code=info["subject_code"])
     except Subject.DoesNotExist:
         pass
-    survey = EndSurvey.objects.create(
+    EndSurvey.objects.create(
         experiment=experiment,
         subject=subject,
         age=info["questionnaire"]["age"],
@@ -1635,18 +1660,18 @@ def end_survey(request, pk):
 
 
 def create_subject(request):
+    """API method to create a new subject and return the subject code"""
     subject = Subject.objects.create()
-    print(subject)
     return JsonResponse({"subject_code": subject.code})
 
 
 def send_subject_code(request):
+    """API method to send subject code via email"""
     if request.method == "POST":
         # Get subject code from post data
         data = json.loads(request.body)
         subject_code = data["subject_code"]
         email = data["email"]
-        print("sending subject code", subject_code, email)
         send_mail(
             "Motor Learning App - Subject Code",
             f"Your generated subject code for motor learning experiments is {subject_code}. Save it, because it will be asked for future experiments.\n\nBest,\n\nMotor Learning App Team",
@@ -1657,31 +1682,24 @@ def send_subject_code(request):
     return JsonResponse({})
 
 
-def loaderio(request):
-    # Output csv
-    response = HttpResponse(content_type="text/plain")
-    response[
-        "Content-Disposition"
-    ] = 'attachment; filename="loaderio-0e64c936e385b2eed7c32769fccfbffd.txt"'
-    response.write("loaderio-0e64c936e385b2eed7c32769fccfbffd")
-    return response
-
-
 def handler404(request, exception, template_name="gestureApp/404.html"):
-    response = render(request, "gestureApp/404.html", {})
+    """Responds to the 404 exception"""
+    response = render(request, template_name, {})
     response.status_code = 404
     return response
 
 
 def new_group(request):
+    """Creates a new group, given the info on the request body"""
     if request.method == "POST":
         group_info = json.loads(request.body)
         study = get_object_or_404(Study, pk=group_info["study"])
         Group.objects.create(name=group_info["name"], study=study, creator=request.user)
         return JsonResponse({})
 
-
+@login_required
 def delete_group(request, pk):
+    """Deletes a group with the group identifier pk"""
     group = get_object_or_404(Group, pk=pk, creator=request.user)
     group.delete()
     return JsonResponse({})
@@ -1689,6 +1707,7 @@ def delete_group(request, pk):
 
 @login_required
 def disable_group(request, pk):
+    """Disables group with group identifier pk"""
     group = get_object_or_404(Group, pk=pk, creator=request.user)
     group.enabled = False
     group.save()
@@ -1699,6 +1718,7 @@ def disable_group(request, pk):
 
 @login_required
 def enable_group(request, pk):
+    """Enables group with group identifier pk"""
     group = get_object_or_404(Group, pk=pk, creator=request.user)
     group.enabled = True
     group.save()
