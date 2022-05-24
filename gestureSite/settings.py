@@ -12,22 +12,39 @@ https://docs.djangoproject.com/en/3.1/ref/settings/
 
 from pathlib import Path
 import os
+import environ
+from google.cloud import secretmanager
+import io
 
+env = environ.Env(
+    # set casting, default value
+    DEBUG=(bool, False)
+)
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve(strict=True).parent.parent
+
+env_file = os.path.join(BASE_DIR, ".env")
+if not os.environ.get("GOOGLE_CLOUD_PROJECT", None):
+    env.read_env(env_file)
+elif os.environ.get("GOOGLE_CLOUD_PROJECT", None):
+    project_id = os.environ.get("GOOGLE_CLOUD_PROJECT")
+    client = secretmanager.SecretManagerServiceClient()
+    settings_name = os.environ.get("SETTINGS_NAME", "django_settings")
+    name = f"projects/{project_id}/secrets/{settings_name}/versions/latest"
+    payload = client.access_secret_version(name=name).payload.data.decode("UTF-8")
+    env.read_env(io.StringIO(payload))
 
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "y!7l+(vux@ny4ak((kk=a1^a3)f@&*hn6zssc5a2f=ov^&)ra="
+SECRET_KEY = env("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = env("DEBUG")
 
 ALLOWED_HOSTS = [
-    "neurroexperiment.herokuapp.com",
     "127.0.0.1",
     "motorlearning.uc.r.appspot.com",
     "experiments.neurro-lab.engin.umich.edu",
@@ -82,29 +99,7 @@ WSGI_APPLICATION = "gestureSite.wsgi.application"
 
 # Database
 # https://docs.djangoproject.com/en/3.1/ref/settings/#databases
-if os.getenv("GAE_APPLICATION", None):
-    DEBUG = False
-    DATABASES = {
-        "default": {
-            "ENGINE": "django.db.backends.postgresql_psycopg2",
-            "HOST": os.getenv("APP_DB_HOST"),
-            "USER": os.getenv("APP_DB_USER"),
-            "PASSWORD": os.getenv("APP_DB_PASSWORD"),
-            "NAME": os.getenv("APP_DB_NAME"),
-        }
-    }
-else:
-    # DEBUG = True
-    DATABASES = {
-        "default": {
-            "ENGINE": "django.db.backends.postgresql_psycopg2",
-            "HOST": os.getenv("APP_DB_HOST"),
-            "PORT": os.getenv("APP_DB_PORT"),
-            "NAME": os.getenv("APP_DB_NAME"),
-            "USER": os.getenv("APP_DB_USER"),
-            "PASSWORD": os.getenv("APP_DB_PASSWORD"),
-        }
-    }
+DATABASES = {"default": env.db()}
 
 
 # Password validation
@@ -155,17 +150,18 @@ STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 import dj_database_url
 
-prod_db = dj_database_url.config(conn_max_age=500)
-DATABASES["default"].update(prod_db)
+# prod_db = dj_database_url.config(conn_max_age=500)
+# DATABASES["default"].update(prod_db)
+# print(DATABASES)
 
 CRISPY_TEMPLATE_PACK = "bootstrap4"
 
 # Email
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 EMAIL_HOST = "smtp.mail.com"
-EMAIL_HOST_USER = os.getenv("APP_EMAIL_USERNAME")
-EMAIL_HOST_PASSWORD = os.getenv("APP_EMAIL_PASSWORD")
+EMAIL_HOST_USER = env("APP_EMAIL_USERNAME")
+EMAIL_HOST_PASSWORD = env("APP_EMAIL_PASSWORD")
 EMAIL_PORT = 465
 EMAIL_USE_TLS = True
-DEFAULT_FROM_EMAIL = os.getenv("APP_EMAIL_USERNAME")
+DEFAULT_FROM_EMAIL = env("APP_EMAIL_USERNAME")
 # EMAIL_USE_SSL = True
