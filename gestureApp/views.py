@@ -1674,8 +1674,8 @@ def send_subject_code(request):
         email = data["email"]
         send_mail(
             "Motor Learning App - Subject Code",
-            f"Your generated subject code for motor learning experiments is {subject_code}. Save it, because it will be asked for future experiments.\n\nBest,\n\nMotor Learning App Team",
-            "lhcubillos93@gmail.com",
+            f"Your generated subject code for motor learning experiments is {subject_code}. Save it, because it will be asked for future experiments.\n\nBest,\n\nNeuRRo Lab",
+            "lhcubill@umich.edu",
             [email],
         )
 
@@ -1696,6 +1696,7 @@ def new_group(request):
         study = get_object_or_404(Study, pk=group_info["study"])
         Group.objects.create(name=group_info["name"], study=study, creator=request.user)
         return JsonResponse({})
+
 
 @login_required
 def delete_group(request, pk):
