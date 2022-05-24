@@ -38,11 +38,5 @@ handlers:
     redirect_http_response_code: 301
 
 env_variables:
-  # APP_DB_HOST: "motor-learning.c13o3v1fgdjv.us-east-2.rds.amazonaws.com"
-  # APP_DB_USER: "postgres"
-  # APP_DB_PASSWORD: "NeuRRo_Lab"
-  # APP_DB_NAME: "motorlearningapp"
-  # APP_EMAIL_USERNAME: "motorlearningapp@gmail.com"
-  # APP_EMAIL_PASSWORD: "NeuRRo_Lab"
   GOOGLE_CLOUD_PROJECT: "motorlearning"
 # [END django_app]

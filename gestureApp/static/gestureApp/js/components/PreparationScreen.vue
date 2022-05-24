@@ -1,5 +1,7 @@
+<!-- Shows the preparation screen before the experiment: requirements, consent form and instructions video -->
 <template>
   <div class="container">
+    <!-- First, show requirements -->
     <template v-if="!requirements_fulfilled">
       <h2>Experiment requirements</h2>
       <b-card>
@@ -18,6 +20,7 @@
         I fulfill the requirements to participate
       </button>
     </template>
+    <!-- Then, show video -->
     <template v-else-if="!video_seen">
       <h2>Video instructions</h2>
       <div class="d-flex justify-content-center">
@@ -26,7 +29,6 @@
           ref="videoPlayer"
           :options="playerOptions"
           :playsinline="true"
-          @ready="playerReadied"
           @ended="playerEnded"
         >
         </video-player>
@@ -44,6 +46,7 @@
         To continue, you must finish watching the video.
       </p>
     </template>
+    <!-- Finally, show consent form -->
     <template v-else>
       <h2>Consent Form</h2>
       <div class="d-flex justify-content-center">
@@ -78,10 +81,7 @@ module.exports = {
         sources: [
           {
             type: "video/mp4",
-            // mp4
             src: this.video_url,
-            // webm
-            // src: "https://cdn.theguardian.tv/webM/2015/07/20/150716YesMen_synd_768k_vp8.webm"
           },
         ],
       },
@@ -101,15 +101,7 @@ module.exports = {
     isObjectEmpty: function (obj) {
       return Object.keys(obj).length === 0 && obj.constructor === Object;
     },
-    // player is ready
-    playerReadied(player) {
-      // seek to 10s
-      // console.log("example player 1 readied", player);
-      // player.currentTime(0);
-      // console.log('example 01: the player is readied', player)
-    },
     playerEnded(player) {
-      // console.log("ended!!", player);
       this.video_ended = true;
     },
   },

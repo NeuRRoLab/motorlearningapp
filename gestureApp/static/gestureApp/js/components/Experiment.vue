@@ -1,6 +1,12 @@
+<!-- Manages all experiment interactions with the user, including
+loading experiment data, showing the consent and video, and actually 
+doing the experiment, with practice trials if necessary. 
+It also shows the end survey at the end and uploads the experiment data
+via the API.
+ -->
 <template>
   <div id="experiment" class="container">
-    <!-- Will have to do a practice example -->
+    <!-- Manages notifications if allowed in the experiment -->
     <notifications
       group="alerts"
       position="top center"
@@ -26,7 +32,7 @@
         class="row"
       >
         <div class="col text-center">
-          <!-- Instructions -->
+          <!-- Practice trial instructions (if enabled in experiment) -->
           <template
             v-if="
               experiment.with_practice_trials && remaining_practice_trials > 0
@@ -48,6 +54,7 @@
               Start Practice
             </button>
           </template>
+          <!-- Experiment instructions -->
           <template v-else>
             <p class="h4">
               Enter the sequence of characters in order when it appears on the
@@ -91,7 +98,7 @@
           </template>
         </div>
       </div>
-      <!-- Practice stuff -->
+      <!-- Practice trials -->
       <template v-else-if="practicing">
         <template v-if="rested_after_practice">
           <p class="text-success text-center">
@@ -115,6 +122,7 @@
             @trial-ended="practiceTrialEnded"
           ></trial>
         </template>
+        <!-- Manage practice resting -->
         <div v-else class="text-center h5">
           Experiment appearing in:
           <countdown
@@ -132,9 +140,10 @@
           </countdown>
         </div>
       </template>
-      <!-- Experiment -->
+      <!-- Actual Experiment -->
       <template v-else-if="experiment_started && !experiment_finished">
         <h4>Experiment Progress</h4>
+        <!-- Show experiment progress (current block and how many are left) -->
         <b-progress height="2rem" :max="blocks.length" show-progress>
           <b-progress-bar
             :value="current_block + 1"
@@ -147,7 +156,7 @@
           ></b-progress-bar>
         </b-progress>
         <br />
-        <!-- Show block type -->
+        <!-- Show block type (number of trials or max time) -->
         <p v-if="experiment.with_shown_instructions" class="text-center h3">
           Instructions:
           {{
@@ -160,7 +169,7 @@
                 " seconds on this block, and should try to do as many trials as possible."
           }}
         </p>
-        <!-- Block countdown -->
+        <!-- Block countdown (just before starting a block)-->
         <div v-if="!block_started" class="text-center h2">
           Block starting in:
           <countdown
@@ -178,6 +187,7 @@
           >
             <span slot-scope="props" class="h1">{{ props.seconds + 1 }}</span>
           </countdown>
+          <!-- Show sequence to type -->
           <p class="text-center h4">
             Sequence:
             <span class="text-center h1">{{
@@ -192,9 +202,10 @@
             }}</span>
           </p>
         </div>
-        <!-- Block -->
+        <!-- Block started-->
         <template v-else>
           <h4>Block Progress</h4>
+          <!-- Show number of trials left if block is of that type -->
           <b-progress
             v-if="isTypeNumTrials"
             height="2rem"
@@ -211,6 +222,7 @@
               "
             ></b-progress-bar>
           </b-progress>
+          <!-- Show the number of seconds left if block is of that type -->
           <div v-else>
             <countdown
               ref="timerBlock"
@@ -226,6 +238,7 @@
               :max="blocks[current_block].max_time"
               show-progress
             >
+              <!-- Show status of countdown timer -->
               <b-progress-bar
                 :value="current_block_time"
                 :label="
@@ -237,7 +250,7 @@
             </b-progress>
           </div>
           <br />
-          <!-- Trial -->
+          <!-- Trial: receives keypresses and manages appropriately painting the sequence squares -->
           <trial
             ref="real-trial"
             v-bind="getTrialObj"
@@ -245,7 +258,7 @@
             @rest-ended="restEnded"
           >
           </trial>
-
+          <!-- If experiment should show feedback of performance in each block -->
           <template v-if="experiment.with_feedback_blocks">
             <h4>Block performance</h4>
             <b-progress
@@ -288,8 +301,9 @@
           </div>
         </template>
         <br />
-        <!-- Redirect home -->
+        <!-- Survey form -->
         <b-form @submit="leaveExperiment">
+          <!-- Redirect home when done -->
           <div class="form-row">
             <b-form-group class="col-4" label="Age:" label-for="age">
               <b-form-input
@@ -448,6 +462,7 @@
               ></b-form-textarea>
             </b-form-group>
           </div>
+          <!-- Submit button -->
           <b-button
             type="submit"
             class="btn btn-block"
@@ -490,6 +505,7 @@ module.exports = {
 
       played_countdown: false,
 
+      // For the end survey
       questionnaire: {
         age: null,
         gender: null,
@@ -504,6 +520,7 @@ module.exports = {
         dominant_hand: null,
         level_education: null,
       },
+      // Options for survey
       gender_opts: { male: "Male", female: "Female", other: "Other" },
       comp_type_opts: { laptop: "Laptop", desktop: "Desktop", other: "Other" },
       hand_used_opts: { left: "Left", right: "Right", both: "Both" },
@@ -520,6 +537,7 @@ module.exports = {
 
       countdown_audio: new Audio("/static/gestureApp/sound/countdown.wav"),
 
+      // Extract video and consent files from public URLs in Cloud Storage
       video_url: `https://storage.googleapis.com/motor-learning/experiment_files/${this.experiment.code}/video.mp4`,
       pdf_url: `https://storage.googleapis.com/motor-learning/experiment_files/${this.experiment.code}/consent.pdf`,
     };
@@ -527,7 +545,9 @@ module.exports = {
   props: {
     experiment: Object,
     blocks: Array,
+    // Whether the data was correctly sent to the API or not
     correctly_sent_data: Boolean,
+    // Number of tries
     unsuccessful_data_sent_counter: Number,
     subject_code: String,
   },
@@ -545,7 +565,7 @@ module.exports = {
           break;
       }
     }
-
+    // Reload page when user changes tabs, so that the experiment data does not get affected
     document.addEventListener("visibilitychange", visibilityListener);
   },
   components: {
@@ -556,6 +576,7 @@ module.exports = {
   },
   computed: {
     getTrialObj() {
+      // Passes the trial info directly to the trial component
       return {
         sequence: this.blocks[this.current_block].sequence,
         resting: this.resting,
@@ -566,10 +587,12 @@ module.exports = {
       };
     },
     isTypeNumTrials() {
+      // Returns whether the block is of type num trials or not
       if (this.blocks[this.current_block].type === "num_trials") return true;
       return false;
     },
     getPrepScreenObj() {
+      // Passes all the necessary objects to the prep screen component
       return {
         exp_code: this.experiment.code,
         video_url: this.video_url,
@@ -578,12 +601,11 @@ module.exports = {
       };
     },
   },
-  watch: {},
   methods: {
     startExperiment: function () {
       this.experiment_started = true;
-      //   this.startTrial();
       var elem = document.documentElement;
+      // Switches to full screen, depending on the browser
       if (elem.requestFullscreen) {
         elem.requestFullscreen();
       } else if (elem.webkitRequestFullscreen) {
@@ -597,6 +619,7 @@ module.exports = {
     startPractice() {
       this.practicing = true;
       var elem = document.documentElement;
+      // Switches to full screen, depending on the browser
       if (elem.requestFullscreen) {
         elem.requestFullscreen();
       } else if (elem.webkitRequestFullscreen) {
@@ -608,8 +631,8 @@ module.exports = {
       }
     },
     stopPractice() {
+      // Stops practice and starts rest
       this.$refs["practice-trial"].stopPractice();
-      // this.practicing = false;
       this.rested_after_practice = false;
     },
     startBlock: function () {
@@ -620,7 +643,6 @@ module.exports = {
       this.startTrial();
     },
     startTrial: function () {
-      //   setTimeout(() => this.$refs.timerTrial.start(), 5);
       this.started_trial_at = new Date().getTime();
     },
     practiceTrialEnded(
@@ -630,6 +652,7 @@ module.exports = {
       sequence,
       partial_correct
     ) {
+      // Runs when a practice trial ended. It either starts the next trial or stops the practice.
       if (this.experiment.with_feedback) {
         if (correct) {
           this.$notify({
@@ -720,13 +743,10 @@ module.exports = {
       this.block_started = false;
       this.capturing_keypresses = false;
 
-      // if (from_timer) {
       if (this.current_block + 1 >= this.blocks.length) this.experimentEnded();
       else this.current_block++;
-      // } else this.current_block++;
     },
     experimentEnded: function () {
-      // this.experiment_blocks.push(this.block_trials)
       this.block_trials = new Array();
       this.current_block = 0;
       this.current_trial = 0;
@@ -752,9 +772,9 @@ module.exports = {
     leaveExperiment(evt) {
       evt.preventDefault();
       this.$emit("end-survey", this.questionnaire);
-      // window.location.href = "/";
     },
     playCountdown(data) {
+      // Play countdown sound when almost three seconds are left. Won't be exactly 3.
       var remaining = data.seconds + data.milliseconds / 1000.0;
       if (remaining <= 3.15 && !this.played_countdown) {
         this.countdown_audio.play();

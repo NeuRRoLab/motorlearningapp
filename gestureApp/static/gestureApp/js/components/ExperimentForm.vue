@@ -1,3 +1,12 @@
+<!-- 
+Manages the full form used to create new experiments. Includes all the possible options users have to customize
+experiments, and includes a section to specify how blocks are going to look.
+
+The same component is used in case the user wants to edit an existing experiment. The fields autofill by extracting
+the experiment and block properties.
+
+An experiment can only be edited if it hasn't been published yet. All fields will be disabled if it is published.
+ -->
 <template>
   <div class="container">
     <h1 v-if="!editing" class="text-center">Create new Experiment</h1>
@@ -6,6 +15,7 @@
     </h1>
     <h1 v-else class="text-center">Edit experiment {{ experiment_code }}</h1>
     <b-form @submit="onSubmitExperiment" @reset="resetExperiment">
+      <!-- Study selector -->
       <b-form-group
         label="Study:"
         :label-for="'study'"
@@ -15,6 +25,7 @@
             : 'Only unpublished studies will be available. If you don\'t see any studies, you probably will need to create one first.'
         "
       >
+        <!-- Get the name and code from all unpublished studies -->
         <b-form-select
           :id="'study'"
           v-model="study.code"
@@ -34,6 +45,7 @@
           :disabled="published"
         ></b-form-select>
       </b-form-group>
+      <!-- Group selector -->
       <b-form-group
         label="Study group:"
         :label-for="'group'"
@@ -62,6 +74,7 @@
           :disabled="published"
         ></b-form-input>
       </b-form-group>
+      <!-- Allows up to a max size and only mp4 files -->
       <b-form-group
         label="Instructions video:"
         :invalid-feedback="invalidFeedbackVideoFile"
@@ -83,6 +96,7 @@
           required
         ></b-form-file>
       </b-form-group>
+      <!-- Consent form, only pdf files -->
       <b-form-group
         label="Consent form:"
         label-for="consent-form"
@@ -99,6 +113,7 @@
           required
         ></b-form-file>
       </b-form-group>
+      <!-- Textbox of experiment requirements -->
       <b-form-group
         label="Experiment requirements:"
         label-for="requirements"
@@ -153,7 +168,10 @@
           Show instructions during experiment
         </b-form-checkbox>
       </b-form-group>
-      <b-form-group>
+      <!-- Whether to show practice trials or not -->
+      <b-form-group
+        description="Turn on if you want the user to have some practice trials"
+      >
         <b-form-checkbox
           switch
           id="checkbox-practice-trials"
@@ -164,6 +182,7 @@
           Practice Trials
         </b-form-checkbox>
       </b-form-group>
+      <!-- Practice trials customizer -->
       <template v-if="with_practice_trials">
         <div class="form-row">
           <b-form-group
@@ -214,6 +233,7 @@
           </b-form-group>
         </div>
         <div class="form-row">
+          <!-- Whether to have a random sequence or not -->
           <b-form-group
             class="col-4"
             label="Practice Trials Sequence:"
@@ -272,6 +292,7 @@
         </div>
       </template>
       <h5>Blocks:</h5>
+      <!-- Blocks customizer -->
       <button
         @click="removeAllBlocks"
         class="btn btn-link text-danger"
@@ -359,6 +380,7 @@
           </b-form-group>
         </div>
         <div class="form-row">
+          <!-- To be shown in the instructions -->
           <b-form-group
             class="col-6"
             label="Hand to use:"
@@ -374,6 +396,7 @@
           </b-form-group>
         </div>
         <div class="form-row">
+          <!-- Block type -->
           <b-form-group
             class="col-6"
             label="Block type:"
@@ -490,6 +513,7 @@
             :disabled="published"
             >Submit</b-button
           >
+          <!-- If submitting, show spinner and disable everything, so that it doesn't get clicked multiple times -->
           <b-button
             v-else
             class="btn btn-block"
@@ -507,6 +531,7 @@
 module.exports = {
   data: function () {
     return {
+      // Experiment properties that are originally inherited from the props (coming from existing experiment if in edit mode, else they are the defaults)
       study: this.prop_study,
       group: this.prop_group,
       experiment_name: this.prop_experiment_name,
@@ -536,6 +561,7 @@ module.exports = {
     experiment_code: String,
     editing: Boolean,
     published: Boolean,
+    // Props from default (if creating new) or existing (if editing) experiment
     prop_study: Object,
     prop_group: Object,
     prop_experiment_name: String,
@@ -555,10 +581,6 @@ module.exports = {
     prop_with_shown_instructions: Boolean,
     prop_requirements: String,
   },
-  mounted: function () {},
-  components: {
-    "nav-bar": httpVueLoader("/static/gestureApp/js/components/NavBar.vue"),
-  },
   computed: {
     getGroupOptions() {
       if (this.study.code !== null) {
@@ -577,6 +599,7 @@ module.exports = {
       if (this.video_file.size > this.max_video_size) return false;
       else return true;
     },
+    // Will raise an alert if file size too big.
     invalidFeedbackVideoFile() {
       if (
         this.video_file !== null &&
@@ -591,13 +614,14 @@ module.exports = {
         return "";
       }
     },
+    // Checker to change color status in form input
     consentFileState() {
       if (this.consent_file === null) return null;
       else return true;
     },
   },
-  watch: {},
   methods: {
+    // Adds a new block with all default values to the experiment
     addBlock() {
       this.experiment_blocks.push({
         block_id: null,
@@ -615,18 +639,22 @@ module.exports = {
       });
     },
     removeBlock(index) {
+      // Removes block from index
       this.experiment_blocks.splice(index, 1);
     },
     removeAllBlocks() {
+      // Remove all blocks and add a sample one
       this.experiment_blocks = [];
       this.addBlock();
     },
     onSubmitExperiment(evt) {
+      // When submit is clicked
       evt.preventDefault();
       // This two changes are only to disable everything while the request to create the experiment loads
       this.submitting = true;
       this.published = true;
 
+      // Emits an event to the parent javascript file to edit/create the experiment
       this.$emit(
         "submit-experiment",
         this.experiment_name,
@@ -650,8 +678,8 @@ module.exports = {
       );
     },
     resetExperiment(evt) {
+      // Resets experiment to default values
       evt.preventDefault();
-      console.log(this.experiment_blocks);
 
       this.experiment_name = null;
       this.experiment_blocks = [];
@@ -662,6 +690,7 @@ module.exports = {
 </script>
 
 <style scoped>
+/* Some style to improve appearence of blocks */
 .block-form {
   border: 1px solid lightgray;
   padding: 10px;

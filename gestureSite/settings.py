@@ -25,8 +25,10 @@ BASE_DIR = Path(__file__).resolve(strict=True).parent.parent
 
 env_file = os.path.join(BASE_DIR, ".env")
 if not os.environ.get("GOOGLE_CLOUD_PROJECT", None):
+    # Running locally
     env.read_env(env_file)
 elif os.environ.get("GOOGLE_CLOUD_PROJECT", None):
+    # Running in App Engine
     project_id = os.environ.get("GOOGLE_CLOUD_PROJECT")
     client = secretmanager.SecretManagerServiceClient()
     settings_name = os.environ.get("SETTINGS_NAME", "django_settings")
@@ -34,9 +36,6 @@ elif os.environ.get("GOOGLE_CLOUD_PROJECT", None):
     payload = client.access_secret_version(name=name).payload.data.decode("UTF-8")
     env.read_env(io.StringIO(payload))
 
-
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/3.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = env("SECRET_KEY")
@@ -99,6 +98,7 @@ WSGI_APPLICATION = "gestureSite.wsgi.application"
 
 # Database
 # https://docs.djangoproject.com/en/3.1/ref/settings/#databases
+# Extracts the database from the environment variable
 DATABASES = {"default": env.db()}
 
 
@@ -123,13 +123,9 @@ LOGIN_URL = "/login"
 # https://docs.djangoproject.com/en/3.1/topics/i18n/
 
 LANGUAGE_CODE = "en-us"
-
 TIME_ZONE = "America/New_York"
-
 USE_I18N = True
-
 USE_L10N = True
-
 USE_TZ = True
 
 
@@ -147,9 +143,6 @@ STATIC_ROOT = os.path.join(BASE_DIR, "static")
 #  Add configuration for static files storage using whitenoise
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
-
-import dj_database_url
-
 # prod_db = dj_database_url.config(conn_max_age=500)
 # DATABASES["default"].update(prod_db)
 # print(DATABASES)
@@ -164,4 +157,3 @@ EMAIL_HOST_PASSWORD = env("APP_EMAIL_PASSWORD")
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 DEFAULT_FROM_EMAIL = env("APP_EMAIL_USERNAME")
-# EMAIL_USE_SSL = True

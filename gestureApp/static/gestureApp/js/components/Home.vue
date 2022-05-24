@@ -1,3 +1,5 @@
+<!-- Component loaded on the home page of the application. Shows form to user to input the experiment they want to perform and redirects them
+as appropriate. -->
 <template>
   <div class="container justify-content-center">
     <div class="experiment-form">
