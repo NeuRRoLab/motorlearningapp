@@ -134,3 +134,6 @@ dmypy.json
 gestureApp/config/motorlearning-f6f2e7aa15b2.json
 
 .env_external
+.env
+
+.vscode
