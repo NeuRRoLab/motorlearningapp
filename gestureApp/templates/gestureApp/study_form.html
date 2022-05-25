@@ -1,4 +1,6 @@
 {% extends 'gestureApp/base.html' %} {% block content %}
+{% comment %} HTML template that manages the study form page {% endcomment %}
+
 <div id="app">
   <App />
 </div>
@@ -7,5 +9,6 @@
 {{ study|json_script:"study" }}
 <script src="https://unpkg.com/http-vue-loader"></script>
 <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+{% comment %} Load the appropriate JS script {% endcomment %}
 <script src="{% static 'gestureApp/js/study_form.js' %}"></script>
 {% endblock %}

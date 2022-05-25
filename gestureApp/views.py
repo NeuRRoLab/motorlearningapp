@@ -37,7 +37,7 @@ from dateutil.tz import tzoffset
 from google.cloud import storage
 import numpy as np
 
-from .forms import ExperimentCode, UserRegisterForm, BlockFormSet, ExperimentForm
+from .forms import ExperimentCode, UserRegisterForm
 from .models import (
     Block,
     Experiment,
@@ -97,63 +97,6 @@ class SignUpView(CreateView):
         # self.object contains the newly created object
         login(self.request, self.object)
         return valid
-
-
-# class ExperimentCreate(CreateView):
-#     """"View to create Experiment"""
-
-#     model = Experiment
-#     template_name = "gestureApp/experiment_form.html"
-#     form_class = ExperimentForm
-#     success_url = None
-
-#     def get_context_data(self, **kwargs):
-#         data = super(ExperimentCreate, self).get_context_data(**kwargs)
-#         # If request is POST, means that the experiment is being created.
-#         if self.request.POST:
-#             # Adds formset to be able to create multiple blocks.
-#             data["blocks"] = BlockFormSet(self.request.POST)
-#         # If request is GET, then the user just entered the view
-#         else:
-#             data["blocks"] = BlockFormSet()
-#         return data
-
-#     def form_valid(self, form):
-#         """Uses the inherited form valid method to determine validity"""
-#         return super(ExperimentCreate, self).form_valid(form)
-
-#     def get_success_url(self):
-#         # self.object contains the newly created object (in this case, the experiment)
-#         return reverse_lazy(
-#             "gestureApp:experiment_create", kwargs={"pk": self.object.pk}
-#         )
-
-
-# class ExperimentUpdate(UpdateView):
-#     model = Experiment
-#     template_name = "gestureApp/experiment_form.html"
-#     form_class = ExperimentForm
-#     success_url = None
-
-#     def get_context_data(self, **kwargs):
-#         data = super(ExperimentUpdate, self).get_context_data(**kwargs)
-#         if self.request.POST:
-#             data["blocks"] = BlockFormSet(self.request.POST)
-#         else:
-#             data["blocks"] = BlockFormSet()
-#         return data
-
-#     def form_valid(self, form):
-#         context = self.get_context_data()
-#         blocks = context["blocks"]
-#         with transaction.atomic():
-#             print(form.instance)
-#         return super(ExperimentCreate, self).form_valid(form)
-
-#     def get_success_url(self):
-#         return reverse_lazy(
-#             "gestureApp:experiment_create", kwargs={"pk": self.object.pk}
-#         )
 
 
 def home(request):
@@ -1672,12 +1615,15 @@ def send_subject_code(request):
         data = json.loads(request.body)
         subject_code = data["subject_code"]
         email = data["email"]
-        send_mail(
-            "Motor Learning App - Subject Code",
-            f"Your generated subject code for motor learning experiments is {subject_code}. Save it, because it will be asked for future experiments.\n\nBest,\n\nNeuRRo Lab",
-            "lhcubill@umich.edu",
-            [email],
-        )
+        try:
+            send_mail(
+                "Motor Learning App - Subject Code",
+                f"Your generated subject code for motor learning experiments is {subject_code}. Save it, because it will be asked for future experiments.\n\nBest,\n\nNeuRRo Lab",
+                "lhcubill@umich.edu",
+                [email],
+            )
+        except Exception as e:
+            logging.error(e)
 
     return JsonResponse({})
 

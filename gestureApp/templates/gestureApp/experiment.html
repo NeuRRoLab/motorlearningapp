@@ -1,26 +1,12 @@
-{% extends 'gestureApp/base.html' %} {% load static %} 
-{% block css %}
+{% extends 'gestureApp/base.html' %} {% load static %} {% block css %}
 <link href="{% static 'gestureApp/css/video-js.css' %}" rel="stylesheet" />
-{% endblock %}
-{% block content %} 
-{% csrf_token %}
+{% endblock %} {% block content %} {% csrf_token %}
 
-<div id="experiment-info" style="display: none">
-  <h2>Block number: <span id="block-num">1</span></h2>
-  <h2>Current Trial: <span id="trial-num">1</span></h2>
-  <h3>Trials left: <span id="trials-left">0</span></h3>
-  <h2>Sequence to replicate: <b id="sequence">0</b></h2>
-  <h2>Time left: <b id="time-left">0</b></h2>
-</div>
-<div id="rest-info" style="display: none">
-  <h2>Rest</h2>
-  <h2>Time left: <b id="time-left-rest">0</b></h2>
-</div>
-<div id="div-content"></div>
 <div id="app">
   <App />
 </div>
-{% endblock %} {% block javascript %}
+{% endblock %} 
+{% block javascript %}
 <script src="https://unpkg.com/http-vue-loader"></script>
 <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 <script type="text/javascript">
@@ -34,14 +20,27 @@
   window.vueNotification = window["vue-notification"].default;
   Vue.use(vueNotification);
 </script>
-{{ experiment|json_script:"experiment" }} {{ blocks|json_script:"blocks" }}
+{% comment %} HTML information about the current experiment, for javascript to read it {% endcomment %}
+{{ experiment|json_script:"experiment" }} 
+{{ blocks|json_script:"blocks" }} 
 {{ subject_code|json_script:"subject_code" }}
 <script src="{% static 'gestureApp/js/dist/vue-countdown.js' %}"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.5.207/pdf.min.js" integrity="sha512-Vvbhrrw9oPzjTUUbw+bw/P1mMW9NW2H21DhoajJW69XzOBhICUlI5rywBcy7SI8Y5Dc9v+oIe5lXwQX0PauUCA==" crossorigin="anonymous"></script>
-<script type="text/javascript" src="{% static 'gestureApp/js/dist/video.min.js' %}"></script>
-<script type="text/javascript" src="{% static 'gestureApp/js/dist/vue-video-player.js' %}"></script>
+<script
+  src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.5.207/pdf.min.js"
+  integrity="sha512-Vvbhrrw9oPzjTUUbw+bw/P1mMW9NW2H21DhoajJW69XzOBhICUlI5rywBcy7SI8Y5Dc9v+oIe5lXwQX0PauUCA=="
+  crossorigin="anonymous"
+></script>
+<script
+  type="text/javascript"
+  src="{% static 'gestureApp/js/dist/video.min.js' %}"
+></script>
+<script
+  type="text/javascript"
+  src="{% static 'gestureApp/js/dist/vue-video-player.js' %}"
+></script>
 <script type="text/javascript">
-  Vue.use(window.VueVideoPlayer)
+  Vue.use(window.VueVideoPlayer);
 </script>
+{% comment %} Load appropriate JS script {% endcomment %}
 <script src="{% static 'gestureApp/js/experiment.js' %}"></script>
 {% endblock javascript %}

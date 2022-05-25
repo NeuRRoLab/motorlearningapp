@@ -1,21 +1,17 @@
 {% extends "gestureApp/base.html" %}
+{% comment %} HTML template that manages the login page {% endcomment %}
 {% load static %}
 {% load crispy_forms_tags %}
 {% block content %}
-    {% comment %} <link rel="stylesheet" type="text/css" href="{% static 'gestureApp/css/login.css' %}"> {% endcomment %}
+{% comment %} This is not managed by Vue: exclusively by Django and HTML {% endcomment %}
     <h1 class="text-center">Login</h1>
-    <!-- From to start session -->
+    <!-- Login form-->
     <div class="container">
         <form method="POST">
             {% csrf_token %}
-            {% comment %} <div class="imgcontainer">
-                <img src="{% static 'gestureApp/img/img_avatar2.png' %}" alt="Avatar" class="avatar">
-            </div> {% endcomment %}
-                {{ form|crispy }}
-                {% comment %} {{ form.as_p }} {% endcomment %}
-
-                <input type="hidden" name="next" value="{% url 'gestureApp:profile' %}"/>
-                <button type="submit" class="btn btn-primary btn-block">Login</button>
+            {{ form|crispy }}
+            <input type="hidden" name="next" value="{% url 'gestureApp:profile' %}"/>
+            <button type="submit" class="btn btn-primary btn-block">Login</button>
         </form>
     </div>
     <p>{{ txt }}</p>

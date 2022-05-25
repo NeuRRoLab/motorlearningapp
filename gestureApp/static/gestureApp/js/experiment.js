@@ -1,7 +1,11 @@
+// Parent script that manages the relationship between the Vue component and the Django API
+// during the actual experiment
+
 // CSRF token for axios
 axios.defaults.xsrfCookieName = 'csrftoken'
 axios.defaults.xsrfHeaderName = "X-CSRFTOKEN"
 
+// Countdown component
 Vue.component('countdown', VueCountdown);
 
 var app = new Vue({
@@ -11,11 +15,13 @@ var app = new Vue({
       experiment: '',
       blocks: [],
       subject_code: null,
+      // Some experiment properties
       with_practice_trials: false,
       num_practice_trials: 0,
       practice_is_random_seq: false,
       practice_seq: null,
       subject_code: null,
+      // Data helper variables
       correctly_sent_data: false,
       unsuccessful_data_sent_counter: 0,
     }
@@ -32,6 +38,7 @@ var app = new Vue({
   },
   computed: {
     getExperimentObj: function () {
+      // Gets experiment object that will be sent to Vue component
       return {
         experiment: this.experiment,
         blocks: this.blocks,
@@ -43,10 +50,9 @@ var app = new Vue({
   },
   methods: {
     sendData: function (experiment_blocks) {
-      console.log(this.$refs.experiment)
-      console.log(experiment_blocks);
-      // console.log(this.)
+      // Sends the data contained in the experiment blocks to the API
       if (!this.correctly_sent_data) {
+        // Create POST request
         axios.post('/api/create_trials', {
           'experiment_trials': JSON.stringify(experiment_blocks),
           'experiment': this.experiment.code,
@@ -54,22 +60,22 @@ var app = new Vue({
           'subject_code': this.subject_code,
         }
         ).then(response => {
-          console.log(response);
+          // Notify the user that the data was sent correctly
           this.$refs.experiment.$notify({
             group: 'alerts',
-            title: 'Success sending data',
+            title: 'Success sending data to the server',
             type: 'success',
           });
           this.correctly_sent_data = true;
-          // this.$refs.experiment.experiment_finished = false;
           this.$refs.experiment.experiment_started = false;
           this.subject_code = response.data.subject_code;
         }
         ).catch(error => {
           this.unsuccessful_data_sent_counter += 1;
+          // Notify that there was an error sending the data to the server
           this.$refs.experiment.$notify({
             group: 'alerts',
-            title: 'Error sending data',
+            title: 'Error sending data to the server',
             text: `Please try again. ${error}`,
             type: 'error',
           });
@@ -77,7 +83,11 @@ var app = new Vue({
       }
     },
     sendSurvey(questionnaire) {
-      axios.post(`/api/experiment/end_survey/${this.experiment.code}/`, { 'questionnaire': questionnaire, 'subject_code': this.subject_code }).then(response => window.location.href = "/");
+      // POST survey data
+      axios.post(`/api/experiment/end_survey/${this.experiment.code}/`, {
+        'questionnaire': questionnaire, 'subject_code': this.subject_code
+      }
+      ).then(response => window.location.href = "/");
     }
   },
   created: function () {

@@ -1,45 +1,38 @@
+{% comment %} Base HTML template for all other views {% endcomment %}
 <!DOCTYPE html>
 <html>
-    {% load static %}
-    <head>
-        <title>NeuRRoExperiment</title>
-        <!-- Required meta tags -->
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  {% load static %}
+  <head>
+    <title>NeuRRoExperiment</title>
+    <!-- Required meta tags -->
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, shrink-to-fit=no"
+    />
 
-        {% block title %}
-        {% endblock %}
+    {% block title %} {% endblock %}
 
-        <!-- Required Stylesheets -->
-        <link
-        type="text/css"
-        rel="stylesheet"
-        href="{% static 'gestureApp/css/bootstrap.min.css' %}"
-        />
-        {% block css %}
-        {% endblock %}
-        {% comment %} <link
-        type="text/css"
-        rel="stylesheet"
-        href="https://unpkg.com/bootstrap-vue@latest/dist/bootstrap-vue.css"
-        /> {% endcomment %}
-        {% comment %} <link href="https://cdn.jsdelivr.net/npm/vuesax/dist/vuesax.css" rel="stylesheet"> {% endcomment %}
-
-        
-    </head>
-    <body>
-        <div id="navbar">
-        </div>
-        {% block content %}{% endblock %}
-        <!-- Required scripts -->
-        {% if debug %}
-            <script src="{% static 'gestureApp/js/dist/vue.js' %}"></script>
-        {% else %}
-            <script src="{% static 'gestureApp/js/dist/vue.min.js' %}"></script>
-        {% endif %}
-        <script src="https://unpkg.com/bootstrap-vue@latest/dist/bootstrap-vue.js"></script>
-        <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-        <script type="module" src="{% static 'gestureApp/js/base.js' %}"></script>
-        {% block javascript %}{% endblock %}
-    </body>
+    <!-- Required Stylesheets -->
+    <link
+      type="text/css"
+      rel="stylesheet"
+      href="{% static 'gestureApp/css/bootstrap.min.css' %}"
+    />
+    {% block css %} {% endblock %}
+  </head>
+  <body>
+    <div id="navbar"></div>
+    {% block content %}{% endblock %}
+    <!-- Required scripts -->
+    {% if debug %}
+    <script src="{% static 'gestureApp/js/dist/vue.js' %}"></script>
+    {% else %}
+    <script src="{% static 'gestureApp/js/dist/vue.min.js' %}"></script>
+    {% endif %}
+    <script src="https://unpkg.com/bootstrap-vue@latest/dist/bootstrap-vue.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script type="module" src="{% static 'gestureApp/js/base.js' %}"></script>
+    {% block javascript %}{% endblock %}
+  </body>
 </html>

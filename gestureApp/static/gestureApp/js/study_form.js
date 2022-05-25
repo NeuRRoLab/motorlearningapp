@@ -1,3 +1,5 @@
+// Parent script that manages the relationship between the Study Form Vue component and the Django API
+
 // CSRF token for axios
 axios.defaults.xsrfCookieName = 'csrftoken'
 axios.defaults.xsrfHeaderName = "X-CSRFTOKEN"
@@ -30,7 +32,7 @@ var app = new Vue({
         study_code: this.study_code,
         editing: this.editing,
         published: this.is_study_published,
-
+        // Study properties
         prop_study_name: this.study_name,
         prop_description: this.description,
       }
@@ -56,12 +58,12 @@ var app = new Vue({
     },
   },
   created() {
-    // TODO: Read from HTML if existent
     if (document.getElementById("study") !== null) {
       // If no study data is available, then we are creating a new study
       if (!JSON.parse(document.getElementById('study').textContent))
         return;
       this.editing = true;
+      // Extract study information from HTML template
       html_study = JSON.parse(document.getElementById('study').textContent);
       this.study_code = html_study.code;
       this.is_study_published = html_study.published;

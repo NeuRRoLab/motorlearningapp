@@ -1,3 +1,6 @@
+// Parent script that manages the relationship between the Profile Vue Component and the Django API
+// Allows to modify studies, groups and experiments
+
 // CSRF token for axios
 axios.defaults.xsrfCookieName = 'csrftoken'
 axios.defaults.xsrfHeaderName = "X-CSRFTOKEN"
@@ -10,6 +13,7 @@ var app = new Vue({
       studies: [],
     }
   },
+  // Adds the notification component to allow notifying user when experiments or studies get successfully deleted
   template: `
   <div>
     <notifications
@@ -59,6 +63,7 @@ var app = new Vue({
       })
     },
     newGroup(name, study_code) {
+      // Method to create a new group (and alert when created)
       axios.post(`/api/group/new/`, { name: name, study: study_code }).then(response => {
         this.getUserStudies();
         this.$notify({
@@ -89,6 +94,7 @@ var app = new Vue({
       });
     },
     deleteExperiment(code) {
+      // Asks for confirmation between deleting experiment
       if (prompt(`Are you sure you want to delete Experiment ${code} and all its data? Enter the experiment code to confirm the deletion`) === code) {
         axios.post(`/api/experiment/delete/${code}/`).then(response => {
           this.getUserStudies();
@@ -111,6 +117,7 @@ var app = new Vue({
       });
     },
     publishStudy(code) {
+      // Asks for confirmation before publishing a study
       if (confirm("Publishing the study will forbid any future edits in its experiments and will discard the testing data. Are you sure you want to proceed?")) {
         axios.post(`/api/study/publish/${code}/`).then(response => {
           this.getUserStudies();
@@ -143,6 +150,7 @@ var app = new Vue({
       });
     },
     deleteStudy(code) {
+      // Ask for confirmation before deleting study
       if (prompt(`Are you sure you want to delete Study ${code} and all its data? Enter the study code to confirm the deletion`) === code) {
         axios.post(`/api/study/delete/${code}/`).then(response => {
           this.getUserStudies();
@@ -155,6 +163,7 @@ var app = new Vue({
       }
     },
     deleteGroup(code) {
+      // Ask for confirmation before deleting group
       if (prompt(`Are you sure you want to delete Group ${code} and all its data? Enter the group code to confirm the deletion`) === code) {
         axios.post(`/api/group/delete/${code}/`).then(response => {
           this.getUserStudies();
@@ -198,6 +207,7 @@ var app = new Vue({
     },
   },
   mounted() {
+    // Get the data when view is loaded
     this.getCurrentUser();
     this.getUserStudies();
   },

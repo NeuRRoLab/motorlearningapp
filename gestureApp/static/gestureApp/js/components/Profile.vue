@@ -1,6 +1,10 @@
+<!-- Component that shows the researcher all the unpublished and published studies and experiments
+and allows them to create new studies and/or experiments as needed. They can also see the progress of each experiment -->
 <template>
+  <!-- Only show the study data if the user object is not empty -->
   <div v-if="!isUserEmpty" class="container-fluid">
     <h1 class="text-center">Profile</h1>
+    <!-- Study and experiment creation buttons -->
     <a href="/profile/create_study" class="btn btn-lg text-center btn-primary"
       >Create Study</a
     >
@@ -21,6 +25,7 @@
         :key="study.code"
       >
         <b-card-group class="col">
+          <!-- Study card -->
           <b-card :header="`${study.name} (${study.code})`">
             <p v-if="study.description !== ''">{{ study.description }}</p>
             <p class="card-text mt-2">
@@ -51,7 +56,7 @@
                 Publish
               </b-button>
             </p>
-
+            <!-- Form to create a new group -->
             <h6>New group</h6>
             <b-form inline>
               <b-form-input
@@ -70,12 +75,14 @@
               >
             </b-form>
             <br />
+            <!-- Button to collapse the groups in the study -->
             <b-button
               v-b-toggle="'collapse_unpub_' + std_index"
               variant="primary"
               size="sm"
               >Show/hide groups</b-button
             >
+            <!-- Collapsable element with the groups -->
             <b-collapse :id="'collapse_unpub_' + std_index" class="mt-2">
               <h5>Groups</h5>
               <div v-for="(group, group_index) in study.groups" :key="group.id">
@@ -84,7 +91,7 @@
                 </h6>
                 <p class="card-text mt-2">
                   Group actions:
-                  <!-- TODO: still missing -->
+                  <!-- TODO: add edit capability to groups-->
                   <!-- <a :href="`/profile/group/edit/${group.code}`"> Edit </a> -->
                   <!-- | -->
                   <b-button
@@ -95,15 +102,19 @@
                     Delete
                   </b-button>
                 </p>
+                <!-- Button to collapse experiments -->
                 <b-button
-                  v-b-toggle="'collapse_unpub_exp_' + group_index"
+                  v-b-toggle="
+                    'collapse_unpub_' + std_index + 'exp_' + group_index
+                  "
                   variant="primary"
                   size="sm"
                   >Show/hide experiments</b-button
                 >
                 <br />
+                <!-- Collapsable element -->
                 <b-collapse
-                  :id="'collapse_unpub_exp_' + group_index"
+                  :id="'collapse_unpub_' + std_index + 'exp_' + group_index"
                   class="mt-2"
                   v-if="group.experiments.length > 0"
                 >
@@ -160,6 +171,7 @@
                         >
                           Survey data</a
                         >
+                        <!-- Shows the number of experiment responses -->
                         <b-badge
                           variant="primary"
                           pill
@@ -236,6 +248,7 @@
               size="sm"
               >Show/hide groups</b-button
             >
+            <!-- Collapsable element -->
             <b-collapse :id="'collapse_pub_' + std_index_2" class="mt-2">
               <h5>Groups</h5>
               <div v-for="(group, group_index) in study.groups" :key="group.id">
@@ -275,14 +288,17 @@
                   </b-button>
                 </p>
                 <b-button
-                  v-b-toggle="'collapse_pub_exp_' + group_index"
+                  v-b-toggle="
+                    'collapse_pub_' + std_index_2 + 'exp_' + group_index
+                  "
                   variant="primary"
                   size="sm"
                   >Show/hide experiments</b-button
                 >
                 <br />
+                <!-- Collapsable element -->
                 <b-collapse
-                  :id="'collapse_pub_exp_' + group_index"
+                  :id="'collapse_pub_' + std_index_2 + 'exp_' + group_index"
                   class="mt-2"
                   v-if="group.experiments.length > 0"
                 >
@@ -354,6 +370,7 @@
                         >
                           Survey data</a
                         >
+                        <!-- Keeps track of number of responses -->
                         <b-badge
                           variant="primary"
                           pill
@@ -386,30 +403,26 @@ module.exports = {
       group_name: null,
     };
   },
+  // Props that come from parent scripts
   props: {
     current_user: Object,
     studies: Array,
   },
-  mounted: function () {},
-  components: {},
   computed: {
+    // Returns list of published studies
     published_studies() {
       return this.studies.filter((s) => s.published);
     },
+    // Returns list of unpublished studies
     unpublished_studies() {
       return this.studies.filter((s) => !s.published);
     },
+    // Determines whether the user is empty or not
     isUserEmpty() {
       return (
         Object.keys(this.current_user).length === 0 &&
         this.current_user.constructor === Object
       );
-    },
-  },
-  watch: {},
-  methods: {
-    isObjectEmpty: function (obj) {
-      return Object.keys(obj).length === 0 && obj.constructor === Object;
     },
   },
 };

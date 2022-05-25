@@ -3,6 +3,7 @@ as appropriate. -->
 <template>
   <div class="container justify-content-center">
     <div class="experiment-form">
+      <!-- Form to fill out experiment, study and group code -->
       <b-form @submit="goToExperiment">
         <div class="form-row">
           <b-form-group class="col" label="Study Code:" label-for="study-code">
@@ -163,17 +164,14 @@ module.exports = {
     subject_code: String,
     email_response: String,
   },
-  mounted: function () {},
-  components: {
-    "nav-bar": httpVueLoader("/static/gestureApp/js/components/NavBar.vue"),
-  },
-  computed: {},
   watch: {
+    // Update the subject code input variable from the input of the form
     subject_code: function (newVal, oldVal) {
       this.subject_code_input = newVal;
     },
   },
   methods: {
+    // Get input to upper case
     onInputStudy: function (input) {
       this.study_code = input.toUpperCase();
     },
@@ -183,6 +181,7 @@ module.exports = {
     onInputExperiment: function (input) {
       this.exp_code = input.toUpperCase();
     },
+    // Add parameters to request and go to experiment
     goToExperiment(evt) {
       evt.preventDefault();
       this.logging_in = true;
@@ -205,6 +204,7 @@ module.exports = {
 </script>
 
 <style scoped>
+/* Add specific style to form */
 .experiment-form {
   border: 1px solid lightgray;
   width: 730px;

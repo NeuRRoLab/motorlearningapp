@@ -1,8 +1,12 @@
+<!-- Component that manages the actual showing of keys in a screen and also captures the keypresses -->
 <template>
   <div>
+    <!-- If not resting -->
     <template v-if="!resting">
       <h4 class="text-center">Enter Key Sequence:</h4>
       <div class="text-center">
+        <!-- For each character in the sequence, show the appropriate square for it -->
+        <!-- If practicing, show the practice sequence -->
         <div
           :ref="'seq-' + (index - 1)"
           :value="practice ? practice_sequence : sequence[index - 1]"
@@ -13,6 +17,7 @@
           {{ practice ? practice_sequence[index - 1] : sequence[index - 1] }}
         </div>
       </div>
+      <!-- Countdown timer -->
       <p class="text-center">
         Time left:
         <countdown
@@ -31,8 +36,10 @@
         seconds
       </p>
     </template>
+    <!-- Resting -->
     <template v-else>
       <h1 class="text-center">Rest</h1>
+      <!-- Countdown timer -->
       <p class="text-center">
         Time left:
         <countdown
@@ -75,9 +82,11 @@ module.exports = {
     with_feedback: Boolean,
   },
   mounted: function () {
+    // Add listener to keypresses
     window.addEventListener("keydown", this.keydownHandler);
+    // Create random sequence for practice if needed
     if (this.practice && this.random_seq)
-      this.practice_sequence = this.makeid(5);
+      this.practice_sequence = this.make_sequence(5);
     else if (this.practice && !this.random_seq)
       this.practice_sequence = this.sequence;
   },
@@ -85,7 +94,8 @@ module.exports = {
   computed: {},
   watch: {},
   methods: {
-    makeid(length) {
+    make_sequence(length) {
+      // Make a random sequence of length 'length' using only characters from 1 to 5.
       var result = "";
       var characters = "12345";
       var charactersLength = characters.length;
@@ -102,9 +112,13 @@ module.exports = {
     trialEnded(do_rest = true, from_timer = false, started_trial_at = true) {
       // If the trial doesn't have a starting timestamp, then do nothing
       if (!started_trial_at) return;
+
+      // Sequence the user is trying to complete
       let sequence = this.sequence;
       if (this.practice) sequence = this.practice_sequence;
+      // Whether the inputted sequence matches the expected sequence
       let correct = this.current_inputted_sequence.join("") === sequence;
+      // Whether the sequence was partially correct or not (user didn't manage to complete it, but started properly)
       let partial_correct = correct;
       if (from_timer && this.current_inputted_sequence.length > 0) {
         partial_correct =
@@ -112,8 +126,10 @@ module.exports = {
           sequence.slice(0, this.current_inputted_sequence.length);
       }
 
+      // Avoid doing rest after finishing practice trials
       this.resting = true;
       if (do_rest) {
+        // Submit trial to parent script
         this.$emit(
           "trial-ended",
           correct,
@@ -122,25 +138,27 @@ module.exports = {
           sequence,
           partial_correct
         );
+        // Start the resting countdown timer
         this.$nextTick(() => {
           if (this.$refs.timerRest) this.$refs.timerRest.start();
         });
       }
+      // Create empty keypresses and inputted sequence arrays for a new trial
       this.keypresses_trial = new Array();
       this.current_inputted_sequence = new Array();
     },
     restEnded() {
+      // Runs when rest ends
       this.$emit("rest-ended");
       this.resting = false;
+      // Creates a new random practice sequence if practicing
       if (this.practice && this.random_seq)
         this.practice_sequence = this.makeid(5);
       else if (this.practice && !this.random_seq)
         this.practice_sequence = this.sequence;
     },
-    incorrectSequence() {
-      this.$refs.timerTrial.end();
-    },
     keydownHandler: function (e) {
+      // Manages input of keypresses
       // Do not count special keys
       if (
         e.key === "Alt" ||
@@ -151,14 +169,15 @@ module.exports = {
       )
         return;
       if (!this.resting && this.capturing_keypresses) {
-        // TODO: Only count digits as keypresses
         let sequence = this.sequence;
         if (this.practice) {
           sequence = this.practice_sequence;
         }
-
+        // Get keypress timestamp.
+        // TODO: could improve timing here
         var timestamp = new Date().getTime();
         this.current_inputted_sequence.push(e.key);
+        // TODO: Only count digits as keypresses
         this.keypresses_trial.push({ value: e.key, timestamp: timestamp });
         // Check if the inputted key is correct
         var index = this.current_inputted_sequence.length - 1;
@@ -169,7 +188,6 @@ module.exports = {
         } else {
           this.$refs["seq-" + index.toString()][0].style.backgroundColor =
             "#F5793A";
-          // this.incorrectSequence();
         }
         // Finished sequence!
         if (
@@ -181,6 +199,7 @@ module.exports = {
     },
   },
   destroyed() {
+    // Remove listener once the trials are done
     window.removeEventListener("keydown", this.keydownHandler);
   },
 };

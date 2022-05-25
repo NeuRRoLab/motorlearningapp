@@ -17,3 +17,10 @@
 __pycache__/
 # Ignored by the build system
 /setup.cfg
+
+# Project specific
+.env
+.env_external
+.cloud_sql_proxy
+./deploy.sh
+config/

@@ -1,20 +1,13 @@
 {% extends 'gestureApp/base.html' %}
+{% comment %} HTML template that manages homepage {% endcomment %}
 {% block content %}
-  {% comment %} {% if request.user.is_authenticated %}
-  <a href="{% url 'gestureApp:logout' %}">Logout</a>
-  <a href="{% url 'gestureApp:profile' %}">Profile</a>
-  {% else %}
-  <a href="{% url 'gestureApp:login' %}">Log In</a>
-  <a href="{% url 'gestureApp:register' %}">Register</a>
-  {% endif %} {% endcomment %}
-
   <div id="app">
       <App/>
-  </div>
-  
+  </div>  
 {% endblock content %}
 {% block javascript %}
   <script src="https://unpkg.com/http-vue-loader"></script>
   {% load static %}
+  {% comment %} Load the appropriate JS script {% endcomment %}
   <script src="{% static 'gestureApp/js/home.js' %}"></script> 
 {% endblock javascript %}

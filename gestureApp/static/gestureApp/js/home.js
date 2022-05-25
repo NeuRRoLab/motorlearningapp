@@ -1,3 +1,7 @@
+// Parent script that manages relationship between Home Vue component
+// and the Django API
+// Shows in the homepage
+
 // CSRF token for axios
 axios.defaults.xsrfCookieName = 'csrftoken'
 axios.defaults.xsrfHeaderName = "X-CSRFTOKEN"
@@ -46,8 +50,6 @@ var app = new Vue({
       }).catch(err => `Failed sending email to ${email}. ${err}`);
 
     }
-  },
-  created: function () {
   },
 });
 

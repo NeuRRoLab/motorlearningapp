@@ -1,6 +1,9 @@
 from pynput import keyboard
 import time
 
+# TODO: not being used currently, but was thought as a script to validate the timing of the
+# platform
+
 
 class ExperimentValidation:
     def __init__(self):

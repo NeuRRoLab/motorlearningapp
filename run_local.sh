@@ -1,4 +1,4 @@
-sudo service postgres stop
+sudo service postgresql stop
 # Make sure the gcloud shell tool is enabled and connected to a google account with access to the project
 # This way of running the program kills also the connection to the database when exited
 (trap 'kill 0' INT; \

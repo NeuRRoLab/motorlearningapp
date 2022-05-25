@@ -1,14 +1,15 @@
+// Base script that is imported into every HTML template.
+// Manages the base structure of the web app, mostly nav bar and logged user
+
 // CSRF token for axios
-axios.defaults.xsrfCookieName = 'csrftoken'
-axios.defaults.xsrfHeaderName = "X-CSRFTOKEN"
+axios.defaults.xsrfCookieName = "csrftoken";
+axios.defaults.xsrfHeaderName = "X-CSRFTOKEN";
 
 var app = new Vue({
-    el: '#navbar',
+    el: "#navbar",
     data: () => ({
         current_user: {},
     }),
-    components: {
-    },
     template: `
     <div>
         <b-navbar sticky variant="light" type="light">
@@ -35,18 +36,17 @@ var app = new Vue({
     </div>
   `,
     methods: {
+        // Gets current user from API
         getCurrentUser() {
-            axios.get('/api/current_user').then(response => {
+            axios.get("/api/current_user").then((response) => {
                 this.current_user = response.data;
-            })
+            });
         },
         isObjectEmpty: function (obj) {
             return Object.keys(obj).length === 0 && obj.constructor === Object;
         },
     },
-    computed: {
-
-    },
+    computed: {},
     created() {
         this.getCurrentUser();
     },

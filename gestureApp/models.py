@@ -9,6 +9,8 @@ from collections import defaultdict
 
 
 class User(AbstractUser):
+    """Main user of the application. Refers to the researcher, not the participant"""
+
     organization = models.CharField(max_length=50)
 
     def __str__(self):
@@ -16,25 +18,28 @@ class User(AbstractUser):
 
 
 class Subject(models.Model):
+    """Participant in a given study"""
+
+    # Random code to represent it
     code = models.CharField(max_length=16, blank=True, editable=False, primary_key=True)
 
     def save(self, *args, **kwargs):
         if not self.code:
+            # generate random code
             self.code = "".join(
                 random.choices(string.ascii_letters + string.digits, k=16)
             )
-            # using your function as above or anything else
         success = False
         failures = 0
+        # Do the process until finding a subject code that has not been created yet.
+        # Very very unlikely to be run more than once
         while not success:
             try:
                 super(Subject, self).save(*args, **kwargs)
             except IntegrityError:
                 failures += 1
-                if (
-                    failures > 5
-                ):  # or some other arbitrary cutoff point at which things are clearly wrong
-                    raise
+                if failures > 5:
+                    raise Exception("Could not create a subject without collisions")
                 else:
                     # looks like a collision, try another random value
                     self.code = "".join(
@@ -48,13 +53,17 @@ class Subject(models.Model):
 
 
 class Study(models.Model):
+    """Represents the study in the database. Contains all possible properties and is linked by groups and experiments."""
+
+    # Code to represent study
     code = models.CharField(max_length=4, blank=True, editable=False, primary_key=True)
     name = models.CharField(max_length=100)
     created_at = models.DateTimeField(auto_now_add=True)
+    # If user is deleted, all studies are deleted as well
     creator = models.ForeignKey(User, models.CASCADE, related_name="studies")
     description = models.TextField(null=True, default="")
 
-    # flag to know if the experiment should be shown or not
+    # Study properties
     published = models.BooleanField(default=False)
     published_timestamp = models.DateTimeField(blank=True, null=True, default=None)
     enabled = models.BooleanField(default=True)
@@ -64,18 +73,16 @@ class Study(models.Model):
             self.code = "".join(
                 random.choices(string.ascii_uppercase + string.digits, k=4)
             )
-            # using your function as above or anything else
         success = False
         failures = 0
+        # Run until code with no collisions is found
         while not success:
             try:
                 super(Study, self).save(*args, **kwargs)
             except IntegrityError:
                 failures += 1
-                if (
-                    failures > 5
-                ):  # or some other arbitrary cutoff point at which things are clearly wrong
-                    raise
+                if failures > 5:
+                    raise Exception("Could not create study code without collisions")
                 else:
                     # looks like a collision, try another random value
                     self.code = "".join(
@@ -84,26 +91,17 @@ class Study(models.Model):
             else:
                 success = True
 
-    def to_dict2(self):
-        return {
-            "code": self.code,
-            "name": self.name,
-            "groups": [
-                g.to_dict() for g in self.groups.prefetch_related("experiments").all()
-            ],
-            "experiments": [
-                e.to_dict() for e in self.experiments.order_by("created_at").all()
-            ],
-            "created_at": self.created_at,
-            "published": self.published,
-            "creator": self.creator.username,
-            "description": self.description,
-            "enabled": self.enabled,
-        }
-
     def to_dict(self):
+        """Helper method to convert study to a dict to be readable from an HTML template
+
+        Returns:
+            dict: study dict with all the necessary fields
+        """
+        # Get all experiments from this study
         experiments = list(self.experiments.order_by("created_at").values())
+        # Get all groups
         groups = list(self.groups.values())
+        # get all subjects, and get specific data from them
         subjects = list(
             Subject.objects.filter(trials__block__experiment__in=self.experiments.all())
             .annotate(exp_code=F("trials__block__experiment__code"))
@@ -112,6 +110,8 @@ class Study(models.Model):
             .annotate(published_at=F("trials__block__experiment__published_timestamp"))
             .values()
         )
+        # If the study is published, get all subjects that did the experiment after the publish date
+        # Else, get all subjects
         exp_subjects = defaultdict(set)
         for s in subjects:
             # Factor in the published or unpublished status of the experiment
@@ -128,7 +128,7 @@ class Study(models.Model):
         creator = self.creator.username
 
         for e in experiments:
-            # Replace group id by a group object
+            # Replace group id by a group dict
             group_id = e["group_id"]
             e["group"] = {"code": group_id, "name": groups_names[group_id]}
             # Replace study id by a study object
@@ -144,6 +144,7 @@ class Study(models.Model):
         for g in groups:
             g["experiments"] = [e for e in experiments if e["group_id"] == g["code"]]
 
+        # Final study dictionary
         study_dict = {
             "code": self.code,
             "name": self.name,
@@ -159,30 +160,36 @@ class Study(models.Model):
 
 
 class Group(models.Model):
+    """Represents a group in the database"""
+
+    # 4 character code to represent it
     code = models.CharField(max_length=4, blank=True, editable=False, primary_key=True)
     name = models.CharField(max_length=100)
+    # If study is deleted all the groups in it get deleted as well
     study = models.ForeignKey(Study, on_delete=models.CASCADE, related_name="groups")
     created_at = models.DateTimeField(auto_now_add=True)
     creator = models.ForeignKey(User, models.CASCADE, related_name="study_groups")
+
+    # Group property
     enabled = models.BooleanField(default=True)
 
     def save(self, *args, **kwargs):
         if not self.code:
+            # Generate code
             self.code = "".join(
                 random.choices(string.ascii_uppercase + string.digits, k=4)
             )
             # using your function as above or anything else
         success = False
         failures = 0
+        # Run until code with no collisions is found
         while not success:
             try:
                 super(Group, self).save(*args, **kwargs)
             except IntegrityError:
                 failures += 1
-                if (
-                    failures > 5
-                ):  # or some other arbitrary cutoff point at which things are clearly wrong
-                    raise
+                if failures > 5:
+                    raise Exception("Could not create group code without collisions")
                 else:
                     # looks like a collision, try another random value
                     self.code = "".join(
@@ -192,6 +199,11 @@ class Group(models.Model):
                 success = True
 
     def to_dict(self):
+        """Helper method to export group to a dictionary
+
+        Returns:
+            dict: group dictionary
+        """
         return {
             "code": self.code,
             "name": self.name,
@@ -205,24 +217,27 @@ class Group(models.Model):
 
 
 class Experiment(CloneMixin, models.Model):
+    """Represents an experiment in the database. An experiment contains multiple blocks"""
+
     code = models.CharField(max_length=4, blank=True, editable=False, primary_key=True)
     name = models.CharField(max_length=100)
     created_at = models.DateTimeField(auto_now_add=True)
     creator = models.ForeignKey(User, models.CASCADE, related_name="experiments")
-    # FIXME: remove the null
+    # If a study is deleted, all related experiments are deleted
     study = models.ForeignKey(
-        Study, models.CASCADE, related_name="experiments", null=True
+        Study, models.CASCADE, related_name="experiments", null=False
     )
+    # If a group is deleted, all related experiments are deleted
     group = models.ForeignKey(
-        Group, models.CASCADE, related_name="experiments", null=True
+        Group, models.CASCADE, related_name="experiments", null=False
     )
 
-    # flag to know if the experiment should be shown or not
+    # Experiments properties
     published = models.BooleanField(default=False)
     published_timestamp = models.DateTimeField(blank=True, null=True, default=None)
     enabled = models.BooleanField(default=True)
 
-    # TODO: maybe get all of the practice info into a block type
+    # TODO: maybe get all of the practice info into a type object or something
     with_practice_trials = models.BooleanField(default=True)
     num_practice_trials = models.IntegerField(default=5, null=True, blank=True)
     practice_is_random_seq = models.BooleanField(default=True, null=True, blank=True)
@@ -232,9 +247,8 @@ class Experiment(CloneMixin, models.Model):
     practice_rest_time = models.FloatField(default=5, null=True, blank=True)
     rest_after_practice = models.FloatField(default=0, null=True, blank=True)
 
-    # Requirements
+    # Experiment requirements
     requirements = models.TextField()
-
     # For the trials
     with_feedback = models.BooleanField(default=True)
     # For the blocks
@@ -242,24 +256,24 @@ class Experiment(CloneMixin, models.Model):
     # Whether to show instructions during experiment
     with_shown_instructions = models.BooleanField(default=True)
 
+    # To be able to clone the blocks when cloning the experiment
     _clone_m2o_or_o2m_fields = ["blocks"]
 
     def save(self, *args, **kwargs):
+        # Generate random code
         if not self.code:
             self.code = "".join(
                 random.choices(string.ascii_uppercase + string.digits, k=4)
             )
-            # using your function as above or anything else
         success = False
         failures = 0
+        # Do until no collisions are found
         while not success:
             try:
                 super(Experiment, self).save(*args, **kwargs)
             except IntegrityError:
                 failures += 1
-                if (
-                    failures > 5
-                ):  # or some other arbitrary cutoff point at which things are clearly wrong
+                if failures > 5:
                     raise
                 else:
                     # looks like a collision, try another random value
@@ -273,6 +287,9 @@ class Experiment(CloneMixin, models.Model):
         return self.code + " | " + self.name
 
     def num_responses(self):
+        """Return the number of people that have performed the experiment"""
+
+        # If the experiment is published, return the number of people that have responded to the experiment since its publishing timestamp
         if self.published:
             return (
                 Subject.objects.filter(
@@ -283,6 +300,7 @@ class Experiment(CloneMixin, models.Model):
                 .count()
             )
         else:
+            # Else, return all subjects who have done the experiment
             return (
                 Subject.objects.filter(trials__block__experiment=self)
                 .distinct()
@@ -290,19 +308,18 @@ class Experiment(CloneMixin, models.Model):
             )
 
     def has_done_experiment(self, subject):
+        """Returns whether the subject has performed this experiment or not"""
         return self.blocks.filter(trials__subject=subject).exists()
 
     def to_dict(self):
-        try:
-            study_code = self.study.code
-            study_name = self.study.name
-        except AttributeError:
-            study_code = None
-            study_name = None
-        try:
-            group = {"code": self.group.code, "name": self.group.name}
-        except AttributeError:
-            group = None
+        """Helper method to transform experiment to dictionary
+
+        Returns:
+            dict: experiment dictionary
+        """
+        study_code = self.study.code
+        study_name = self.study.name
+        group = {"code": self.group.code, "name": self.group.name}
 
         return {
             "code": self.code,
@@ -330,21 +347,30 @@ class Experiment(CloneMixin, models.Model):
 
 
 class Block(CloneMixin, models.Model):
+    """Represents a single block in an experiment in the database"""
+
     class BlockTypes(models.TextChoices):
+        """Types the block can be"""
+
         MAX_TIME = "max_time"
         NUM_TRIALS = "num_trials"
 
+    # If parent experiment deleted, all blocks are deleted as well.
     experiment = models.ForeignKey(
         Experiment, related_name="blocks", on_delete=models.CASCADE
     )
+    # Sequence of this block
     sequence = models.CharField(max_length=50)
     seq_length = models.IntegerField(null=True)
     is_random = models.BooleanField(default=False)
     # Whether or not to show the same sequence everytime
+    # TODO: not being used currently
     is_fixed = models.BooleanField(default=True)
+    # Hand to show in instructions
     hand_to_use = models.CharField(max_length=30, default="right")
 
     max_time_per_trial = models.FloatField(default=5)
+    # Resting time between trials
     resting_time = models.FloatField(default=10)
 
     type = models.CharField(max_length=12, choices=BlockTypes.choices)
@@ -355,6 +381,8 @@ class Block(CloneMixin, models.Model):
     sec_until_next = models.FloatField(default=0)
 
     def clean(self):
+        """Validation method for the block properties"""
+        # More checks can be added
         if self.type == Block.BlockTypes.MAX_TIME and self.max_time is None:
             raise ValidationError("Block type is of max time, but no max time supplied")
         elif self.type == Block.BlockTypes.NUM_TRIALS and self.num_trials is None:
@@ -364,7 +392,11 @@ class Block(CloneMixin, models.Model):
 
 
 class Trial(models.Model):
+    """Represents a trial completed by a subject in the database database"""
+
+    # If the corresponding block is deleted, all associated trials should be deleted as well
     block = models.ForeignKey(Block, on_delete=models.CASCADE, related_name="trials")
+    # Prevent deletion if the corresponding subject is deleted
     subject = models.ForeignKey(
         Subject, on_delete=models.PROTECT, related_name="trials"
     )
@@ -380,12 +412,16 @@ class Trial(models.Model):
 
 
 class Keypress(models.Model):
+    """Represents a keypress in the database. A trial is composed of multiple keypresses"""
+
     class Meta:
         ordering = ["timestamp"]
 
+    # Delete keypresses if the trial is deleted
     trial = models.ForeignKey(
         Trial, related_name="keypresses", on_delete=models.CASCADE
     )
+    # Which key was pressed
     value = models.CharField(max_length=1)
     timestamp = models.DateTimeField()
 
@@ -394,7 +430,11 @@ class Keypress(models.Model):
 
 
 class EndSurvey(models.Model):
+    """Represents the full end survey in the database"""
+
+    # Potentially could be saved in a NoSQL database for simplicity
     experiment = models.ForeignKey(Experiment, on_delete=models.CASCADE)
+    # Set subject field to null if corresponding subject is deleted
     subject = models.OneToOneField(
         Subject, on_delete=models.SET_NULL, null=True, related_name="survey"
     )

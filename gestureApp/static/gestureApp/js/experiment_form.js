@@ -1,3 +1,6 @@
+// Script that manages the connection between the Vue component of
+// the experiment form and the actual Django API
+
 // CSRF token for axios
 axios.defaults.xsrfCookieName = 'csrftoken'
 axios.defaults.xsrfHeaderName = "X-CSRFTOKEN"
@@ -8,6 +11,7 @@ var app = new Vue({
     return {
       studies: [],
       groups: [],
+      // Experiment properties
       study: { code: null, name: null },
       group: { code: null, name: null },
       experiment_code: null,
@@ -41,6 +45,7 @@ var app = new Vue({
           hand_to_use: null,
         },
       ],
+      // Form options
       block_types: [
         { value: null, text: "Please select a block type" },
         { value: "max_time", text: "Maximum time" },
@@ -56,6 +61,7 @@ var app = new Vue({
       editing: false,
     }
   },
+  // Show the experiment form component
   template: `
       <div>
         <ExperimentForm v-bind="getExperimentFormData"
@@ -67,6 +73,7 @@ var app = new Vue({
     'ExperimentForm': httpVueLoader('/static/gestureApp/js/components/ExperimentForm.vue'),
   },
   computed: {
+    // Fills up all experiment properties
     getExperimentFormData() {
       return {
         studies: this.studies,
@@ -97,6 +104,8 @@ var app = new Vue({
     }
   },
   methods: {
+    // Submit newly created or edited study to the API, with all the necessary properties
+    // TODO: maybe convert properties to one object for easier access and better syntax
     submitExperiment(name, study_code, group_code, with_practice_trials, practice_trials, practice_is_random_sequence, practice_seq_length, practice_sequence, practice_trial_time, practice_rest_time, blocks, video_file, consent_file, with_feedback, with_feedback_blocks, with_shown_instructions, rest_after_practice, requirements) {
       let obj = {
         code: this.experiment_code,
@@ -120,10 +129,12 @@ var app = new Vue({
       // Prevent editing if already published
       if (this.published) return;
 
+      // Form data to upload the files to Cloud Storage
       let formData = new FormData();
       formData.append("consent", consent_file);
       formData.append("video", video_file);
       if (!this.editing)
+        // If creating a new experiment
         axios.post('/profile/create_experiment', obj).then(response => {
           axios.post(`/profile/experiment/upload_files/${response.data.code}/`, formData)
             .then(response =>
@@ -131,7 +142,7 @@ var app = new Vue({
             );
         })
       else {
-
+        // If editing an existing experiment
         axios.post(`/profile/experiment/edit/${this.experiment_code}/`, obj).then(response => {
           console.log(response);
           axios.post(`/profile/experiment/upload_files/${this.experiment_code}/`, formData)
@@ -143,17 +154,20 @@ var app = new Vue({
     },
     getUserStudies() {
       axios.get('/api/user_studies').then(response => {
-        // Only unpublished studies
+        // Only unpublished studies (managed in Django)
         this.studies = response.data.studies;
       })
     },
   },
   created() {
+    // Method that runs when the page loads
     this.getUserStudies();
     if (document.getElementById("experiment") !== null && document.getElementById("blocks") !== null) {
       // If no experiment data is available, then we are creating a new experiment
       if (!JSON.parse(document.getElementById('experiment').textContent) || !JSON.parse(document.getElementById('blocks').textContent))
         return;
+      // If experiment data is available, then we are creating a new experiment.
+      // fill the experiment properties from the HTML elements
       this.editing = true;
       html_experiment = JSON.parse(document.getElementById('experiment').textContent);
       this.study = html_experiment.study;
@@ -174,6 +188,7 @@ var app = new Vue({
       this.rest_after_practice = html_experiment.rest_after_practice;
       this.requirements = html_experiment.requirements;
 
+      // Get all blocks from the HTML template
       html_blocks = JSON.parse(document.getElementById('blocks').textContent);
       if (html_blocks !== undefined && html_blocks.length != 0) {
         this.experiment_blocks = [];

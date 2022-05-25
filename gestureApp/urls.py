@@ -6,6 +6,7 @@ from . import views
 
 app_name = "gestureApp"
 urlpatterns = [
+    # Home view
     path("", views.home, name="home"),
     path(
         "login",
@@ -39,7 +40,6 @@ urlpatterns = [
     ),
     re_path(r"^experiment/(?P<pk>[A-Z0-9]{4})/$", views.experiment, name="experiment",),
     re_path(r"^study/(?P<pk>[A-Z0-9]{4})/$", views.study, name="study",),
-    # path("prep_screen/", views.preparation_screen, name="prep_screen"),
     path("raw_data/", views.download_raw_data, name="download_raw_data"),
     path(
         "processed_data/", views.download_processed_data, name="download_processed_data"
@@ -116,11 +116,6 @@ urlpatterns = [
         views.end_survey,
         name="end_survey",
     ),
-    # re_path(
-    #     r"^api/experiment/bonstrup_metrics/(?P<pk>[A-Z0-9]{4})/$",
-    #     views.download_bonstrup_processed,
-    #     name="bonstrup_metrics",
-    # ),
     re_path(
         r"^api/experiment/download_end_survey/(?P<pk>[A-Z0-9]{4})/$",
         views.download_survey,
