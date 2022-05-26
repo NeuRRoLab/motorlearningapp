@@ -81,54 +81,54 @@ Table explaining each of the file headers
 
 #### Raw data
 
-|           Header           | Type | Description |
-| :------------------------: | :--: | :---------: |
-|      experiment_code       |      |             |
-|        subject_code        |      |             |
-|          block_id          |      |             |
-|       block_sequence       |      |             |
-|          trial_id          |      |             |
-|     was_trial_correct      |      |             |
-| was_partial_trial_correct  |      |             |
-|     keypress_timestamp     |      |             |
-|       keypress_value       |      |             |
-|    was_keypress_correct    |      |             |
-| diff_between_keypresses_ms |      |             |
+|         **Header**         | **Type** |                                                                                       **Description**                                                                                        |
+| :------------------------: | :------: | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
+|      experiment_code       |  string  |                                                                       4-character code that represents the experiment                                                                        |
+|        subject_code        |  string  |                                                                        16-character code that represents the subject                                                                         |
+|          block_id          | integer  |                                                                             Block number that this row refers to                                                                             |
+|       block_sequence       |  string  |                                                         Sequence of the current block. Resets to one when there is a subject change                                                          |
+|          trial_id          | integer  |                                                           Number of the current trial. Resets to one when there is a block change                                                            |
+|     was_trial_correct      | boolean  |                                                          Whether the current trial as a whole was correctly inputted by the subject                                                          |
+| was_partial_trial_correct  | boolean  | Whether the current trial as a whole was partially correct. It can be partially correct when the subject runs out of time in a given block but the inputted sequence so far had been correct |
+|     keypress_timestamp     | datetime |                                                         YYYY-MM-DD HH:MM:SS.MS format for the timestamp at which the key was pressed                                                         |
+|       keypress_value       |  string  |                                                                                 The value of the key pressed                                                                                 |
+|    was_keypress_correct    | boolean  |                                            Whether the keypress was correct in the context of the current sequence and location in that sequence                                             |
+| diff_between_keypresses_ms | integer  |                                                         How many milliseconds were there between the last keypress and this keypress                                                         |
 
 #### Processed data
 
-|          **Header**          | **Type** | **Description** |
-| :--------------------------: | :------: | :-------------: |
-|       experiment_code        |          |                 |
-|         subject_code         |          |                 |
-|           block_id           |          |                 |
-|        block_sequence        |          |                 |
-|           trial_id           |          |                 |
-|        correct_trial         |          |                 |
-|  accumulated_correct_trials  |          |                 |
-|      execution_time_ms       |          |                 |
-|      tapping_speed_mean      |          |                 |
-| tapping_speed_extra_keypress |          |                 |
+|          **Header**          | **Type** |                                                     **Description**                                                      |
+| :--------------------------: | :------: | :----------------------------------------------------------------------------------------------------------------------: |
+|       experiment_code        |  string  |                                     4-character code that represents the experiment                                      |
+|         subject_code         |  string  |                                      16-character code that represents the subject                                       |
+|           block_id           | integer  |                                           Block number that this row refers to                                           |
+|        block_sequence        |  string  |                       Sequence of the current block. Resets to one when there is a subject change                        |
+|           trial_id           | integer  |                         Number of the current trial. Resets to one when there is a block change                          |
+|        correct_trial         | boolean  |                             Whether the current trial was correctly inputted by the subject                              |
+|  accumulated_correct_trials  | integer  |  Accumulated number of correct trials in a given block. If all trials are correct, this number would match the trial_id  |
+|      execution_time_ms       | integer  |                          Time in milliseconds between the first and last keypress of the trial                           |
+|      tapping_speed_mean      |  float   |                         One over the mean time in milliseconds between keypresses in this trial                          |
+| tapping_speed_extra_keypress |  float   | One over the mean time in milliseconds between keypresses, including the time between trial start and the first keypress |
 
 #### End survey
 
-|             Header              | Type | Description |
-| :-----------------------------: | :--: | :---------: |
-|         experiment_code         |      |             |
-|          subject_code           |      |             |
-|      started_experiment_at      |      |             |
-|               Age               |      |             |
-|             Gender              |      |             |
-|          Computer Type          |      |             |
-|        Medical condition        |      |             |
-|   Hours of Sleep night before   |      |             |
-|       Excercise Regularly       |      |             |
-|       Level of Education        |      |             |
-| Done keypress experiment before |      |             |
-|      Followed instructions      |      |             |
-|    Hand used for experiment     |      |             |
-|          Dominant Hand          |      |             |
-|            Comments             |      |             |
+|           **Header**            | **Type** |                                                                                         **Description**                                                                                         |
+| :-----------------------------: | :------: | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
+|         experiment_code         |  string  |                                                                         4-character code that represents the experiment                                                                         |
+|          subject_code           |  string  |                                                                          16-character code that represents the subject                                                                          |
+|      started_experiment_at      | datetime |                                                         Datetime in UTC at which the subject started the first trial of the experiment                                                          |
+|               Age               | integer  |                                                                                         Age of subject                                                                                          |
+|             Gender              |  string  |                                                                     Gender of subject. Can be "male", "female", or "other"                                                                      |
+|          Computer Type          |  string  |                                                          Type of computer used for experiment. Can be "laptop", "desktop", or "other"                                                           |
+|        Medical condition        | boolean  |     Answer to the question "Do you have any medical conditions (e.g., recent surgery, fracture, vision problem, stroke) that could have potentially affected your performance on the task?"     |
+|   Hours of Sleep night before   | integer  |                                                                        How many hours the subject slept the night before                                                                        |
+|       Excercise Regularly       | boolean  |                                                                        Answer to question: "Do you exercise regularly?"                                                                         |
+|       Level of Education        |  string  | Level of education completed. Can be "kindergarten_or_below", "first_to_sixth", "seventh_to_ninth", "tenth_to_twelfth", "community_college_or_associate_degree", "bachelor", or "master_or_phd" |
+| Done keypress experiment before | boolean  |                                                                      Whether they have done keypressing experiments before                                                                      |
+|      Followed instructions      | boolean  |                                                              Answer to the question: "Did you follow the experiment instructions?"                                                              |
+|    Hand used for experiment     |  string  |                                                             Hand subject used for the experiment. Can be "left", "right", or "both"                                                             |
+|          Dominant Hand          |  string  |                                                                                   Self-reported dominant hand                                                                                   |
+|            Comments             |   text   |                                                                       Any comments they had on the experiment experience                                                                        |
 
 ## Run locally
 
