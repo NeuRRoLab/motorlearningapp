@@ -17,6 +17,11 @@ If you use this software, please cite it as below.
 ## Table of contents<!-- omit in toc -->
 
 - [How to use](#how-to-use)
+  - [General Usage](#general-usage)
+  - [Result files](#result-files)
+    - [Raw data](#raw-data)
+    - [Processed data](#processed-data)
+    - [End survey](#end-survey)
 - [Run locally](#run-locally)
   - [Dependencies](#dependencies)
   - [Usage](#usage)
@@ -27,6 +32,8 @@ If you use this software, please cite it as below.
 - [License](#license)
 
 ## How to use
+
+### General Usage
 
 Here, we will cover basic usage of the web application, starting from user registration to experiment distribution and data download.
 
@@ -56,7 +63,7 @@ Once participants start doing the experiments, you will be able to see the numbe
 
 ![](doc/track_responses.png)
 
-Once you are happy with the number of responses, and want to stop people from participating, you can disable the experiment by clicking on `Disable` next to the experiment. You can also download the participants' data for further processing. Three different files per experiment are available: `Raw data`, which contains the timestamp for each keypress in the experiment and could be used for fine detail analysis; `Processed data` aggregates data per trials and gives information about tapping speed and execution time for each one; `Survey data` contains the end survey information across all subjects, which can be used for demographic analyses. A subset of the resulting `csv` file for the `Processed data` is shown below, and a description for each column on each file can be seen below as well.
+Once you are happy with the number of responses, and want to stop people from participating, you can disable the experiment by clicking on `Disable` next to the experiment. You can also download the participants' data for further processing. Three different files per experiment are available: `Raw data`, which contains the timestamp for each keypress in the experiment and could be used for fine detail analysis; `Processed data` aggregates data per trials and gives information about tapping speed and execution time for each one; `Survey data` contains the end survey information across all subjects, which can be used for demographic analyses. A subset of an example resulting `csv` file for the `Processed data` is shown below. The description for each table header, for all three files, can be found in section [Result files](#result-files).
 
 | experiment_code | subject_code     | block_id | block_sequence | trial_id | correct_trial | accumulated_correct_trials | execution_time_ms | tapping_speed_mean | tapping_speed_extra_keypress |
 | --------------- | ---------------- | -------- | -------------- | -------- | ------------- | -------------------------- | ----------------- | ------------------ | ---------------------------- |
@@ -69,6 +76,59 @@ Once you are happy with the number of responses, and want to stop people from pa
 | DHXY            | bCvf6ST6AZ5QOD2G | 2        | 70897          | 4        | True          | 3                          | 1008              | 3.96825396825397   | 3.24044069993519             |
 
 Table explaining each of the file headers
+
+### Result files
+
+#### Raw data
+
+|           Header           | Type | Description |
+| :------------------------: | :--: | :---------: |
+|      experiment_code       |      |             |
+|        subject_code        |      |             |
+|          block_id          |      |             |
+|       block_sequence       |      |             |
+|          trial_id          |      |             |
+|     was_trial_correct      |      |             |
+| was_partial_trial_correct  |      |             |
+|     keypress_timestamp     |      |             |
+|       keypress_value       |      |             |
+|    was_keypress_correct    |      |             |
+| diff_between_keypresses_ms |      |             |
+
+#### Processed data
+
+|          **Header**          | **Type** | **Description** |
+| :--------------------------: | :------: | :-------------: |
+|       experiment_code        |          |                 |
+|         subject_code         |          |                 |
+|           block_id           |          |                 |
+|        block_sequence        |          |                 |
+|           trial_id           |          |                 |
+|        correct_trial         |          |                 |
+|  accumulated_correct_trials  |          |                 |
+|      execution_time_ms       |          |                 |
+|      tapping_speed_mean      |          |                 |
+| tapping_speed_extra_keypress |          |                 |
+
+#### End survey
+
+|             Header              | Type | Description |
+| :-----------------------------: | :--: | :---------: |
+|         experiment_code         |      |             |
+|          subject_code           |      |             |
+|      started_experiment_at      |      |             |
+|               Age               |      |             |
+|             Gender              |      |             |
+|          Computer Type          |      |             |
+|        Medical condition        |      |             |
+|   Hours of Sleep night before   |      |             |
+|       Excercise Regularly       |      |             |
+|       Level of Education        |      |             |
+| Done keypress experiment before |      |             |
+|      Followed instructions      |      |             |
+|    Hand used for experiment     |      |             |
+|          Dominant Hand          |      |             |
+|            Comments             |      |             |
 
 ## Run locally
 
