@@ -58,7 +58,15 @@ Once participants start doing the experiments, you will be able to see the numbe
 
 Once you are happy with the number of responses, and want to stop people from participating, you can disable the experiment by clicking on `Disable` next to the experiment. You can also download the participants' data for further processing. Three different files per experiment are available: `Raw data`, which contains the timestamp for each keypress in the experiment and could be used for fine detail analysis; `Processed data` aggregates data per trials and gives information about tapping speed and execution time for each one; `Survey data` contains the end survey information across all subjects, which can be used for demographic analyses. A subset of the resulting `csv` file for the `Processed data` is shown below, and a description for each column on each file can be seen below as well.
 
-SUBSET of processed data info
+| experiment_code | subject_code     | block_id | block_sequence | trial_id | correct_trial | accumulated_correct_trials | execution_time_ms | tapping_speed_mean | tapping_speed_extra_keypress |
+| --------------- | ---------------- | -------- | -------------- | -------- | ------------- | -------------------------- | ----------------- | ------------------ | ---------------------------- |
+| DHXY            | bCvf6ST6AZ5QOD2G | 1        | 70897          | 1        | True          | 1                          | 2191              | 1.82565038795071   | 1.82565038795071             |
+| DHXY            | bCvf6ST6AZ5QOD2G | 1        | 70897          | 2        | False         | 1                          |                   |                    |                              |
+| DHXY            | bCvf6ST6AZ5QOD2G | 1        | 70897          | 3        | False         | 1                          |                   |                    |                              |
+| DHXY            | bCvf6ST6AZ5QOD2G | 2        | 70897          | 1        | True          | 1                          | 1409              | 2.8388928317956    | 2.8388928317956              |
+| DHXY            | bCvf6ST6AZ5QOD2G | 2        | 70897          | 2        | False         | 1                          |                   |                    |                              |
+| DHXY            | bCvf6ST6AZ5QOD2G | 2        | 70897          | 3        | True          | 2                          | 1117              | 3.5810205908684    | 2.90528762347472             |
+| DHXY            | bCvf6ST6AZ5QOD2G | 2        | 70897          | 4        | True          | 3                          | 1008              | 3.96825396825397   | 3.24044069993519             |
 
 Table explaining each of the file headers
 
