@@ -56,8 +56,7 @@ MIN_MS_BETW_KEYPRESSES = 9
 
 @method_decorator([login_required], name="dispatch")
 class Profile(DetailView):
-    """Profile view for the current user. Shows the current studies, groups and experiments.
-    """
+    """Profile view for the current user. Shows the current studies, groups and experiments."""
 
     model = User
     template_name = "gestureApp/profile.html"
@@ -77,8 +76,7 @@ class Profile(DetailView):
 
 
 class SignUpView(CreateView):
-    """View that allows users to sign up as new users.
-    """
+    """View that allows users to sign up as new users."""
 
     template_name = "gestureApp/register.html"
     success_url = reverse_lazy("gestureApp:profile")
@@ -100,8 +98,7 @@ class SignUpView(CreateView):
 
 
 def home(request):
-    """Handles a GET request to the home page
-    """
+    """Handles a GET request to the home page"""
     form = ExperimentCode()
     return render(request, "gestureApp/home.html", {"form": form})
 
@@ -244,12 +241,14 @@ def create_trials(request):
                 block=experiment.blocks.order_by("id")[i],
                 subject=subject,
                 started_at=datetime.fromtimestamp(
-                    trial["started_at"] / 1000, user_timezone,
+                    trial["started_at"] / 1000,
+                    user_timezone,
                 ),
                 correct=trial["correct"],
                 partial_correct=trial["partial_correct"],
                 finished_at=datetime.fromtimestamp(
-                    trial["finished_at"] / 1000, user_timezone,
+                    trial["finished_at"] / 1000,
+                    user_timezone,
                 ),
             )
             trials_to_save.append(t)
@@ -324,7 +323,7 @@ def handle_upload_file(cs_bucket, file, code, filename, content_type):
 # Requires login to create experiments
 @login_required
 def create_experiment(request):
-    """Creates experiment from the form attached in the request (if it is a POST request), 
+    """Creates experiment from the form attached in the request (if it is a POST request),
     or views the experiment creation form if a GET request.
 
     Args:
@@ -388,7 +387,11 @@ def create_experiment(request):
 
         return JsonResponse({"code": experiment.code})
 
-    return render(request, "gestureApp/experiment_form.html", {},)
+    return render(
+        request,
+        "gestureApp/experiment_form.html",
+        {},
+    )
 
 
 # Requires login to edit an experiment
@@ -519,7 +522,11 @@ def create_study(request):
 
         return JsonResponse({"code": study.code})
     # If the user is trying to enter the view
-    return render(request, "gestureApp/study_form.html", {},)
+    return render(
+        request,
+        "gestureApp/study_form.html",
+        {},
+    )
 
 
 # Requires logging in to edit a study
@@ -536,7 +543,11 @@ def edit_study(request, pk):
         # If entering the view to start editing the study
         study = get_object_or_404(Study, pk=pk, creator=request.user)
         return render(
-            request, "gestureApp/study_form.html", {"study": study.to_dict(),},
+            request,
+            "gestureApp/study_form.html",
+            {
+                "study": study.to_dict(),
+            },
         )
     elif request.method == "POST":
         # If user modified study and is trying to change it
@@ -691,8 +702,7 @@ def raw_data(user, code):
 # Requires to be logged in to download the raw data
 @login_required
 def download_raw_data(request):
-    """Runs the full cloud process to calculate raw data if necessary, and then downloads the file from cloud storage.
-    """
+    """Runs the full cloud process to calculate raw data if necessary, and then downloads the file from cloud storage."""
     # Process the experiment if it hasn't been processed yet.
     cloud_process_data(request)
     form = ExperimentCode(request.GET)
@@ -917,8 +927,7 @@ def process_data(user, exp_code):
 
 @login_required
 def download_processed_data(request):
-    """Runs the full cloud process to calculate processed data if necessary, and then downloads the file from cloud storage.
-    """
+    """Runs the full cloud process to calculate processed data if necessary, and then downloads the file from cloud storage."""
     cloud_process_data(request)
     form = ExperimentCode(request.GET)
     if form.is_valid():
@@ -1301,9 +1310,6 @@ def download_survey(request, pk):
         subject.code: subject.trials.order_by("started_at").first().started_at
         for subject in subjects
     }
-    possible_subjects = [
-        (subj.code, subj.trials.order_by("started_at").first()) for subj in subjects
-    ]
     # Translation of the survey components
     survey = {
         "age": "Age",
@@ -1321,9 +1327,9 @@ def download_survey(request, pk):
     }
     for values_dict in subjects_surveys:
         values_dict["experiment_code"] = values_dict.pop("code")
-        started_experiment_at = possible_subjects[
+        started_experiment_at = subjects_starting_timestamp[
             values_dict["blocks__trials__subject"]
-        ][1]
+        ]
         values_dict["subject_code"] = values_dict.pop("blocks__trials__subject")
         values_dict["started_experiment_at"] = started_experiment_at
 
@@ -1359,7 +1365,7 @@ def unique(sequence):
     """Helper method to get a set of unique values from a sequence
 
     Args:
-        sequence (iterable): sequence from which we want to extract 
+        sequence (iterable): sequence from which we want to extract
 
     Returns:
         list: unique set of elements
@@ -1369,8 +1375,7 @@ def unique(sequence):
 
 
 def current_user(request):
-    """API method that returns a dictionary containing the current user information
-    """
+    """API method that returns a dictionary containing the current user information"""
     if request.method == "GET":
         if request.user.is_anonymous:
             return JsonResponse({})
