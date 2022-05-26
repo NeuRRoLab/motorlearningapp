@@ -88,6 +88,7 @@ An experiment can only be edited if it hasn't been published yet. All fields wil
         <b-form-file
           accept=".mp4"
           id="instructions-video"
+          ref="video-input"
           v-model="video_file"
           :state="videoFileState"
           placeholder="Choose a file or drop it here..."
@@ -605,12 +606,13 @@ module.exports = {
         this.video_file !== null &&
         this.video_file.size > this.max_video_size
       ) {
-        this.video_file = null;
         alert(
           "File size too big. Max size is " +
             this.max_video_size / (1024 * 1024) +
             "MB"
         );
+        this.video_file = null;
+        this.$refs["video-input"].reset();
         return "";
       }
     },

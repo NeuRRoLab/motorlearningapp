@@ -24,3 +24,5 @@ __pycache__/
 .cloud_sql_proxy
 ./deploy.sh
 config/
+
+doc/
