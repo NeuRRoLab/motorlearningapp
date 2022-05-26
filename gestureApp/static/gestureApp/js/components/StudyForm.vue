@@ -31,7 +31,7 @@ It also allows editing or viewing an existing study -->
           <b-form-textarea
             id="description"
             v-model="description"
-            placeholder="Description..."
+            placeholder="Description (optional)"
             rows="3"
             max-rows="6"
           ></b-form-textarea>

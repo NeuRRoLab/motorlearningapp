@@ -553,7 +553,7 @@ module.exports = {
       rest_after_practice: this.prop_rest_after_practice,
       requirements: this.prop_requirements,
       submitting: false,
-      max_video_size: 50 * 1024 * 1024,
+      max_video_size: 32 * 1024 * 1024,
     };
   },
   props: {
