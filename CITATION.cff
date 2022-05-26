@@ -1,0 +1,13 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+authors:
+- family-names: "Cubillos"
+  given-names: "Luis Hernan"
+  orcid: "https://orcid.org/0000-0001-9876-6204"
+- family-names: "Krishnan"
+  given-names: "Chandramouli"
+  orcid: "https://orcid.org/0000-0002-7278-7389"
+title: "motorlearningapp"
+version: 1.0.0
+date-released: 2022-05-26
+url: "https://github.com/lhcubillos/motorlearningapp"
