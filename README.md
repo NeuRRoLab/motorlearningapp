@@ -2,7 +2,7 @@
 
 # Breaking the Barriers to Designing Online Experiments: A Novel Open-Source Platform for Supporting Procedural Skill Learning Experiments<!-- omit in toc -->
 
-This repository contains a web application that provides researchers in the motor learning field with a way of creating and monitoring sequential finger-tapping experiments very easily. Researchers can create a new user profile, set up an experiment by selecting from a set of options, and then distribute the experiment as needed by just sending a link. Participants will be able to do the experiments from their own personal computers. Researchers can then track an experiment responses and download the participants data in a processing-friendly format. We hope that this tool allows researchers in the motor learning field to quickly test hypotheses without the hassle of having to bring subjects into a laboratory.
+This repository contains a web application that provides researchers in the motor learning field with a way of creating and monitoring sequential finger-tapping experiments very easily, without any coding experience required. Researchers can create a new user profile, set up an experiment by selecting from a set of options, and then distribute the experiment as needed by just sending a link. Participants will be able to do the experiments from their own personal computers. Researchers can then track an experiment responses and download the participants data in a processing-friendly format. We hope that this tool allows researchers in the motor learning field to quickly test hypotheses without the hassle of having to bring subjects into a laboratory.
 
 The web app is accessible at https://experiments.neurro-lab.engin.umich.edu/, and an example experiment is available [here](TODO). Go to [How to use](#how-to-use) for a guide on how to use the platform.
 
@@ -24,9 +24,17 @@ If you use this software, please cite it as below.
     - [End survey](#end-survey)
 - [Run locally](#run-locally)
   - [Dependencies](#dependencies)
+    - [Set up database](#set-up-database)
+    - [Set up Google Cloud Storage](#set-up-google-cloud-storage)
+    - [Set up email account](#set-up-email-account)
+    - [Set up dependencies and environment](#set-up-dependencies-and-environment)
   - [Usage](#usage)
+- [Hosting the code](#hosting-the-code)
 - [Contributing](#contributing)
   - [Understanding the code](#understanding-the-code)
+    - [Django](#django)
+    - [Javascript](#javascript)
+    - [Vue](#vue)
 - [Known issues and future work](#known-issues-and-future-work)
 - [Contact](#contact)
 - [License](#license)
@@ -132,25 +140,93 @@ Table explaining each of the file headers
 
 ## Run locally
 
+Some researchers may need to customize the web application to their specific needs. To do that, the application can run locally in a lab computer, where they would be able to clone this repository and do the modifications needed for their studies.
+
+The application was extensively tested in a computer running Ubuntu 20.10 and Python 3.9 through [Anaconda](https://www.anaconda.com/). The evironment was chosen due to how easy it makes installing new packages and configuring the development conditions in general. Most of the application should run as is in Windows. However, it has not been tested, which should be taken into account.
+
 ### Dependencies
 
-**Google Cloud Storage**
+The core of the application was built using two different tools: Django and Vue. Django is a web framework based in Python that has become popular in the past few years because of how easy it is to create applications from scratch. We used [Django](https://www.djangoproject.com/) to develop the full backend of the application: all connections to the database and all url-to-view requests are handled by the Django backend. [Vue](https://vuejs.org/), on the other hand, is a Javascript framework, and we used it to manage most of the frontend behavior of the web app: any interactive behavior (e.g., the actual experiment) is managed by Vue.
 
-To upload videos and consent forms
+One important caveat is that, as of now, the application is intimately linked with Google Cloud. Even when running the application locally, we use Google Cloud Storage to manage the uploading and downloading of the instructions videos and consent forms, and the downloading of experiments' data. In this instructions, we will cover how to connect to the Cloud Storage account, assuming users have created a Google Cloud account and have billing enabled. It is also possible to run it completely offline, but some modifications would have to be made to the code:
+
+1. Every method in `views.py` that uploads to Cloud Storage would have to be changed so that it saves the files locally.
+2. The links to the processed experiment files in `views.py` would also need to be changed to the local paths.
+3. The `Experiment.vue` component would have to be updated with the local path at which the instructions video and consent form are to be saved.
+
+Now, we will go over each step necessary to set up the local environment and run a version of the application locally (though still connected to Google Cloud Storage).
+
+#### Set up database
+
+Create database in local Postgresql
+
+Migrate the database structure using Django
+
+#### Set up Google Cloud Storage
+
+Add link to do the Cloud Storage part.
+
+Add link on how to create service account
+
+Say how to put service account key on the config folder, and mention that it shouldn't be pushed.
+
+#### Set up email account
+
+Add link to Mailgun tutorial.
+
+#### Set up dependencies and environment
+
+Set up Python 3.9 (make them install Anaconda and then create environment)
+
+Clone repository
+
+Install all packages (requirements.txt)
+
+Create env file with connection to local database and location of google cloud config file
 
 ### Usage
+
+Run local script: modify it so that it doesn't stop the PostgreSQL instance.
+
+## Hosting the code
+
+Do a diagram explaining the general structure of the webpage
 
 ## Contributing
 
 ### Understanding the code
 
-**Django**
+#### Django
 
-**Javascript**
+Link to Django full tutorial
 
-**Vue**
+Most important files:
+
+1. views.py
+2. templates
+3. url.py
+
+#### Javascript
+
+Link to JS tutorial
+
+Most important files
+
+1. experiment.js
+2. home.js
+
+#### Vue
+
+Link to Vue tutorial
+
+Most important files
+
+1. Experiment.js
+2. Profile.js
 
 ## Known issues and future work
+
+The current application is intimately linked to Google Cloud.
 
 ## Contact
 
