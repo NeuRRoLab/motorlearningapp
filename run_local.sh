@@ -1,3 +1,4 @@
+# This tool allows the user to connect to the remote database (set up in Cloud SQL) but with the application running locally
 sudo service postgresql stop
 # Make sure the gcloud shell tool is enabled and connected to a google account with access to the project
 # This way of running the program kills also the connection to the database when exited

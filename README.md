@@ -24,12 +24,11 @@ If you use this software, please cite it as below.
     - [End survey](#end-survey)
 - [Run locally](#run-locally)
   - [Dependencies](#dependencies)
+    - [Set up dependencies and environment](#set-up-dependencies-and-environment)
     - [Set up database](#set-up-database)
     - [Set up Google Cloud Storage](#set-up-google-cloud-storage)
-    - [Set up email account](#set-up-email-account)
-    - [Set up dependencies and environment](#set-up-dependencies-and-environment)
+    - [Set up email account (optional)](#set-up-email-account-optional)
   - [Usage](#usage)
-- [Hosting the code](#hosting-the-code)
 - [Contributing](#contributing)
   - [Understanding the code](#understanding-the-code)
     - [Django](#django)
@@ -150,83 +149,152 @@ The core of the application was built using two different tools: Django and Vue.
 
 One important caveat is that, as of now, the application is intimately linked with Google Cloud. Even when running the application locally, we use Google Cloud Storage to manage the uploading and downloading of the instructions videos and consent forms, and the downloading of experiments' data. In this instructions, we will cover how to connect to the Cloud Storage account, assuming users have created a Google Cloud account and have billing enabled. It is also possible to run it completely offline, but some modifications would have to be made to the code:
 
-1. Every method in `views.py` that uploads to Cloud Storage would have to be changed so that it saves the files locally.
-2. The links to the processed experiment files in `views.py` would also need to be changed to the local paths.
-3. The `Experiment.vue` component would have to be updated with the local path at which the instructions video and consent form are to be saved.
+1. Every method in [views.py](gestureApp/views.py) that uploads to Cloud Storage would have to be changed so that it saves the files locally.
+2. The links to the processed experiment files in [views.py](gestureApp/views.py) would also need to be changed to the local paths.
+3. The [Experiment.vue](static/gestureApp/js/components/Experiment.vue) component would have to be updated with the local path at which the instructions video and consent form are to be saved.
 
 Now, we will go over each step necessary to set up the local environment and run a version of the application locally (though still connected to Google Cloud Storage).
 
+#### Set up dependencies and environment
+
+The first step (though optional) is to install Anaconda, following the instructions [here](https://www.anaconda.com/) to install it for Linux. Then, we can create the environment, download the repository, and install all the dependencies.
+
+```bash
+# Open terminal after having anaconda added to path
+conda create -n motorlearningapp python=3.9
+conda activate motorlearningapp
+# Clone repository
+git clone <REPO_URL>
+# Install python dependencies
+cd motorlearningapp
+pip install -r requirements.txt
+```
+
+The next part is setting up the Google Cloud CLI (command line interface), which will allow the local application to upload the files to Google Cloud Storage. The instructions for installing the CLI are available [here](https://cloud.google.com/sdk/gcloud).
+
+Finally, we will create an environment file that will contain all relevant passwords and keys to make the application work. Note that it is very important to keep this file a secret, as others could use these passwords to disrupt the application and maybe even incur in additional charges with the Google Cloud account. The environment file will be called `.env`, and should contain the following:
+
+```bash
+DATABASE_URL=<URL>
+SECRET_KEY=<DJANGO_SECRET_KEY>
+DEBUG=true
+GOOGLE_APPLICATION_CREDENTIALS=<ABSOLUTE_PATH_TO_SERVICE_ACCOUNT_KEY>.json
+# Following two are optional
+APP_EMAIL_USERNAME=<MAILGUN_USERNAME>
+APP_EMAIL_PASSWORD=<MAILGUN_PASSWORD>
+```
+
+The Django secret key may be generated using the following command:
+
+```bash
+conda activate motorlearningapp
+python -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())'
+```
+
 #### Set up database
 
-Create database in local Postgresql
+For this app we have used PostgreSQL as the database provider, since it allows specific queries that are useful when analyzing the experiment data. To install PostgreSQL in Ubuntu, follow the instructions [here](https://www.digitalocean.com/community/tutorials/how-to-install-postgresql-on-ubuntu-20-04-quickstart).
 
-Migrate the database structure using Django
+Once the setup is complete, we can create our database:
+
+```bash
+sudo -u postgres createdb motorlearningapp
+```
+
+Once the database is setup, we need to update the `.env` file with the proper URL to access it. The structure should be as follows:
+
+```bash
+DATABASE_URL=postgres://<USER>:<PASSWORD>@<HOST ADDRESS>/<DATABASE NAME>
+```
+
+For example, if the user for the database is `postgres`, the password is `12345678`, the host address is `127.0.0.1` (running locally) and the database is called `motorlearningapp`, then the URL would be:
+
+```bash
+DATABASE_URL=postgres://postgres:12345678@127.0.0.1/motorlearningapp
+```
+
+Finally, we need to create the database structure that our application expects. For that, we can use Django:
+
+```bash
+conda activate motorlearningapp
+cd motorlearningapp
+python manage.py migrate
+```
 
 #### Set up Google Cloud Storage
 
-Add link to do the Cloud Storage part.
+Here we will go over how to setup Google Cloud Storage to be able to upload and then download the instructions videos and consent forms for each experiment created. Note that this could be done with other storage services (such as AWS S3), or even locally, but the instructions would vary a little on those cases.
 
-Add link on how to create service account
+The first part is to create a new bucket in Google Cloud Storage. To do that, you can follow the instructions [here](https://cloud.google.com/storage/docs/creating-buckets). A bucket allows you to store and download content. Remember the name you gave to the bucket, as it is important for the next steps. Finally, to allow Javascript to extract the files from the buckets without any extra permissions, we need to configure the bucket to serve the files publicly. To do that, you can follow the instructions [here](https://cloud.google.com/storage/docs/access-control/making-data-public).
 
-Say how to put service account key on the config folder, and mention that it shouldn't be pushed.
+After the bucket in Google Cloud Storage is set up, we need to reference it from the necessary parts of the code. The bucket name should be modified at the top of [views.py](gestureApp/views.py) with the new bucket name. The URL for both the consent form and instruction video should be updated to the bucket URL in [Experiment.vue](static/gestureApp/js/components/Experiment.vue), on the lines where `video_url` and `pdf_url` are defined.
 
-#### Set up email account
+Then, to be able to upload files to the Cloud Storage from the local application, we will need to set up a new service account with permissions to Cloud Storage. A tutorial to do that can be found [here](https://cloud.google.com/iam/docs/creating-managing-service-account-keys). Make sure that the service account has access to the bucket you created in the previous step.
 
-Add link to Mailgun tutorial.
+The service account key you just created should be put inside the folder `config` in the local copy of the repository. Note that by default all the content inside config gets ignored by git. This is important: you do not want to upload the service account key to the remote repository, as it could be used to create unwanted Google resources, depending on how many permissions that service key has.
 
-#### Set up dependencies and environment
+#### Set up email account (optional)
 
-Set up Python 3.9 (make them install Anaconda and then create environment)
+The application allows first-time participants to email their user code to themselves, so that they have it available the next time they participate. The application is currently set up with a free account of Mailgun. If you want to enable the same feature for your application, you will need to set up a Mailgun account.
 
-Clone repository
+To do that, sign up [here](https://signup.mailgun.com/new/signup) and choose the plan most suitable to your needs. Then, you will need to copy the email username and password they provide, and put it into the `.env` file. It should have the following structure:
 
-Install all packages (requirements.txt)
-
-Create env file with connection to local database and location of google cloud config file
+```bash
+# .env
+...
+APP_EMAIL_USERNAME=<MAILGUN_USERNAME>
+APP_EMAIL_PASSWORD=<MAILGUN_PASSWORD>
+...
+```
 
 ### Usage
 
-Run local script: modify it so that it doesn't stop the PostgreSQL instance.
+Finally, to actually run the application, you need to run the following:
 
-## Hosting the code
+```bash
+conda activate motorlearningapp
+cd motorlearningapp
 
-Do a diagram explaining the general structure of the webpage
+python manage.py runserver
+```
+
+Make sure that the database is running (either remotely or locally), or the application will fail to run.
+
+Then, you can access the application by going to http://127.0.0.1:8000/ in a browser.
 
 ## Contributing
 
 ### Understanding the code
 
+In this section, we will go over the most important files that the application has, and explain a little what their role is. We can separate our application into three distinct frameworks and languages: Django, Javascript, and Vue. Django manages the backend of the application, connecting to the database and handling requests. Javascript handles the connection between Django and Vue, making the necessary API connections to the backend and giving information to the frontend about the experiment or the current user. Vue manages the frontend, and adds interactivity to the webpage: the experiments run through Vue code.
+
 #### Django
 
-Link to Django full tutorial
+A complete Django tutorial can be found [here](https://www.djangoproject.com/start/). It is recommended to complete it before modifying anything, as it is important to understand the general structure of the webpage. Django constitutes the basic building block of the webpage, and without it, it would not be possible to run the application.
 
-Most important files:
+Some of the most important files and folders from the Django side of the application are explained here:
 
-1. views.py
-2. templates
-3. url.py
+1. [gestureApp/views.py](gestureApp/views.py): contains all the methods that handle the different requests to the web app. For example, the method `experiment` is run when a participant (or a researcher, when testing) accesses a new experiment. It takes an experiment ID as argument, and then renders the template [experiment.html](gestureApp/templates/gestureApp/experiment.html). It passes along the experiment information, all blocks that it contains, and the subject code that was assigned to the current user.
+2. [gestureApp/urls.py](gestureApp/urls.py): this file links URL addresses to a specific method in [views.py](gestureApp/views.py). It can also stablish some conditions on the URL, to make sure that it is being accessed correctly. For example, for the experiment URL, it expects an address with the following structure `^experiment/(?P<pk>[A-Z0-9]{4})/$`, which means that the PK needs to be a 4 character code containing only uppercase letters and numbers. It also links the `experiment` method described before to this URL, by passing `views.experiment` as the second argument.
+3. [templates/experiment.html](gestureApp/templates/gestureApp/experiment.html): the templates in Django are pseudo HTML files that allow Django python code to pass variables from the backend to the frontend. [experiment.html](gestureApp/templates/gestureApp/experiment.html) is the template that renders the experiment. It also passes the information about the experiment and all its blocks to the frontend. Then, the corresponding Javascript file reads from it and passes it to the Vue component.
 
 #### Javascript
 
-Link to JS tutorial
+Multiple Javascript tutorial exist, but one that has great reviews is [this one](https://javascript.info/). It is recommended to do a Javascript tutorial before working on the project, as it is necessary to understand certain nuances in the code.
 
-Most important files
+The general workflow of the Javascript file is as follows: it reads some properties from the HTML template it is loaded on, and then renders a Vue component that makes use of those properties. The Vue component may do some actions that require interaction with the database: the Javascript file is the one that contains all the actual calls to the Backend.
 
-1. experiment.js
-2. home.js
+As an example, the file [experiment.js](static/gestureApp/js/experiment.js) reads the experiment and blocks information from the Django template, and then renders the [Experiment](static/gestureApp/js/components/Experiment.vue) Vue component, passing all the information. After the experiment is done, the Javascript file is the one that does the internal API requests to save the experiment response and the end survey if applicable.
 
 #### Vue
 
-Link to Vue tutorial
+Finally, Vue is a Javascript framework on which most of the frontend interactivity is based in the app. A very thorough tutorial can be found [here](https://vuejs.org/tutorial/#step-1).
 
-Most important files
-
-1. Experiment.js
-2. Profile.js
+A Vue file is generally split in three parts: the HTML, the code, and the style. As an example, the [Experiment.vue](static/gestureApp/js/components/Experiment.vue) component is the one that handles the experiment interaction with the participant: it first shows the instructions video and consent form, and then shows the experiment to the user, capturing the keypresses when appropriate. When the experiment is done, it emits an event to the parent Javascript script ([experiment.js](static/gestureApp/js/experiment.js)), which then does the necessary requests to the Django API.
 
 ## Known issues and future work
 
-The current application is intimately linked to Google Cloud.
+The current application is intimately linked to Google Cloud, which is a limitation in case there is interest in migrating to another platform, or when trying to run it completely local.
 
 ## Contact
 
