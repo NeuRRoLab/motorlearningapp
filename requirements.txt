@@ -12,5 +12,6 @@ psycopg2-binary==2.8.6
 pytz==2020.1
 whitenoise==5.2.0
 django-queryset-csv==1.1.0
+django-anymail==8.6
 six==1.15.0
 python-dateutil==2.8.1

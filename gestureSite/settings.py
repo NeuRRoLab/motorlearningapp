@@ -62,6 +62,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "django_extensions",
     "crispy_forms",
+    "anymail",
 ]
 
 MIDDLEWARE = [
@@ -141,10 +142,12 @@ STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 CRISPY_TEMPLATE_PACK = "bootstrap4"
 
 # Email
-EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+ANYMAIL = {
+    "MAILJET_API_KEY": env("MAILJET_API_KEY"),
+    "MAILJET_SECRET_KEY": env("MAILJET_SECRET_KEY"),
+}
+EMAIL_BACKEND = "anymail.backends.mailjet.EmailBackend"
 EMAIL_HOST = "smtp.mailgun.org"
-EMAIL_HOST_USER = env("APP_EMAIL_USERNAME")
-EMAIL_HOST_PASSWORD = env("APP_EMAIL_PASSWORD")
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 DEFAULT_FROM_EMAIL = env("APP_EMAIL_USERNAME")
