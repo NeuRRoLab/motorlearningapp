@@ -703,16 +703,29 @@ def raw_data(user, code):
 @login_required
 def download_raw_data(request):
     """Runs the full cloud process to calculate raw data if necessary, and then downloads the file from cloud storage."""
-    # Process the experiment if it hasn't been processed yet.
-    cloud_process_data(request)
     form = ExperimentCode(request.GET)
     if form.is_valid():
         code = form.cleaned_data["code"]
-        cs_bucket = storage.Client().bucket(BUCKET_NAME)
-        blob = cs_bucket.blob(f"raw_data/{code}.csv")
-        if blob is None:
-            raise Http404("Experiment is not ready for downloading yet")
-        csv_content = blob.download_as_string()
+        experiment = Experiment.objects.get(pk=code)
+        # If the experiment is not published, just download the experiment data
+        if not experiment.published:
+            output_dict = raw_data(experiment.creator, code)
+            f = io.StringIO()
+            if len(output_dict) > 0:
+                writer = csv.DictWriter(f, output_dict[0].keys())
+                writer.writeheader()
+            else:
+                writer = csv.DictWriter(f, ["experiment"])
+            writer.writerows(output_dict)
+            csv_content = f.getvalue()
+        else:
+            # Process the experiment if it hasn't been processed yet.
+            cloud_process_data(request)
+            cs_bucket = storage.Client().bucket(BUCKET_NAME)
+            blob = cs_bucket.blob(f"raw_data/{code}.csv")
+            if blob is None:
+                raise Http404("Experiment is not ready for downloading yet")
+            csv_content = blob.download_as_string()
         # Output csv
         response = HttpResponse(csv_content, content_type="text/csv")
         response[
@@ -928,15 +941,29 @@ def process_data(user, exp_code):
 @login_required
 def download_processed_data(request):
     """Runs the full cloud process to calculate processed data if necessary, and then downloads the file from cloud storage."""
-    cloud_process_data(request)
     form = ExperimentCode(request.GET)
     if form.is_valid():
         code = form.cleaned_data["code"]
-        cs_bucket = storage.Client().bucket(BUCKET_NAME)
-        blob = cs_bucket.blob(f"processed_data/{code}.csv")
-        if blob is None:
-            raise Http404("Experiment is not ready for downloading yet")
-        csv_content = blob.download_as_string()
+        experiment = Experiment.objects.get(pk=code)
+        # If the experiment is not published, just download the experiment data
+        if not experiment.published:
+            output_dict = process_data(experiment.creator, code)
+            f = io.StringIO()
+            if len(output_dict) > 0:
+                writer = csv.DictWriter(f, output_dict[0].keys())
+                writer.writeheader()
+            else:
+                writer = csv.DictWriter(f, ["experiment"])
+            writer.writerows(output_dict)
+            csv_content = f.getvalue()
+        else:
+            cloud_process_data(request)
+            code = form.cleaned_data["code"]
+            cs_bucket = storage.Client().bucket(BUCKET_NAME)
+            blob = cs_bucket.blob(f"processed_data/{code}.csv")
+            if blob is None:
+                raise Http404("Experiment is not ready for downloading yet")
+            csv_content = blob.download_as_string()
         # Output csv
         response = HttpResponse(csv_content, content_type="text/csv")
         response[
