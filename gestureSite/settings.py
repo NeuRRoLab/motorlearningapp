@@ -147,9 +147,4 @@ ANYMAIL = {
     "MAILJET_SECRET_KEY": env("MAILJET_SECRET_KEY"),
 }
 EMAIL_BACKEND = "anymail.backends.mailjet.EmailBackend"
-EMAIL_HOST = "smtp.mailgun.org"
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
-DEFAULT_FROM_EMAIL = env("APP_EMAIL_USERNAME")
-
 DEFAULT_AUTO_FIELD = "django.db.models.AutoField"

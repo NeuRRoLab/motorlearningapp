@@ -178,8 +178,8 @@ SECRET_KEY=<DJANGO_SECRET_KEY>
 DEBUG=true
 GOOGLE_APPLICATION_CREDENTIALS=<ABSOLUTE_PATH_TO_SERVICE_ACCOUNT_KEY>.json
 # Following two are optional
-APP_EMAIL_USERNAME=<MAILGUN_USERNAME>
-APP_EMAIL_PASSWORD=<MAILGUN_PASSWORD>
+MAILJET_API_KEY=<API_KEY>
+MAILJET_SECRET_KEY=<SECRET_KEY>
 ```
 
 The Django secret key may be generated using the following command:
@@ -233,15 +233,15 @@ The service account key you just created should be put inside the folder `config
 
 #### Set up email account (optional)
 
-The application allows first-time participants to email their user code to themselves, so that they have it available the next time they participate. The application is currently set up with a free account of Mailgun. If you want to enable the same feature for your application, you will need to set up a Mailgun account.
+The application allows first-time participants to email their user code to themselves, so that they have it available the next time they participate. The application is currently set up with a free account of Mailjet. If you want to enable the same feature for your application, you will need to set up a Mailjet account.
 
-To do that, sign up [here](https://signup.mailgun.com/new/signup) and choose the plan most suitable to your needs. Then, you will need to copy the email username and password they provide, and put it into the `.env` file. It should have the following structure:
+To do that, sign up [here](https://app.mailjet.com/signup) and choose the plan most suitable to your needs. Then, you will need to copy the API key and secret key they provide, and put it into the `.env` file. It should have the following structure:
 
 ```bash
 # .env
 ...
-APP_EMAIL_USERNAME=<MAILGUN_USERNAME>
-APP_EMAIL_PASSWORD=<MAILGUN_PASSWORD>
+MAILJET_API_KEY=<API_KEY>
+MAILJET_SECRET_KEY=<SECRET_KEY>
 ...
 ```
 
