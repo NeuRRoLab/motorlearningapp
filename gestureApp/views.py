@@ -1457,7 +1457,6 @@ def user_studies(request):
         )
 
 
-@login_required
 def _publish_experiment(experiment):
     """Manages the publishing of an experiment, modifying the date at which it was published
 
