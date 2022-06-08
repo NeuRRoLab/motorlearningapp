@@ -56,7 +56,10 @@ via the API.
           </template>
           <!-- Experiment instructions -->
           <template v-else>
-            <p class="h4">
+            <p class="h4" style="white-space: pre-wrap">
+              {{ experiment.instructions }}
+            </p>
+            <!-- <p class="h4">
               Enter the sequence of characters in order when it appears on the
               screen
             </p>
@@ -89,8 +92,7 @@ via the API.
             </p>
             <p class="h4">
               Click on "Start Experiment" when you're ready to begin
-            </p>
-            <br />
+            </p> -->
             <br />
             <button class="btn btn-primary btn-lg" @click="startExperiment">
               Start Experiment

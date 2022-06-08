@@ -129,6 +129,21 @@ An experiment can only be edited if it hasn't been published yet. All fields wil
           required
         ></b-form-textarea>
       </b-form-group>
+      <!-- Textbox of experiment instructions -->
+      <b-form-group
+        label="Experiment instructions:"
+        label-for="instructions"
+        description="Instructions that will be shown to the participant just before they start the experiment."
+      >
+        <b-form-textarea
+          id="instructions"
+          placeholder="Experiment instructions"
+          rows="3"
+          max-rows="8"
+          v-model="instructions"
+          required
+        ></b-form-textarea>
+      </b-form-group>
 
       <b-form-group
         description="Turn on if you want the user to know when they input the wrong key in a sequence"
@@ -553,6 +568,7 @@ module.exports = {
       with_shown_instructions: this.prop_with_shown_instructions,
       rest_after_practice: this.prop_rest_after_practice,
       requirements: this.prop_requirements,
+      instructions: this.prop_instructions,
       submitting: false,
       max_video_size: 32 * 1024 * 1024,
     };
@@ -581,6 +597,7 @@ module.exports = {
     prop_with_feedback_blocks: Boolean,
     prop_with_shown_instructions: Boolean,
     prop_requirements: String,
+    prop_instructions: String,
   },
   computed: {
     getGroupOptions() {
@@ -676,7 +693,8 @@ module.exports = {
         this.with_feedback_blocks,
         this.with_shown_instructions,
         this.rest_after_practice,
-        this.requirements
+        this.requirements,
+        this.instructions
       );
     },
     resetExperiment(evt) {

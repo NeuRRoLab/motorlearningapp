@@ -241,14 +241,12 @@ def create_trials(request):
                 block=experiment.blocks.order_by("id")[i],
                 subject=subject,
                 started_at=datetime.fromtimestamp(
-                    trial["started_at"] / 1000,
-                    user_timezone,
+                    trial["started_at"] / 1000, user_timezone,
                 ),
                 correct=trial["correct"],
                 partial_correct=trial["partial_correct"],
                 finished_at=datetime.fromtimestamp(
-                    trial["finished_at"] / 1000,
-                    user_timezone,
+                    trial["finished_at"] / 1000, user_timezone,
                 ),
             )
             trials_to_save.append(t)
@@ -358,6 +356,7 @@ def create_experiment(request):
             with_shown_instructions=exp_info["with_shown_instructions"],
             rest_after_practice=exp_info["rest_after_practice"],
             requirements=exp_info["requirements"],
+            instructions=exp_info["instructions"],
         )
         # Create all the blocks in the experiment
         for block in exp_info["blocks"]:
@@ -387,11 +386,7 @@ def create_experiment(request):
 
         return JsonResponse({"code": experiment.code})
 
-    return render(
-        request,
-        "gestureApp/experiment_form.html",
-        {},
-    )
+    return render(request, "gestureApp/experiment_form.html", {},)
 
 
 # Requires login to edit an experiment
@@ -448,6 +443,7 @@ def edit_experiment(request, pk):
             with_shown_instructions=exp_info["with_shown_instructions"],
             rest_after_practice=exp_info["rest_after_practice"],
             requirements=exp_info["requirements"],
+            instructions=exp_info["instructions"],
         )
         # Delete blocks not in exp info blocks but that were originally on the experiment
         edit_blocks = [
@@ -522,11 +518,7 @@ def create_study(request):
 
         return JsonResponse({"code": study.code})
     # If the user is trying to enter the view
-    return render(
-        request,
-        "gestureApp/study_form.html",
-        {},
-    )
+    return render(request, "gestureApp/study_form.html", {},)
 
 
 # Requires logging in to edit a study
@@ -543,11 +535,7 @@ def edit_study(request, pk):
         # If entering the view to start editing the study
         study = get_object_or_404(Study, pk=pk, creator=request.user)
         return render(
-            request,
-            "gestureApp/study_form.html",
-            {
-                "study": study.to_dict(),
-            },
+            request, "gestureApp/study_form.html", {"study": study.to_dict(),},
         )
     elif request.method == "POST":
         # If user modified study and is trying to change it
