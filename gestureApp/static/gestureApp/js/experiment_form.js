@@ -29,6 +29,13 @@ var app = new Vue({
       with_shown_instructions: true,
       rest_after_practice: null,
       requirements: null,
+      instructions: `\
+Enter the sequence of characters in order when it appears on the screen
+Try to do it as fast and correctly as you can
+Do not change window or tab, or the experiment will restart
+Make sure you only use one finger for each key
+After clicking on "Start Experiment", and before each block, you MAY hear an auditory cue
+Click on "Start Experiment" when you're ready to begin`,
       experiment_blocks: [
         {
           block_id: null,
@@ -99,6 +106,7 @@ var app = new Vue({
         prop_with_shown_instructions: this.with_shown_instructions,
         prop_rest_after_practice: this.rest_after_practice,
         prop_requirements: this.requirements,
+        prop_instructions: this.instructions,
         prop_hands: this.hands,
       }
     }
@@ -106,7 +114,7 @@ var app = new Vue({
   methods: {
     // Submit newly created or edited study to the API, with all the necessary properties
     // TODO: maybe convert properties to one object for easier access and better syntax
-    submitExperiment(name, study_code, group_code, with_practice_trials, practice_trials, practice_is_random_sequence, practice_seq_length, practice_sequence, practice_trial_time, practice_rest_time, blocks, video_file, consent_file, with_feedback, with_feedback_blocks, with_shown_instructions, rest_after_practice, requirements) {
+    submitExperiment(name, study_code, group_code, with_practice_trials, practice_trials, practice_is_random_sequence, practice_seq_length, practice_sequence, practice_trial_time, practice_rest_time, blocks, video_file, consent_file, with_feedback, with_feedback_blocks, with_shown_instructions, rest_after_practice, requirements, instructions) {
       let obj = {
         code: this.experiment_code,
         study: study_code,
@@ -125,6 +133,7 @@ var app = new Vue({
         with_shown_instructions: with_shown_instructions,
         rest_after_practice: rest_after_practice,
         requirements: requirements,
+        instructions: instructions,
       }
       // Prevent editing if already published
       if (this.published) return;
@@ -187,6 +196,7 @@ var app = new Vue({
       this.with_shown_instructions = html_experiment.with_shown_instructions;
       this.rest_after_practice = html_experiment.rest_after_practice;
       this.requirements = html_experiment.requirements;
+      this.instructions = html_experiment.instructions;
 
       // Get all blocks from the HTML template
       html_blocks = JSON.parse(document.getElementById('blocks').textContent);
