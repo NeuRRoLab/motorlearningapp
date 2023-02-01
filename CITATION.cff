@@ -1,13 +1,92 @@
+# This CITATION.cff file was generated with cffinit.
+# Visit https://bit.ly/cffinit to generate yours today!
+
 cff-version: 1.2.0
-message: "If you use this software, please cite it as below."
+title: >-
+  Breaking the Barriers to Designing Online Experiments: A
+  Novel Open-Source Platform for Supporting Procedural Skill
+  Learning Experiments
+message: 'If you use this software, please cite it as below.'
+type: software
 authors:
-- family-names: "Cubillos"
-  given-names: "Luis Hernan"
-  orcid: "https://orcid.org/0000-0001-9876-6204"
-- family-names: "Krishnan"
-  given-names: "Chandramouli"
-  orcid: "https://orcid.org/0000-0002-7278-7389"
-title: "Breaking the Barriers to Designing Online Experiments: A Novel Open-Source Platform for Supporting Procedural Skill Learning Experiments"
+  - family-names: Cubillos
+    given-names: Luis H
+    orcid: 'https://orcid.org/0000-0001-9876-6204'
+    email: lhcubill@umich.edu
+    affiliation: University of Michigan
+  - family-names: Krishnan
+    given-names: Chandramouli
+    orcid: 'https://orcid.org/0000-0002-7278-7389'
+    affiliation: University of Michigan
+  - given-names: Thomas E.
+    family-names: Augenstein
+    affiliation: University of Michigan
+    orcid: 'https://orcid.org/0000-0002-2781-3066'
+  - given-names: Rajiv
+    family-names: Ranganathan
+    affiliation: Michigan State University
+    orcid: 'https://orcid.org/0000-0002-6924-253X'
+identifiers:
+  - type: doi
+    value: 10.1016/j.compbiomed.2023.106627
+url: 'https://github.com/lhcubillos/motorlearningapp'
+abstract: >-
+  Background
+
+  Motor learning experiments are typically performed in
+  laboratory environments, which can be time-consuming and
+  require dedicated equipment/personnel, thus limiting the
+  ability to gather data from large samples. To address this
+  problem, some researchers have transitioned to
+  unsupervised online experiments, showing advantages in
+  participant recruitment without losing validity. However,
+  most online platforms require coding experience or
+  time-consuming setups to create and run experiments,
+  limiting their usage across the field.
+
+
+  Method
+
+  To tackle this issue, an open-source web-based platform
+  was developed
+  (https://experiments.neurro-lab.engin.umich.edu/) to
+  create, run, and manage procedural skill learning
+  experiments without coding or setup requirements. The
+  feasibility of the platform and the comparability of the
+  results between supervised (n = 17) and unsupervised
+  (n = 24) were tested in 41 naive right-handed participants
+  using an established sequential finger tapping task. The
+  study also tested if a previously reported rapid form of
+  offline consolidation (i.e., microscale learning) in
+  procedural skill learning could be replicated with the
+  developed platform and evaluated the extent of interlimb
+  transfer associated with the finger tapping task.
+
+
+  Results
+
+  The results indicated that the performance metrics were
+  comparable between the supervised and unsupervised groups
+  (all p's > 0.05). The learning curves, average tapping
+  speeds, and micro-scale learning were similar to previous
+  studies. Training led to significant improvements in mean
+  tapping speed (2.22 ± 1.48 keypresses/s, p < 0.001) and a
+  significant interlimb transfer of learning (1.22 ± 1.43
+  keypresses/s, p < 0.05).
+
+
+  Conclusions
+
+  The results show that the presented platform may serve as
+  a valuable tool for conducting online procedural
+  skill-learning experiments.
+keywords:
+  - Key pressing
+  - Offline gains
+  - Micro-offline
+  - Micro-online
+  - Cloud computing
+  - Machine learning
+license: GPL-3.0
 version: 1.0.0
-date-released: 2022-05-26
-url: "https://github.com/lhcubillos/motorlearningapp"
+date-released: '2022-05-26'
