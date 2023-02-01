@@ -14,10 +14,6 @@ authors:
     orcid: 'https://orcid.org/0000-0001-9876-6204'
     email: lhcubill@umich.edu
     affiliation: University of Michigan
-  - family-names: Krishnan
-    given-names: Chandramouli
-    orcid: 'https://orcid.org/0000-0002-7278-7389'
-    affiliation: University of Michigan
   - given-names: Thomas E.
     family-names: Augenstein
     affiliation: University of Michigan
@@ -26,6 +22,10 @@ authors:
     family-names: Ranganathan
     affiliation: Michigan State University
     orcid: 'https://orcid.org/0000-0002-6924-253X'
+  - family-names: Krishnan
+    given-names: Chandramouli
+    orcid: 'https://orcid.org/0000-0002-7278-7389'
+    affiliation: University of Michigan
 identifiers:
   - type: doi
     value: 10.1016/j.compbiomed.2023.106627
