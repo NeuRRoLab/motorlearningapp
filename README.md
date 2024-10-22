@@ -4,7 +4,7 @@
 
 This repository contains a web application that provides researchers in the motor learning field with a way of creating and monitoring sequential finger-tapping experiments very easily, without any coding experience required. Researchers can create a new user profile, set up an experiment by selecting from a set of options, and then distribute the experiment as needed by just sending a link. Participants will be able to do the experiments from their own personal computers. Researchers can then track an experiment responses and download the participants data in a processing-friendly format. We hope that this tool allows researchers in the motor learning field to quickly test hypotheses without the hassle of having to bring subjects into a laboratory.
 
-The web app is accessible at https://experiments.neurro-lab.engin.umich.edu/, and an example experiment is available [here](http://127.0.0.1:8000/experiment/5FYA/). Go to [How to use](#how-to-use) for a guide on how to use the platform.
+The web app is accessible at https://experiments.neurro-lab.engin.umich.edu/, and an example experiment is available [here](https://experiments.neurro-lab.engin.umich.edu/experiment/5FYA/). Go to [How to use](#how-to-use) for a guide on how to use the platform.
 
 ![app_gif](doc/webapp.gif)
 
