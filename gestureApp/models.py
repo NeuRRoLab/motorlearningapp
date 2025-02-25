@@ -446,8 +446,8 @@ class EndSurvey(models.Model):
     # Potentially could be saved in a NoSQL database for simplicity
     experiment = models.ForeignKey(Experiment, on_delete=models.CASCADE)
     # Set subject field to null if corresponding subject is deleted
-    subject = models.OneToOneField(
-        Subject, on_delete=models.SET_NULL, null=True, related_name="survey"
+    subject = models.ForeignKey(
+        Subject, on_delete=models.SET_NULL, null=True, related_name="surveys"
     )
     age = models.IntegerField()
     gender = models.CharField(max_length=15)

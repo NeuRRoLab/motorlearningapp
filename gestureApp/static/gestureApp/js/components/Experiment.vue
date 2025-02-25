@@ -778,7 +778,15 @@ module.exports = {
     playCountdown(data) {
       // Play countdown sound when almost three seconds are left. Won't be exactly 3.
       var remaining = data.seconds + data.milliseconds / 1000.0;
-      if (remaining <= 3.15 && !this.played_countdown) {
+      
+      // Check if we have enough time between blocks to play the countdown
+      let hasEnoughTimeBetweenBlocks = true;
+      if (this.current_block > 0) {
+        hasEnoughTimeBetweenBlocks = this.blocks[this.current_block - 1].sec_until_next >= 3;
+      }
+      
+      // Only play countdown if there's enough time and we haven't played it yet
+      if (remaining <= 3.15 && !this.played_countdown && hasEnoughTimeBetweenBlocks) {
         this.countdown_audio.play();
         this.played_countdown = true;
       }

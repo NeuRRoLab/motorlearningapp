@@ -1306,7 +1306,7 @@ def download_survey(request, pk):
             creator=request.user,
             blocks__trials__started_at__gt=starting_date_useful_data,
         )
-        .values("code", "blocks__trials__subject", "blocks__trials__subject__survey")
+        .values("code", "blocks__trials__subject")
         .distinct()
     )
     subjects_surveys = list(subjects_surveys)
@@ -1350,13 +1350,18 @@ def download_survey(request, pk):
 
         for value in survey.values():
             values_dict[value] = None
-        if values_dict["blocks__trials__subject__survey"] is not None:
+        
+        # Get the survey for this subject and experiment
+        survey_obj = EndSurvey.objects.filter(
+            experiment=pk,
+            subject=values_dict["subject_code"]
+        ).first()
+        
+        if survey_obj is not None:
             # Add survey values
-            survey_id = values_dict["blocks__trials__subject__survey"]
-            survey_obj = EndSurvey.objects.get(pk=survey_id)
             for key, value in survey.items():
                 values_dict[value] = getattr(survey_obj, key)
-        values_dict.pop("blocks__trials__subject__survey")
+
     # Order the list by block and then subject
     subjects_surveys.sort(
         key=lambda value_dict: (subjects_starting_timestamp[value_dict["subject_code"]])
